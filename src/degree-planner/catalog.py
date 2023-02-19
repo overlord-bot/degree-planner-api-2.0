@@ -55,11 +55,13 @@ class Catalog():
             self.reindex()
             self.reindex_flag = False
         name = self.search.search(course_name.casefold())
+        if len(name) == 0:
+            return None
         if len(name) == 1:
             return self.__course_list.get(name[0], None)
         else:
-            self.output.print(f"CATALOG ERROR: catalog get course non unique course found: {str(name)}", OUT.ERROR)
-        return None
+            print(f"CATALOG ERROR: catalog get course non unique course found: {str(name)}", OUT.ERROR)
+            return self.__course_list.get(name[0], None)
 
 
     def get_all_courses(self):

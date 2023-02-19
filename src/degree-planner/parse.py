@@ -20,23 +20,11 @@ async def parse_courses(file_name, catalog:Catalog, output:Output=None):
     if output == None: output = Output(OUT.CONSOLE)
     await output.print("Beginning parsing course data into catalog")
 
-    # There are 4 locations for catalog_results and class_results, checked in this order:
-    # 1) /cogs/webcrawling/
-    # 2) /cogs/degree-planner/data/
-    # 3) /cogs/degree-planner/
-    # 4) / (root directory of bot)
-    if os.path.isfile(os.getcwd() + "/cogs/webcrawling/" + file_name):
-        await output.print(f"file found: {os.getcwd()}/cogs/webcrawling/" + file_name)
-        file_catalog_results = open(os.getcwd() + "/cogs/webcrawling/" + file_name)
-    elif os.path.isfile(os.getcwd() + "/cogs/degree-planner/data/" + file_name):
-        await output.print(f"file found: {os.getcwd()}/cogs/degree-planner/data/" + file_name)
-        file_catalog_results = open(os.getcwd() + "/cogs/degree-planner/data/" + file_name)
-    elif os.path.isfile(os.getcwd() + "/cogs/degree-planner/" + file_name):
-        await output.print(f"file found: {os.getcwd()}/cogs/degree-planner/" + file_name)
-        file_catalog_results = open(os.getcwd() + "/cogs/degree-planner/" + file_name)
-    elif os.path.isfile(os.getcwd() + "/" + file_name):
-        await output.print(f"file found: {os.getcwd()}/" + file_name)
-        file_catalog_results = open(os.getcwd() + "/" + file_name)
+    # There are 1 location(s) for catalog_results and class_results, checked in this order:
+    # 1) data/
+    if os.path.isfile(os.getcwd() + "/data/" + file_name):
+        await output.print(f"file found: {os.getcwd()}/data/" + file_name)
+        file_catalog_results = open(os.getcwd() + "/data/" + file_name)
     else:
         await output.print("catalog file not found")
         return
@@ -98,6 +86,14 @@ async def parse_courses(file_name, catalog:Catalog, output:Output=None):
         if 'course_description' in element:
             course.description = element['course_description']
 
+        ########### TESTING STUFF TEMPORARY ############
+        if course.course_id == 4350 or course.course_id == 4100 or course.course_id == 4961:
+            course.concentration = {'AI'}
+
+        if course.course_id == 4020 or course.course_id == 4260:
+            course.concentration = {'theory'}
+        ################################################
+
         catalog.add_course(course)
 
 
@@ -111,46 +107,52 @@ Args:
 async def parse_degrees(file_name, catalog, output:Output=None):
     if output == None: output = Output(OUT.CONSOLE)
     await output.print("Beginning parsing degree data into catalog")
-
-    if os.path.isfile(os.getcwd() + "/cogs/webcrawling/" + file_name):
-        await output.print(f"file found: {os.getcwd()}/cogs/webcrawling/" + file_name)
-        file_degree_results = open(os.getcwd() + "/cogs/webcrawling/" + file_name)
-    elif os.path.isfile(os.getcwd() + "/cogs/degree-planner/data/" + file_name):
-        await output.print(f"file found: {os.getcwd()}/cogs/degree-planner/data/" + file_name)
-        file_degree_results = open(os.getcwd() + "/cogs/degree-planner/data/" + file_name)
-    elif os.path.isfile(os.getcwd() + "/cogs/degree-planner/" + file_name):
-        await output.print(f"file found: {os.getcwd()}/cogs/degree-planner/" + file_name)
-        file_degree_results = open(os.getcwd() + "/cogs/degree-planner/" + file_name)
-    elif os.path.isfile(os.getcwd() + "/" + file_name):
-        await output.print(f"file found: {os.getcwd()}/" + file_name)
-        file_degree_results = open(os.getcwd() + "/" + file_name)
+    
+    ''' NOT IMPLEMENTED FOR JSON INPUT YET
+    # There are 1 location(s) for degree_results and class_results, checked in this order:
+    # 1) data/
+    if os.path.isfile(os.getcwd() + "/data/" + file_name):
+        await output.print(f"file found: {os.getcwd()}/data/" + file_name)
+        file_degree_results = open(os.getcwd() + "/data/" + file_name)
     else:
         await output.print("degree file not found")
         return
-
+    
     json_data = json.load(file_degree_results)
     file_degree_results.close()
+    '''
 
     # TESTING DEGREES FOR NOW:
     degree = Degree("computer science")
 
-    rule = Rule("concentration")
+    rule1 = Rule("concentration")
 
     template1 = Template("concentration requirement", Course("", "", 4000))
     template1.template_course.concentration = "*"
 
-    template2 = Template("intensity requirement", Course("", "", 4000))
+    rule2 = Rule("intensity")
+
+    template2 = Template("4000 level courses", Course("", "", 4000))
+
+    rule3 = Rule("core")
 
     template3 = Template("Data Structures", Course("Data Structures", "CSCI", 1200))
+    template4 = Template("Programming Languages", Course("Programming Languages", "CSCI", 4430))
+    template5 = Template("Algorithms", Course("Introduction to Algorithms", "CSCI", 2300))
 
-    rule.add_template(template1, 2)
-    rule.add_template(template2, 3)
-    rule.add_template(template3)
+    rule1.add_template(template1, 2)
+    rule2.add_template(template2, 3)
+    rule3.add_template(template3)
+    rule3.add_template(template4)
+    rule3.add_template(template5)
 
-    degree.add_rule(rule)
+    degree.add_rule(rule1)
+    degree.add_rule(rule2)
+    degree.add_rule(rule3)
+
     catalog.add_degree(degree)
 
-    await output.print(f"added degree {str(degree)} containing rule {str(rule)} to catalog")
+    await output.print(f"added degree {repr(degree)} to catalog")
 
     '''
     #----------------------------------------------------------------------

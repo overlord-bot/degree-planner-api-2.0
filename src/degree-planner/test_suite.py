@@ -12,7 +12,7 @@ from .user import *
 
 class Test1():    
     async def test(self, output:Output=None):
-        if output == None: output = Output(OUT.CONSOLE)
+        if output == None: output = Output(output_location=OUT.DEBUG)
 
         await output.print("Generating synthetic test data set")
         user = User("testuser")
@@ -186,13 +186,13 @@ class Test1():
 
         # testing json dumps:
         y = json.loads(user.json())
-        print('user json dump: \n' + str(y))
+        await output.print('user json dump: \n' + str(y))
         y = json.loads(catalog.json())
-        print('catalog json dump: \n' + str(y))
+        await output.print('catalog json dump: \n' + str(y))
         y = json.loads(user.get_schedule('test').json())
-        print('schedule json dump: \n' + str(y))
+        await output.print('schedule json dump: \n' + str(y))
         y = json.loads(course6.json())
-        print('course json dump: \n' + str(y))
+        await output.print('course json dump: \n' + str(y))
 
         await output.print(f"\nPrinting user data: {str(user)}")
 

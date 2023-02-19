@@ -51,25 +51,14 @@ class Rule():
 
             # 1) checks for courses within taken_bundle that fulfills this templated requirement
             # return format is <template : {fulfilled courses}>
-            fulfilled_courses = get_course_match(template, taken_courses)
-
-            # 2) get biggest fulfillment within fulfilled_courses
-            size = 0
-            best_template = template
-            best_fulfillment = set()
-            for k, v in fulfilled_courses.items():
-                if len(v) > size:
-                    size = len(v)
-                    best_template = k
-                    best_fulfillment = v
-
+            fulfilled_courses = get_best_course_match(template, taken_courses)
+            num_fulfilled = len(fulfilled_courses)
             # 3) return fulfillment status
             status_return.update({template:{
                     "required":required_count, 
-                    "actual":size,
-                    "fulfilled":size >= required_count,
-                    "fulfillment set":best_fulfillment,
-                    "best_template":best_template}})
+                    "actual":num_fulfilled,
+                    "fulfilled":num_fulfilled >= required_count,
+                    "fulfillment set":fulfilled_courses}})
 
         return status_return
 
@@ -110,7 +99,7 @@ class Rule():
     def __eq__(self, other):
         if not isinstance(other, Rule):
             return False
-        return self.course_templates == other.course_templates
+        return self.name == other.name
 
     def __len__(self):
         return len(self.course_templates)

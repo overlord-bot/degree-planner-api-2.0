@@ -27,6 +27,9 @@ class Template():
         if not isinstance(other, Template):
             return False
         
+        if other.template_course != self.template_course:
+            return False
+        
         mylist = self.course_set
         otherlist = other.course_set
 

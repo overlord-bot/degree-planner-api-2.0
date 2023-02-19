@@ -31,7 +31,7 @@ class Degree():
     def fulfillment_msg(self, taken_courses:set):
         status_return = ""
         for rule in self.rules:
-            status_return = f"Rule {rule.name}: \n{rule.fulfillment_return_message(taken_courses)}\n"
+            status_return += f"Rule {rule.name} fulfillment: \n{rule.fulfillment_return_message(taken_courses)}\n"
         return status_return
 
     def json(self):
@@ -44,7 +44,7 @@ class Degree():
 
 
     def __repr__(self):
-        return f"{self.name}: {str(self.rules)}"
+        return f"{self.name}: \n{repr(self.rules)}"
 
     def __eq__(self, other):
         if not isinstance(other, Degree):

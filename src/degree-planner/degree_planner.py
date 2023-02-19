@@ -1,6 +1,7 @@
 from array import *
-from discord.ext import commands
-import discord
+import asyncio
+import sys
+import os
 
 from ..utils.output import *
 from .course import Course
@@ -16,7 +17,7 @@ from .course_template import Template
 from .command import *
 from .parse import *
 
-VERSION = "dev 12.1 (Fancy Embeds)"
+VERSION = "API 2.0"
 SEMESTERS_MAX = 12
 
 OUTERROR = Output(OUT.ERROR)
@@ -25,14 +26,11 @@ OUTINFO = Output(OUT.INFO)
 OUTDEBUG = Output(OUT.DEBUG)
 OUTCONSOLE = Output(OUT.CONSOLE)
 
-class Degree_Planner(commands.Cog, name="Degree Planner"):
+class Planner():
     """ DEGREE PLANNER COMMAND PARSER
 
     message_handler function receives commands and arguments separated by 
     cammas in a string. Multiple commands allowed within one entry.
-
-    om_message is a Discord listener to automatically submit entries from 
-    Discord's chat.
 
     Valid commands are:
         (developer only)
@@ -64,54 +62,16 @@ class Degree_Planner(commands.Cog, name="Degree Planner"):
     It is essential to keep all user specific data inside the User class.
     """
 
-    def __init__(self, bot):
-        self.bot = bot
-
+    def __init__(self, name):
         # each user is assigned a User object and stored in this dictionary
         # Users = <user id, User>
         # note that the User object is meant to represent any user and does not
         # specifically have to be a discord user.
+        self.name = name
         self.users = dict()
         self.catalog = Catalog()
         self.course_search = Search()
         self.flags = set()
-
-    @commands.command()
-    async def dp(self, ctx, *, args) -> None:
-        user = self.get_user(ctx)
-        output = Output(OUT.DISCORD_CHANNEL, user=user, discord_channel=ctx.channel, output_type=OUTTYPE.EMBED)
-        #print(args)
-
-        await self.message_handler(user, args, output)
-        return
-
-    """@dp.error
-    async def dp_error(self, ctx, error):
-        user = self.get_user(ctx)
-        output = Output(OUT.DISCORD_CHANNEL, user=user, discord_channel=ctx.channel, output_type=OUTTYPE.EMBED)
-        await output.print(f'ERROR{DELIMITER_TITLE}No arguments provided')
-    """
-
-    """ Listens for user's choices when prompted
-
-    Args:
-        message (Discord message obj): contains message and relevant metadata
-    """
-    @commands.Cog.listener()
-    async def on_message(self, message) -> None:
-        # ignore messages not from users
-        if message.author == self.bot.user or message.author.bot:
-            return
-
-        user = self.get_user(message)
-        # only allows message through to message handler if there's a paused command
-        # waiting for user input or if the message starts with !dp
-        if Flag.CMD_PAUSED in user.flag and not message.content.startswith('!dp'):
-            print(message.content)
-            await self.message_handler(user, message.content, Output(OUT.DISCORD_CHANNEL, user=user, discord_channel=message.channel, output_type=OUTTYPE.EMBED))
-        
-        return
-
 
     """ MAIN FUNCTION FOR ACCEPTING COMMAND ENTRIES
 
@@ -186,7 +146,7 @@ class Degree_Planner(commands.Cog, name="Degree Planner"):
             if command.command == CMD.TEST:
                 await output.print("BEGINNING TEST", output_location=OUT.INFO)
                 await output.print(f"ADMIN{DELIMITER_TITLE}Testing Degree Planner {VERSION}")
-                await self.test(Output(OUT.CONSOLE))
+                await self.test(Output(OUT.DEBUG))
                 await output.print("FINISHED TEST", output_location=OUT.INFO)
                 await output.print(f"ADMIN{DELIMITER_TITLE}Test completed successfully, all assertions met")
                 user.command_queue.task_done()
@@ -195,7 +155,7 @@ class Degree_Planner(commands.Cog, name="Degree Planner"):
             if command.command == CMD.IMPORT:
                 await output.print("BEGINNING DATA IMPORTING", output_location=OUT.INFO)
                 await output.print(f"ADMIN{DELIMITER_TITLE}begin parsing data")
-                await self.parse_data(Output(OUT.DEBUG))
+                await self.parse_data(Output(OUT.INFO))
                 await output.print("FINISHED DATA IMPORTING", output_location=OUT.INFO)
                 await output.print(f"ADMIN{DELIMITER_TITLE}parsing completed")
                 user.command_queue.task_done()
@@ -357,7 +317,7 @@ class Degree_Planner(commands.Cog, name="Degree Planner"):
         output (Output): user interface output
     """
     async def test(self, output:Output=None):
-        if output == None: output = Output(OUT.CONSOLE)
+        if output == None: output = Output(output_location=OUT.DEBUG)
         test_suite = Test1()
         await test_suite.test(output)
 
@@ -577,7 +537,8 @@ class Degree_Planner(commands.Cog, name="Degree Planner"):
         Exception: if exception occurs, returns exception, else None
     """
     async def parse_data(self, output:Output=None) -> Exception:
-        if output == None: output = Output(OUT.CONSOLE)
+        if output == None: 
+            output = Output(OUT.CONSOLE)
 
         catalog_file = "catalog_results.json"
         degree_file = "class_results.json"
@@ -602,7 +563,3 @@ class Degree_Planner(commands.Cog, name="Degree Planner"):
 
         else:
             return None
-
-
-async def setup(bot):
-    await bot.add_cog(Degree_Planner(bot))
