@@ -2,7 +2,7 @@ import asyncio
 
 from src.dp.degree_planner import Planner
 from src.dp.user import User
-from src.utils.output import *
+from src.io.output import *
 
 planner = Planner('API2.0')
 user = User(1)

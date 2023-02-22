@@ -3,7 +3,7 @@ import asyncio
 import sys
 import os
 
-from ..utils.output import *
+from ..io.output import *
 from .course import Course
 from .catalog import Catalog
 from .degree import Degree

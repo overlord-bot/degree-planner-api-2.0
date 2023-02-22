@@ -6,7 +6,7 @@ from .course import Course
 from .degree import Degree
 from .course_template import Template
 from .search import Search
-from ..utils.output import *
+from ..io.output import *
 
 class Catalog():
 

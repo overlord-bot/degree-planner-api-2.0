@@ -1,10 +1,9 @@
 from array import *
 from enum import Enum
-from discord.ext import commands
-import discord
 from .schedule import Schedule
 from queue import Queue
 import json
+
 
 class Flag(Enum):
     CMD_PAUSED = 100
