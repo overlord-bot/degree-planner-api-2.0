@@ -2,6 +2,7 @@ from array import *
 import asyncio
 import sys
 import os
+import re
 
 from ..io.output import *
 from .course import Course
@@ -270,7 +271,7 @@ class Planner():
     async def parse_command(self, cmd:str, output:Output=None) -> list:
         if output == None: output = Output(OUT.CONSOLE)
 
-        arg_list = [cleanse(e.strip().casefold()) for e in cmd.split(",") if e.strip()]
+        arg_list = [self.cleanse(e.strip().casefold()) for e in cmd.split(",") if e.strip()]
         cmd_queue = []
         last_command = None
 
@@ -296,6 +297,11 @@ class Planner():
                 await output.print(f"ERROR{DELIMITER_TITLE}invalid arguments for command {str(e)}")
         cmd_queue = [e for e in cmd_queue if e.valid()]
         return cmd_queue
+    
+
+    def cleanse(msg:str) -> str:
+        re.sub(r'\W+', '', msg)
+        return msg
 
 
     def get_user(self, ctx) -> User:
