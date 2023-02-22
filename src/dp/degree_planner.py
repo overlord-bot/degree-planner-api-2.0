@@ -2,8 +2,9 @@ from array import *
 import asyncio
 import sys
 import os
+import re
 
-from ..utils.output import *
+from ..io.output import *
 from .course import Course
 from .catalog import Catalog
 from .degree import Degree
@@ -155,7 +156,7 @@ class Planner():
             if command.command == CMD.IMPORT:
                 await output.print("BEGINNING DATA IMPORTING", output_location=OUT.INFO)
                 await output.print(f"ADMIN{DELIMITER_TITLE}begin parsing data")
-                await self.parse_data(Output(OUT.INFO))
+                await self.parse_data(Output(OUT.DEBUG))
                 await output.print("FINISHED DATA IMPORTING", output_location=OUT.INFO)
                 await output.print(f"ADMIN{DELIMITER_TITLE}parsing completed")
                 user.command_queue.task_done()
@@ -205,10 +206,10 @@ class Planner():
                     possible_courses = await self.remove_course(user, course, semester, output)
 
                 if possible_courses != None:
-                    await output.print(f"{TAG_NOMERGE}SCHEDULE{DELIMITER_TITLE}entry {course} has multiple choices, please choose from list:")
+                    await output.print(f"SCHEDULE{DELIMITER_TITLE}entry {course} has multiple choices, please choose from list:")
                     i = 1
                     for c in possible_courses:
-                        output.print_hold(f"{i}: {repr(c)}")
+                        output.print_hold(f"  {i}: {repr(c)}")
                         i += 1
                     await output.print_cache()
                     # pause command, set temporary variables/storage and break from the loop
@@ -221,7 +222,7 @@ class Planner():
                 continue
 
             if command.command == CMD.PRINT:
-                await output.print(f"{TAG_NOMERGE}SCHEDULE{DELIMITER_TITLE}{schedule.name}")
+                await output.print(f"SCHEDULE{DELIMITER_TITLE}{schedule.name}")
                 output.print_hold(f"{str(schedule)}")
                 await output.print_cache()
                 user.command_queue.task_done()
@@ -240,7 +241,7 @@ class Planner():
                 if schedule.degree == None:
                     await output.print(f"SCHEDULE{DELIMITER_TITLE}no degree specified")
                 else:
-                    await output.print(f"{TAG_NOMERGE}SCHEDULE{DELIMITER_TITLE}{schedule.name} Fulfillment")
+                    await output.print(f"SCHEDULE{DELIMITER_TITLE}{schedule.name} Fulfillment")
                     output.print_hold(schedule.degree.fulfillment_msg(schedule.get_all_courses()))
                     await output.print_cache()
                 user.command_queue.task_done()
@@ -270,7 +271,7 @@ class Planner():
     async def parse_command(self, cmd:str, output:Output=None) -> list:
         if output == None: output = Output(OUT.CONSOLE)
 
-        arg_list = [cleanse(e.strip().casefold()) for e in cmd.split(",") if e.strip()]
+        arg_list = [self.cleanse(e.strip().casefold()) for e in cmd.split(",") if e.strip()]
         cmd_queue = []
         last_command = None
 
@@ -296,6 +297,11 @@ class Planner():
                 await output.print(f"ERROR{DELIMITER_TITLE}invalid arguments for command {str(e)}")
         cmd_queue = [e for e in cmd_queue if e.valid()]
         return cmd_queue
+    
+
+    def cleanse(self, msg:str) -> str:
+        re.sub(r'\W+', '', msg)
+        return msg
 
 
     def get_user(self, ctx) -> User:
@@ -432,7 +438,7 @@ class Planner():
         if output == None: output = Output(OUT.CONSOLE)
         possible_courses = self.course_search.search(course_name)
         possible_courses.sort()
-        await output.print(f"{TAG_NOMERGE}FIND{DELIMITER_TITLE}courses matching {course_name}: ")
+        await output.print(f"FIND{DELIMITER_TITLE}courses matching {course_name}: ")
         i = 1
         for c in possible_courses:
             course = self.catalog.get_course(c)
@@ -545,14 +551,14 @@ class Planner():
 
         try:
             await parse_courses(catalog_file, self.catalog, output)
-            await output.print(f"ADMIN{DELIMITER_TITLE}Sucessfully parsed catalog data", output_location=OUT.INFO)
+            await output.print(f"ADMIN{DELIMITER_TITLE}Sucessfully parsed catalog data")
             
             # set up searcher for finding courses based on incomplete user input
             self.course_search.update_items(self.catalog.get_all_course_names())
             self.course_search.generate_index()
 
             await parse_degrees(degree_file, self.catalog, output)
-            await output.print(f"ADMIN{DELIMITER_TITLE}Sucessfully parsed degree data", output_location=OUT.INFO)
+            await output.print(f"ADMIN{DELIMITER_TITLE}Sucessfully parsed degree data")
             await output.print(f"ADMIN{DELIMITER_TITLE}Printing catalog:", output_location=OUT.DEBUG)
             output.print_hold(str(self.catalog))
             await output.print_cache(OUT.DEBUG)

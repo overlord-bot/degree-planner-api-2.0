@@ -6,7 +6,7 @@ from .course import Course
 from .degree import Degree
 from .course_template import Template
 from .search import Search
-from ..utils.output import *
+from ..io.output import *
 
 class Catalog():
 
@@ -60,7 +60,7 @@ class Catalog():
         if len(name) == 1:
             return self.__course_list.get(name[0], None)
         else:
-            print(f"CATALOG ERROR: catalog get course non unique course found: {str(name)}", OUT.ERROR)
+            self.output.print(f"CATALOG ERROR: catalog get course non unique course found: {str(name)}", OUT.ERROR)
             return self.__course_list.get(name[0], None)
 
 

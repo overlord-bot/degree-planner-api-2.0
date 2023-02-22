@@ -1,10 +1,9 @@
 from array import *
 from enum import Enum
-from discord.ext import commands
-import discord
 from .schedule import Schedule
 from queue import Queue
 import json
+
 
 class Flag(Enum):
     CMD_PAUSED = 100
@@ -16,7 +15,6 @@ class User():
     def __init__(self, id):
         self.id = id # unique id for user
         self.username = str(id) # username to display
-        self.discord_user = None # discord user object, if applicable
         self.__schedules = dict() # all schedules this user created <schedule name, Schedule>
         self.curr_schedule = "" # schedule to modify
 
@@ -65,7 +63,6 @@ class User():
         user = dict()
         user.update({'username':self.username})
         user.update({'id':self.id})
-        user.update({'discord user':True if self.discord_user != None else False})
         schedules = list()
         for s in self.__schedules.keys():
             schedules.append(s)
