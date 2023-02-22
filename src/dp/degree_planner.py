@@ -299,7 +299,7 @@ class Planner():
         return cmd_queue
     
 
-    def cleanse(msg:str) -> str:
+    def cleanse(self, msg:str) -> str:
         re.sub(r'\W+', '', msg)
         return msg
 
