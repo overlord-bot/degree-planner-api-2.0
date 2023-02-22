@@ -60,7 +60,7 @@ class Catalog():
         if len(name) == 1:
             return self.__course_list.get(name[0], None)
         else:
-            print(f"CATALOG ERROR: catalog get course non unique course found: {str(name)}", OUT.ERROR)
+            self.output.print(f"CATALOG ERROR: catalog get course non unique course found: {str(name)}", OUT.ERROR)
             return self.__course_list.get(name[0], None)
 
 

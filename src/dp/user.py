@@ -63,7 +63,6 @@ class User():
         user = dict()
         user.update({'username':self.username})
         user.update({'id':self.id})
-        user.update({'discord user':True if self.discord_user != None else False})
         schedules = list()
         for s in self.__schedules.keys():
             schedules.append(s)
