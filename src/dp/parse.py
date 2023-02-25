@@ -45,53 +45,50 @@ async def parse_courses(file_name, catalog:Catalog, output:Output=None):
         if 'course_credit_hours' in element:
             course.credits = element['course_credit_hours']
         
-        if 'course_is_ci' in element:
-            course.CI = element['course_is_ci']
+        if 'course_is_ci' in element and element['course_is_ci']:
+            course.add_attribute('CI')
 
         if 'HASS_pathway' in element:
             HASS_pathway = element['HASS_pathway'] # list of pathways
             if isinstance(HASS_pathway, list):
                 for pathway in HASS_pathway: # add each individual pathway (stripped of whitespace)
-                    course.add_pathway(pathway.strip())
+                    course.add_attribute(f'pathway.{pathway.strip()}')
             elif HASS_pathway != "":
-                course.add_pathway(HASS_pathway.strip())
+                course.add_attribute(f'pathway.{HASS_pathway.strip()}')
 
         if 'concentration' in element:
             concentration = element['concentration']
             if isinstance(concentration, list):
                 for con in concentration:
-                    course.add_concentration(con.strip())
+                    course.add_attribute(f'concentration.{con.strip()}')
             elif concentration != "":
-                course.add_concentration(concentration.strip())
+                course.add_attribute(f'concentration.{concentration.strip()}')
 
         if 'course_requisites' in element:
             prereqs = element['course_requisites']
             if isinstance(prereqs, list):
                 for prereq in prereqs:
-                    course.add_prerequisite(prereq.strip())
+                    course.add_attribute(f'prerequisite.{prereq.strip()}')
             elif prereqs != "":
-                course.add_prerequisite(prereqs.strip())
+                course.add_attribute(f'prerequisite.{prereqs.strip()}')
 
         if 'course_crosslisted' in element:
             cross_listed = element['course_crosslisted']
             if isinstance(cross_listed, list):
                 for cross in cross_listed:
-                    course.add_cross_listed(cross.strip())
+                    course.cross_listed.add(cross.strip())
             elif cross_listed != "":
-                course.add_cross_listed(cross_listed.strip())
-
-        if 'restricted' in element:
-            course.restricted = element['restricted']
+                course.cross_listed.add(cross_listed.strip())
 
         if 'course_description' in element:
             course.description = element['course_description']
 
         ########### TESTING STUFF TEMPORARY ############
-        if course.course_id == 4350 or course.course_id == 4100 or course.course_id == 4961:
-            course.concentration = {'AI'}
+        if course.get_id() == '4350' or course.get_id() == 4100 or course.get_id() == 4961:
+            course.add_attribute(f'concentration.AI')
 
-        if course.course_id == 4020 or course.course_id == 4260:
-            course.concentration = {'theory'}
+        if course.get_id() == '4020' or course.get_id() == 4260:
+            course.add_attribute(f'concentration.theory')
         ################################################
 
         catalog.add_course(course)
@@ -127,12 +124,14 @@ async def parse_degrees(file_name, catalog, output:Output=None):
 
     rule1 = Rule("concentration")
 
-    template1 = Template("concentration requirement", Course("", "", 4000))
-    template1.template_course.concentration = "*"
+    template1 = Template("concentration requirement", Course("NA", "NA", -1))
+    template1.template_course.add_attribute('concentration.*')
+    template1.template_course.replace_attribute('level', 'level.4')
 
     rule2 = Rule("intensity")
 
-    template2 = Template("4000 level courses", Course("", "", 4000))
+    template2 = Template("4000 level courses", Course("NA", "NA", -1))
+    template2.template_course.replace_attribute('level', 'level.4')
 
     rule3 = Rule("core")
 

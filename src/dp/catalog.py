@@ -32,13 +32,13 @@ class Catalog():
 
     def add_course(self, course:Course):
         self.reindex_flag = True
-        self.__course_list.update({course.name:course})
+        self.__course_list.update({course.unique_name:course})
 
     
     def add_courses(self, courses:set):
         self.reindex_flag = True
         for c in courses:
-            self.__course_list.update({c.name:c})
+            self.__course_list.update({c.unique_name:c})
 
 
     def add_degree(self, degree:Degree):
@@ -60,7 +60,7 @@ class Catalog():
         if len(name) == 1:
             return self.__course_list.get(name[0], None)
         else:
-            self.output.print(f"CATALOG ERROR: catalog get course non unique course found: {str(name)}", OUT.ERROR)
+            print(f"CATALOG ERROR: catalog get course non unique course found: {str(name)}")
             return self.__course_list.get(name[0], None)
 
 
@@ -117,17 +117,56 @@ class Catalog():
 
 
 """ Intakes a criteria of courses that we want returned
-    For example, if target_course specifies 2000 as course ID, then all 2000 level CSCI courses inside
-    course_list is returned
+    For example, if the template specifies 2000 as course ID, then all 2000 level courses inside
+    the template's course list is returned
+    
+    Parameters: a template with ONLY the attributes we want to require changed to their required states
 
-    There are three course objects being used in this function:
-    1) a default course object
-    2) a target course with ONLY the attributes we want to require changed to their required states
-    3) course pool - the courses we want to select from
-
-    If the target course attribute is not equal to the default value and the course from the pool 
-    has that required value, it will be returned.
+    Returns: { fulfilled template (useful for when wildcards are used) : course set }
 """
+def get_course_match(template:Template, course_pool=None) -> dict:
+    output = Output(OUT.CONSOLE)
+
+    course_sets = dict()
+
+    if course_pool == None:
+        course_pool = template.course_set
+
+    leaf = True
+
+    for target_attribute in template.template_course.attributes.values():
+        if 'NA' in target_attribute or '-1' in target_attribute:
+            continue
+        if '*' not in target_attribute:
+            course_pool = [e for e in course_pool if e.has_attribute(target_attribute)]
+        else:
+            leaf = False
+
+    for target_attribute in template.template_course.attributes.values():
+        if '*' in target_attribute:
+            for course in course_pool:
+                print('all before wildcard: ' + str(course.get_all_before_wildcard(target_attribute)))
+                print('get next: ' + str(course.get_next(course.get_all_before_wildcard(target_attribute))))
+                break
+
+            possible_values_sets = [course.get_next(course.get_all_before_wildcard(target_attribute)) for course in course_pool if len(course.get_next(course.get_all_before_wildcard(target_attribute)))]
+            possible_values = set()
+            for possible_values_set in possible_values_sets:
+                possible_values = possible_values.union(possible_values_set)
+            print('possible values: ' + str(possible_values))
+            for val in possible_values:
+                template_copy = copy.deepcopy(template)
+                template_copy.template_course.replace_wildcard(target_attribute, val)
+                course_sets.update(get_course_match(template_copy, course_pool))
+
+    if leaf:
+        course_sets.update({template:copy.deepcopy(course_pool)})
+
+    return course_sets
+
+
+        
+'''
 def get_course_match(target_course, course_pool:set, possible_values=None) -> dict:
     output = Output(OUT.CONSOLE)
     default_course = Course("", "", 0)
@@ -201,10 +240,10 @@ def get_course_match(target_course, course_pool:set, possible_values=None) -> di
             matched_pools[target_course_copy].add(course)
 
     return matched_pools
+'''
 
-
-def get_best_course_match(target_course, course_pool:set, possible_values=None) -> set:
-    matched_pools = get_course_match(target_course, course_pool, possible_values)
+def get_best_course_match(target_course, course_pool:set) -> set:
+    matched_pools = get_course_match(target_course, course_pool)
     
     size = 0
     best_template = target_course

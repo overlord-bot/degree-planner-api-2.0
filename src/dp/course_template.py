@@ -8,7 +8,7 @@ class Template():
         courses we filter from.
     """
 
-    def __init__(self, name, template_course=Course("", "", 0), course_set=set()):
+    def __init__(self, name, template_course=Course("NA", "NA", -1), course_set=set()):
         self.name = name
         self.template_course = template_course
         self.course_set = course_set

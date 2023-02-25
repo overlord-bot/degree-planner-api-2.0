@@ -20,12 +20,11 @@ class User():
 
         self.flag = set()
 
+        # command queue handling
         self.command_queue = Queue()
         self.command_queue_locked = False
         self.command_decision = None
         self.command_paused = None
-
-        self.admin = False # admin for the bot
 
 
     def get_all_schedules(self) -> Schedule:
