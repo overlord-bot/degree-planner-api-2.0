@@ -85,13 +85,13 @@ class Planner():
     Returns:
         bool: whether input was successfully executed
     """
-    async def message_handler(self, user:User, message:str, output:Output=None):
+    async def input_handler(self, user:User, user_input:str, output:Output=None):
         if output == None: output = Output(OUT.CONSOLE)
         if Flag.CMD_PAUSED in user.flag:
             user.command_queue_locked = True
             await OUTDEBUG.print(f'user {user.username} locked command queue')
-            user.command_decision = message.strip().casefold()
-            await OUTDEBUG.print(f'passed user {user.username} decision {message} to command loop')
+            user.command_decision = user_input.strip().casefold()
+            await OUTDEBUG.print(f'passed user {user.username} decision {user_input} to command loop')
         else:
             # if queue is locked, do not proceed
             if user.command_queue_locked:
@@ -101,7 +101,7 @@ class Planner():
             user.command_queue_locked = True
             await OUTDEBUG.print(f'user {user.username} locked command queue')
             user.command_queue.join()
-            commands = await self.parse_command(message, output)
+            commands = await self.parse_command(user_input, output)
             for command in commands:
                 user.command_queue.put(command)
         await self.command_handler(user, output)

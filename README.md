@@ -1,15 +1,21 @@
 # degree-planner-api-2.0
 A standalone degree planner API that can be used through the command line
 
-# Degree Planning Module for Overlord
+# Degree Planning API
 
-This is a tool to be used within Discord that allows generating out schedules of one's curriculum at RPI, with requirement checking and automated suggestions based on the user's preferences.
+This is a tool that stores user schedules of one's curriculum, checking requirements and automatic suggestions based on the user's preferences.
+
+
+## Using this API:
+
+import dp.degree_planner and dp.user. Create a new Planner object (only one is necessary), and generate a new User object for every unique user. To interact with the planner, call Planner.input_handler(User, Input). 
+
+Note that input can be a command or a response to a prompt. A prompt is requested when the user enters an ambiguous command, such as specifying a course name with multiple possible choices. If your use case does not allow responding to such prompts, just make sure all commands that specify a course name is unambigous (such as by only using the course's unique name "{subject} {course_id} {name})"
 
 
 ## Commands:
 
-Commands can be chained together (i.e. !dp add, 1, data structures, remove, 1, data structures, print)
-The only requirement is that '!dp' must be present at the very beginning when entering the command from Discord chat.
+Commands can be chained together (i.e. import, schedule, Alan, degree, computer science, add, 1, data structures, remove, 1, data structures, print)
 
 `schedule, <schedule name>` : changes the active schedule that is being modified
 
@@ -23,8 +29,6 @@ The only requirement is that '!dp' must be present at the very beginning when en
 
 `fulfillment` : displays fulfillment status for degree requirements
 
-Admin only:
-
 `test` : runs test suite
 
 `import` : imports json catalog into a Catalog object
@@ -37,21 +41,22 @@ user
     
 catalog 
     - stores one copy of RPI's course catalog and degree list
-    - course_match to locate courses with a defined criteria
+    - course_match to find courses that matches with a defined criteria (using course_template)
     
 schedule
     - stores courses organized by semester
 
 course
-    - all data describing a course
+    - all data describing a course, contains an attribute dictionary
     
 degree
     - list of rules that describe degree requirements
+    - calculates degree requirement fulfillment across all rules
 
 course_template
     - describes criteria for filtering courses
     
 rule
     - a set of course templates and the required fulfillment amount
-    - fulfillment returns a dictionary of unfulfilled templates and its status/metadata
+    - calculates fulfillment of templates
 

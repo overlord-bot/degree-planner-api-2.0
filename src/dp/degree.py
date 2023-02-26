@@ -146,7 +146,7 @@ class Degree():
     """
     def json(self):
         degree = dict()
-        degree.update({self.name:copy.deepcopy(self.rules)})
+        degree.update({self.name:self.rules})
         return json.dumps(degree)
 
     def __repr__(self):
