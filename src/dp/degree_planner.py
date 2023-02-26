@@ -182,9 +182,9 @@ class Planner():
             # all commands after this requires an active schedule inside User
             schedule = user.get_current_schedule()
             if schedule == None:
-                await output.print(f"SCHEDULE{DELIMITER_TITLE}no schedule selected")
-                user.command_queue.task_done()
-                continue
+                await output.print(f"SCHEDULE{DELIMITER_TITLE}no schedule selected, creating one named {user.username}")
+                await self.set_active_schedule(user, user.username, output)
+                schedule = user.get_current_schedule()
 
             if command.command == CMD.ADD or command.command == CMD.REMOVE:
                 if Flag.CMD_PAUSED in user.flag:
@@ -242,7 +242,8 @@ class Planner():
                     await output.print(f"SCHEDULE{DELIMITER_TITLE}no degree specified")
                 else:
                     await output.print(f"SCHEDULE{DELIMITER_TITLE}{schedule.name} Fulfillment")
-                    output.print_hold(schedule.degree.fulfillment_msg(schedule.get_all_courses()))
+                    fulfillment = schedule.degree.fulfillment(schedule.get_all_courses())
+                    output.print_hold(schedule.degree.print_fulfillment(fulfillment))
                     await output.print_cache()
                 user.command_queue.task_done()
                 continue

@@ -66,7 +66,6 @@ class User():
         for s in self.__schedules.keys():
             schedules.append(s)
         user.update({'schedules':schedules})
-        user.update({'admin':self.admin})
         user.update({'commands in queue':self.command_queue.qsize()})
         return json.dumps(user)
 

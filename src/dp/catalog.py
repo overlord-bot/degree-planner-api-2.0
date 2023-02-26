@@ -82,12 +82,12 @@ class Catalog():
 
     """ Matches against entire catalog
     """
-    def get_course_match(self, target_course:Course) -> dict:
-        return get_course_match(target_course, self.__course_list.values())
+    def get_course_match(self, target_template:Template) -> dict:
+        return get_course_match(target_template, self.__course_list.values(), True)
 
 
-    def get_best_course_match(self, target_course:Course) -> set:
-        return get_best_course_match(target_course, self.__course_list.values())
+    def get_best_course_match(self, target_template:Template) -> set:
+        return get_best_course_match(target_template, self.__course_list.values())
 
     def json(self):
         catalog = dict()
@@ -124,13 +124,18 @@ class Catalog():
 
     Returns: { fulfilled template (useful for when wildcards are used) : course set }
 """
-def get_course_match(template:Template, course_pool=None) -> dict:
+def get_course_match(template:Template, course_pool=None, head=False) -> dict:
     output = Output(OUT.CONSOLE)
-
     course_sets = dict()
 
-    if course_pool == None:
-        course_pool = template.course_set
+    if head:
+        head = False
+        if isinstance(template, Course):
+            template = Template(template.get_unique_name() + ' template', template)
+        if course_pool == None:
+            course_pool = template.course_set
+        elif template.course_set:
+            course_pool = {e for e in course_pool if e in template.course_set}
 
     leaf = True
 
@@ -138,22 +143,22 @@ def get_course_match(template:Template, course_pool=None) -> dict:
         if 'NA' in target_attribute or '-1' in target_attribute:
             continue
         if '*' not in target_attribute:
-            course_pool = [e for e in course_pool if e.has_attribute(target_attribute)]
+            course_pool = {e for e in course_pool if e.has_attribute(target_attribute)}
         else:
             leaf = False
 
     for target_attribute in template.template_course.attributes.values():
         if '*' in target_attribute:
             for course in course_pool:
-                print('all before wildcard: ' + str(course.get_all_before_wildcard(target_attribute)))
-                print('get next: ' + str(course.get_next(course.get_all_before_wildcard(target_attribute))))
+                # print('all before wildcard: ' + str(course.get_all_before_wildcard(target_attribute)))
+                # print('get next: ' + str(course.get_next(course.get_all_before_wildcard(target_attribute))))
                 break
 
             possible_values_sets = [course.get_next(course.get_all_before_wildcard(target_attribute)) for course in course_pool if len(course.get_next(course.get_all_before_wildcard(target_attribute)))]
             possible_values = set()
             for possible_values_set in possible_values_sets:
                 possible_values = possible_values.union(possible_values_set)
-            print('possible values: ' + str(possible_values))
+            # print('possible values: ' + str(possible_values))
             for val in possible_values:
                 template_copy = copy.deepcopy(template)
                 template_copy.template_course.replace_wildcard(target_attribute, val)
@@ -242,11 +247,11 @@ def get_course_match(target_course, course_pool:set, possible_values=None) -> di
     return matched_pools
 '''
 
-def get_best_course_match(target_course, course_pool:set) -> set:
-    matched_pools = get_course_match(target_course, course_pool)
+def get_best_course_match(target_template:Template, course_pool:set) -> set:
+    matched_pools = get_course_match(target_template, course_pool, True)
     
     size = 0
-    best_template = target_course
+    best_template = target_template
     best_fulfillment = set()
     for k, v in matched_pools.items():
         if len(v) > size:

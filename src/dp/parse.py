@@ -46,7 +46,7 @@ async def parse_courses(file_name, catalog:Catalog, output:Output=None):
             course.credits = element['course_credit_hours']
         
         if 'course_is_ci' in element and element['course_is_ci']:
-            course.add_attribute('CI')
+            course.add_attribute('ci.true')
 
         if 'HASS_pathway' in element:
             HASS_pathway = element['HASS_pathway'] # list of pathways
@@ -129,6 +129,7 @@ async def parse_degrees(file_name, catalog, output:Output=None):
     template1.template_course.replace_attribute('level', 'level.4')
 
     rule2 = Rule("intensity")
+    rule2.no_replacement = True
 
     template2 = Template("4000 level courses", Course("NA", "NA", -1))
     template2.template_course.replace_attribute('level', 'level.4')
@@ -144,6 +145,7 @@ async def parse_degrees(file_name, catalog, output:Output=None):
     rule3.add_template(template3)
     rule3.add_template(template4)
     rule3.add_template(template5)
+    rule3.high_priority = True
 
     degree.add_rule(rule1)
     degree.add_rule(rule2)

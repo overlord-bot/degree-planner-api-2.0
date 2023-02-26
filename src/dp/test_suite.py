@@ -31,26 +31,26 @@ class Test1():
         course2 = Course("Algorithms", "CSCI", 2300)
         course3 = Course("Circuits", "ECSE", 2010)
         course4 = Course("Animation", "ARTS", 4070)
-        course4.HASS_pathway.add("Digital Arts")
+        course4.add_attribute("pathway.Digital Arts")
         course5 = Course("Networking in the Linux Kernel", "CSCI", 4310)
-        course5.CI = True
-        course5.concentration.add("Systems and Software")
+        course5.add_attribute("ci.true")
+        course5.add_attribute("concentration.Systems and Software")
         course6 = Course("Cryptography 1", "CSCI", 4230)
-        course6.CI = True
-        course6.concentration.add("Theory, Algorithms and Mathematics")
+        course6.add_attribute("ci.true")
+        course6.add_attribute("concentration.Theory, Algorithms and Mathematics")
         course7 = Course("Algorithm Analysis", "CSCI", 4020)
-        course7.concentration.add("Theory, Algorithms and Mathematics")
+        course7.add_attribute("concentration.Theory, Algorithms and Mathematics")
 
-        assert (course1.display_name == "Data Structures" and course1.major == "CSCI" and course1.course_id == 1200 and
-                course1.name == "csci 1200 data structures")
-        assert course2.display_name == "Algorithms" and course2.major == "CSCI" and course2.course_id == 2300
-        assert course3.display_name == "Circuits" and course3.major == "ECSE" and course3.course_id == 2010
-        assert (course4.display_name == "Animation" and course4.major == "ARTS" and course4.course_id == 4070 and 
-                "Digital Arts" in course4.HASS_pathway)
-        assert (course5.display_name == "Networking in the Linux Kernel" and course5.major == "CSCI" and 
-                course5.course_id == 4310 and course5.CI == True and "Systems and Software" in course5.concentration)
-        assert (course6.display_name == "Cryptography 1" and course6.major == "CSCI" and course6.course_id == 4230 and 
-                course6.CI == True and "Theory, Algorithms and Mathematics" in course6.concentration)
+        assert (course1.get_name() == "Data Structures" and course1.get_subject() == "CSCI" and course1.course_id == 1200 and
+                course1.get_unique_name() == "csci 1200 data structures")
+        assert course2.get_name() == "Algorithms" and course2.get_subject() == "CSCI" and course2.course_id == 2300
+        assert course3.get_name() == "Circuits" and course3.get_subject() == "ECSE" and course3.course_id == 2010
+        assert (course4.get_name() == "Animation" and course4.get_subject() == "ARTS" and course4.course_id == 4070 and 
+               course4.has_attribute("pathway.Digital Arts"))
+        assert (course5.get_name() == "Networking in the Linux Kernel" and course5.get_subject() == "CSCI" and 
+                course5.course_id == 4310 and course5.has_attribute("ci.true") and course5.has_attribute("concentration.Systems and Software"))
+        assert (course6.get_name() == "Cryptography 1" and course6.get_subject() == "CSCI" and course6.course_id == 4230 and 
+                course6.has_attribute("ci.true") and course6.has_attribute("concentration.Theory, Algorithms and Mathematics"))
 
         #------------------------------------------------------------------------------------------
         # Add courses to the a catalog
@@ -106,29 +106,37 @@ class Test1():
         await output.print("\nBeginning testing of course attribute search")
         
         course_target1 = Course("", "", 0) # all CI courses
-        course_target1.CI = True
-        course_target2 = Course("", "", 4000) # all 4000 level courses
-        course_target3 = Course("Data Structures", "CSCI", 1200) # data structures
-        course_target5 = Course("", "", 0) # all theory concentration courses
-        course_target5.concentration.add("Theory, Algorithms and Mathematics")
+        course_target1.add_attribute('ci.true')
+        template_target1 = Template('1', course_target1)
 
-        bundle1 = catalog.get_best_course_match(course_target1)
+        course_target2 = Course("", "", 0) # all 4000 level courses
+        course_target2.add_attribute('level.4')
+        template_target2 = Template('2', course_target2)
+        
+        course_target3 = Course("Data Structures", "CSCI", 1200) # data structures
+        template_target3 = Template('3', course_target3)
+
+        course_target5 = Course("", "", 0) # all theory concentration courses
+        course_target5.add_attribute("concentration.Theory, Algorithms and Mathematics")
+        template_target5 = Template('5', course_target5)
+
+        bundle1 = catalog.get_best_course_match(template_target1)
         await output.print(f"Bundle1: {str(bundle1)}")
         bundle1_ans = {catalog.get_course("networking in the linux kernel"),catalog.get_course("Cryptography 1")}
         await output.print(f"Bundle1_ans: {str(bundle1_ans)}")
         assert bundle1 == bundle1_ans
 
-        bundle2 = catalog.get_best_course_match(course_target2)
+        bundle2 = catalog.get_best_course_match(template_target2)
         await output.print(f"Bundle2: {set(bundle2)}")
         bundle2_ans = {course4, course5, course6}
         await output.print(f"Bundle2_ans: {str(bundle2_ans)}")
         assert bundle2 == bundle2_ans
 
-        bundle3 = catalog.get_best_course_match(course_target3)
+        bundle3 = catalog.get_best_course_match(template_target3)
         bundle3_ans = {course1}
         assert bundle3 == bundle3_ans
 
-        bundle5 = catalog.get_best_course_match(course_target5)
+        bundle5 = catalog.get_best_course_match(template_target5)
         await output.print(f"Bundle5: {str(bundle5)}")
         bundle5_ans = {course6}
         await output.print(f"Bundle5_ans: {str(bundle5_ans)}")
@@ -141,14 +149,17 @@ class Test1():
 
         catalog.add_course(course7)
 
-        template1 = Course("", "", 2000)
+        tcourse1 = Course("", "", 0)
+        tcourse1.add_attribute('level.2')
+        template1 = Template('t1', tcourse1)
         template1ans = {course2,course3}
         await output.print(f"template1response: {str(catalog.get_course_match(template1))}\n" + \
             f"template1ans: {str(template1ans)}")
         assert catalog.get_best_course_match(template1) == template1ans
 
-        template2 = Template("Concentration requirement", Course("", "", 4000))
-        template2.template_course.concentration = "*"
+        template2 = Template("Concentration requirement", Course("", "", 0))
+        template2.template_course.add_attribute('level.4')
+        template2.template_course.add_attribute('concentration.*')
         template2ans1 = {course5}
         template2ans2 = {course6, course7}
         await output.print(f"template2response: {str(catalog.get_course_match(template2))}\n" + \

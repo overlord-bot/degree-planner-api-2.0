@@ -121,7 +121,6 @@ class Course():
         self.add_attribute(f'course_id.{id}')
         self.remove_attribute_by_head('level')
         self.add_attribute(f'level.{str(id)[0]}')
-        print('set level as ' + str(id)[0])
 
     def set_id2(self, id):
         self.course_id = id
@@ -205,7 +204,6 @@ class Course():
         if isinstance(attr, list):
             attr = '.'.join(attr)
         prior_elements = self.get_all_before_wildcard(attr)
-        print('val : ' + str(val))
         prior_elements += '.' + val
         self.remove_attribute(attr)
         self.add_attribute(prior_elements)
@@ -222,7 +220,6 @@ class Course():
         next = set()
         attr = attr.split('.')
         for matched_attr in matched_attrs:
-            print('matched: ' + str(matched_attr))
             matched_attr = matched_attr.split('.')
             if len(matched_attr) > len(attr):
                 next.add(matched_attr[len(attr)])
@@ -265,7 +262,7 @@ class Course():
         st = (f"{self.unique_name if self.unique_name else 'None'}: {self.subject if self.subject else 'None'} " + \
             f"{str(self.course_id)}{f'.{self.course_id2}' if self.course_id2 != 0 else ''}, " + \
             f"{self.credits} credits, " + \
-            f"attributes: {self.attributes}" if len(self.attributes) > 0 else '' + '\n')
+            f"attributes: {self.attributes.keys()}" if len(self.attributes) > 0 else '' + '\n')
         return st.replace("set()", "none")
 
     def __str__(self):

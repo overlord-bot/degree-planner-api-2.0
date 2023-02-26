@@ -3,10 +3,11 @@ from .course import Course
 from .course_template import Template
 from .catalog import *
 import json
+from .fulfillment_status import Fulfillment_Status
 
 class Rule():
 
-    def __init__(self, name="Untitled rule"):
+    def __init__(self, name="Untitled rule", no_replacement=False):
         self.name = name 
 
         """ course_template usage:
@@ -26,6 +27,8 @@ class Rule():
         which pathway)
         """
         self.course_templates = dict()
+        self.no_replacement = no_replacement
+        self.high_priority = False
 
 
     def add_template(self, template:Template, required_count=1):
@@ -44,21 +47,13 @@ class Rule():
         status_return (dict): returns fulfillment status in the form of
             <template name : <attribute : value>>
     """
-    def fulfillment(self, taken_courses:set) -> dict:
-        status_return = dict()
+    def fulfillment(self, taken_courses:set) -> list:
+        status_return = list()
 
         for template, required_count in self.course_templates.items():
-
-            # 1) checks for courses within taken_bundle that fulfills this templated requirement
-            # return format is <template : {fulfilled courses}>
             fulfilled_courses = get_best_course_match(template, taken_courses)
-            num_fulfilled = len(fulfilled_courses)
-            # 3) return fulfillment status
-            status_return.update({template:{
-                    "required":required_count, 
-                    "actual":num_fulfilled,
-                    "fulfilled":num_fulfilled >= required_count,
-                    "fulfillment set":fulfilled_courses}})
+            fulfillment_stat = Fulfillment_Status(template, required_count, fulfilled_courses)
+            status_return.append(fulfillment_stat)
 
         return status_return
 
