@@ -8,11 +8,11 @@ from src.io.output import *
 planner = Planner('API2.0')
 user = User(1)
 
-def command(cmd):
-    asyncio.run(command_call(cmd))
+def command(user_input):
+    asyncio.run(command_call(user_input))
 
-async def command_call(cmd):
-    await planner.message_handler(user, cmd)
+async def command_call(user_input):
+    await planner.input_handler(user, user_input)
 
 def terminal():
     print("Welcome to Degree Planner API 2.0")
@@ -28,10 +28,10 @@ def terminal():
 
     print("")
     while (1):
-        cmd = input("(degree planner) >>> ")
-        if cmd.casefold() == "quit": 
+        user_input = input("(degree planner) >>> ")
+        if user_input.casefold() == "quit": 
             return
-        command(cmd)
+        command(user_input)
 
 if __name__ == "__main__":
     terminal()
