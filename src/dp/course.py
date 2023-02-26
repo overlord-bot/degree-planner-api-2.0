@@ -7,37 +7,31 @@ import logging
 
 class Course():
 
-    def __init__(self, name, major, cid):
-        self.display_name = name
+    def __init__(self, name, subject, id, credits=0):
+        # main attributes
         self.name = name
-        self.major = major # major tag i.e. CSCI, ECSE
-        self.course_id = cid
+        self.unique_name = name
+        self.subject = subject
+        self.course_id = id
         self.course_id2 = 0
-        self.credits = 0 # credit hours of this course
-        self.cross_listed = set() # set of cross listed courses that should be treated as same course
-        self.syllabus = dict() # this should be a dictionary of <professor, link>
-
-        # critical attributes
-        self.CI = False # if it's communication intensive
-        self.HASS_inquiry = False # if it's hass inquiry
-        self.HASS_pathway = set() # set of pathways
-        self.concentration = set() # set of concentrations
-        self.prerequisites = set() # set of prerequisites
-        self.suggested_prerequisites = set() # optional, set will be displayed as a notification
-        self.restricted = False # if this is a major restricted class
-
-        # optional attributes
-        self.description = "" # text to be displayed describing the clas
-        self.available_semesters = set() # if empty, means available in all semesters
-
-        self.validate_course_data()
+        self.level = str(id)[0]
+        self.credits = credits
+        self.attributes = dict() # dict of lists of items, e.g. {[concentration, AI], [CI, true]}
         
-        if name == "":
-            self.name = ""
-        else:
-            self.name = f"{self.major.casefold()} {str(self.course_id)} {name.strip().casefold()}"
-            self.name = self.name.replace(',', '')
+        self.validate_course_id()
 
+        if name != '' and name != 'NA' and name != 'ANY':
+            self.set_name(name)
+        if subject != '' and subject != 'NA' and subject != 'ANY':
+            self.set_subject(subject)
+        if id != 0 and id != -1 and id != 'ANY':
+            self.set_id(id)
+        if credits != -1:
+            self.set_credits(credits)
+
+        self.cross_listed = set() # set of cross listed courses that should be treated as same course
+        self.description = "" # text to be displayed describing the class
+        
 
     """ Some input data for courses may not be in the desired format. 
 
@@ -47,55 +41,203 @@ class Course():
         
         All data is modified in place, no arguments and return necessary
     """
-    def validate_course_data(self, output:Output=None) -> None:
+    def validate_course_id(self, output:Output=None) -> None:
         if output == None: output = Output(OUT.CONSOLE)
+        self.course_id = str(self.course_id)
         if isinstance(self.course_id, str):
             if '.' in self.course_id:
                 split_num = self.course_id.split('.')
                 if len(split_num) == 2 and split_num[0].isdigit() and split_num[1].isdigit():
-                    self.course_id = int(float(split_num[0]))
-                    self.course_id2 = int(float(split_num[1]))
+                    self.course_id = int(split_num[0])
+                    self.course_id2 = int(split_num[1])
                 else:
                     logging.error(f"COURSE PARSING: 2 part ID not <int>.<int> for course " + self.name)
                     
-            elif not self.course_id.isdigit():
-                logging.error(f"COURSE PARSING: course number is not a number for course " + self.name)
-            else:
-                self.course_id = int(float(self.course_id))
-        elif not isinstance(self.course_id, int):
-            logging.error(f"COURSE PARSING: course number is not a number for course " + self.name)
+            elif not self.course_id.isdigit() and self.course_id != 'ANY':
+                logging.error(f"COURSE PARSING: course id ({self.course_id}) is not a number for course " + self.name)
+            elif self.course_id != 'ANY':
+                self.course_id = int(self.course_id)
+        if not isinstance(self.course_id, int) and self.course_id != 'ANY':
+            logging.error(f"COURSE PARSING: course id ({self.course_id}) is not a number for course " + self.name)
 
-    def add_prerequisite(self, prereq) -> None:
-        self.prerequisites.add(prereq)
 
-    def add_cross_listed(self, cross) -> None:
-        self.cross_listed.add(cross)
-
-    def in_pathway(self, pathway) -> bool:
-        return pathway in self.HASS_pathway
-
-    def add_pathway(self, pathway) -> None:
-        self.HASS_pathway.add(pathway)
-
-    def in_concentration(self, concentration) -> bool:
-        return concentration in self.concentration
-
-    def add_concentration(self, concentration) -> None:
-        self.concentration.add(concentration)
-
-    def add_available(self, semester:str) -> None:
-        self.available_semesters.add(semester)
-
-    def remove_available(self, semester:str) -> None:
-        self.available_semesters.remove(semester)
-
-    def is_available(self, semester:str) -> bool:
-        return not self.available_semesters or semester.casefold() in self.available_semesters
+    """ 
+    Getters
+    """
 
     # determines the level of the course, 1000=1, 2000=2, 4000=4, etc
-    def level(self) -> int:
-        return (self.course_id//1000)
+    def get_level(self):
+        return self.level
+    
+    def get_name(self):
+        return self.name
+    
+    def get_unique_name(self):
+        return self.unique_name
+    
+    def get_subject(self):
+        return self.subject
+    
+    def get_id(self):
+        if isinstance(self.course_id, int) or self.course_id.isdigit():
+            return int(self.course_id)
+        return self.course_id
+    
+    def get_id2(self):
+        return self.course_id2
+    
+    def get_credits(self):
+        return self.credits
+    
+    def get_crosslisted(self):
+        return self.cross_listed
+    
 
+    """
+    Setters
+    """
+    
+    def set_name(self, name):
+        self.name = name
+        self.generate_unique_name()
+        self.remove_attribute_by_head('name')
+        self.add_attribute(f'name.{name}')
+
+    def generate_unique_name(self):
+        if self.name == "":
+            self.unique_name = ""
+        else:
+            self.unique_name = f"{self.subject.casefold()} {str(self.course_id)} {self.name.strip().casefold()}"
+            self.unique_name = self.unique_name.replace(',', '')
+        self.remove_attribute_by_head('unique_name')
+        self.add_attribute(f'unique_name.{self.unique_name}')
+
+    def set_subject(self, subject):
+        self.subject = subject
+        self.remove_attribute_by_head('subject')
+        self.add_attribute(f'subject.{subject}')
+
+    def set_id(self, id):
+        self.course_id = id
+        self.remove_attribute_by_head('course_id')
+        self.add_attribute(f'course_id.{id}')
+        self.remove_attribute_by_head('level')
+        self.add_attribute(f'level.{str(id)[0]}')
+
+    def set_id2(self, id):
+        self.course_id = id
+        self.remove_attribute_by_head('course_id')
+        self.add_attribute(f'course_id2.{id}')
+
+    def set_credits(self, credits):
+        self.credits = credits
+        self.remove_attribute_by_head('credits')
+        self.add_attribute(f'credits.{credits}')
+    
+
+    """
+    Attributes are expressed as elements joined by periods, 
+    but are internally stored in this class as a list
+    """
+    
+    def add_attribute(self, attr) -> None:
+        if isinstance(attr, list):
+            attr = '.'.join(attr)
+        self.attributes.update({attr:attr.split('.')})
+
+    def replace_attribute(self, old_head, attr) -> None:
+        if isinstance(attr, list):
+            attr = '.'.join(attr)
+        self.remove_attribute_by_head(old_head)
+        self.add_attribute(attr)
+
+    def remove_attribute(self, attr) -> None:
+        if isinstance(attr, list):
+            attr = '.'.join(attr)
+        self.attributes.pop(attr)
+
+    def has_attribute(self, attr) -> bool:
+        if isinstance(attr, list):
+            attr = '.'.join(attr)
+        return attr in self.attributes.keys()
+    
+    def get_attributes_by_head(self, queried_attr) -> list:
+        if isinstance(queried_attr, list):
+            queried_attr = '.'.join(queried_attr)
+        queried_attr = queried_attr.split('.')
+        matched_attrs = list()
+        for attribute in self.attributes.values():
+            if len(attribute) < len(queried_attr):
+                continue
+            i = 0
+            good_match = True
+            while i < min(len(attribute), len(queried_attr)):
+                if attribute[i] != queried_attr[i]:
+                    good_match = False
+                    break
+                i += 1
+            if good_match:
+                matched_attrs.append('.'.join(attribute))
+        return matched_attrs
+    
+    def remove_attribute_by_head(self, queried_attr) -> int:
+        if isinstance(queried_attr, list):
+            queried_attr = '.'.join(queried_attr)
+        queried_attr = queried_attr.split('.')
+        remove_list = list()
+        count = 0
+        for attribute in self.attributes.values():
+            if len(attribute) < len(queried_attr):
+                continue
+            i = 0
+            good_match = True
+            while i < min(len(attribute), len(queried_attr)):
+                if attribute[i] != queried_attr[i]:
+                    good_match = False
+                    break
+            if good_match:
+                remove_list.append('.'.join(attribute))
+                count += 1
+        for e in remove_list:
+            self.attributes.pop(e)
+        return count
+    
+    def replace_wildcard(self, attr, val):
+        if isinstance(attr, list):
+            attr = '.'.join(attr)
+        prior_elements = self.get_all_before_wildcard(attr)
+        prior_elements += '.' + val
+        self.remove_attribute(attr)
+        self.add_attribute(prior_elements)
+    
+    def has_attribute_head(self, attr) -> bool:
+        if isinstance(attr, list):
+            attr = '.'.join(attr)
+        return len(self.get_attributes_by_head(attr)) > 0
+    
+    def get_next(self, attr) -> set:
+        if isinstance(attr, list):
+            attr = '.'.join(attr)
+        matched_attrs = self.get_attributes_by_head(attr)
+        next = set()
+        attr = attr.split('.')
+        for matched_attr in matched_attrs:
+            matched_attr = matched_attr.split('.')
+            if len(matched_attr) > len(attr):
+                next.add(matched_attr[len(attr)])
+        return next
+            
+    def get_all_before_wildcard(self, attr) -> list:
+        if isinstance(attr, list):
+            attr = '.'.join(attr)
+        attr = attr.split('.')
+        r_attr = list()
+        for e in attr:
+            if e == '*':
+                break
+            r_attr.append(e)
+        return '.'.join(r_attr)
+                
     """
     Returns:
         course (OrderedDict): all course attributes within an ordered dictionary
@@ -111,28 +253,17 @@ class Course():
         course.update({'id':self.course_id})
         if self.course_id2 != 0:
             course.update({'id2':self.course_id2})
-        course.update({'major':self.major})
+        course.update({'subject':self.subject})
         course.update({'credits':self.credits})
-        course.update({'CI':self.CI})
-        course.update({'HASS_inquiry':self.HASS_inquiry})
-        if len(self.cross_listed):
-            course.update({'crosslisted':list(self.cross_listed)})
-        if len(self.concentration):
-            course.update({'concentrations':list(self.concentration)})
-        if len(self.HASS_pathway):
-            course.update({'pathways':list(self.HASS_pathway)})
-        if len(self.prerequisites):
-            course.update({'prerequisites':list(self.prerequisites)})
-        course.update({'restricted':self.restricted})
         course.update({'description':self.description})
+        course.update(self.attributes)
         return json.dumps(course)
 
     def __repr__(self):
-        st = (f"{self.display_name if self.display_name else 'None'}: {self.major if self.major else 'None'} " + \
+        st = (f"{self.unique_name if self.unique_name else 'None'}: {self.subject if self.subject else 'None'} " + \
             f"{str(self.course_id)}{f'.{self.course_id2}' if self.course_id2 != 0 else ''}, " + \
-            f"{self.credits} credits{' (CI)' if self.CI else ''}" + \
-            f"{f', concentrations: {str(self.concentration)}' if len(self.concentration) != 0 else ''}" + \
-            f"{f', pathways: {str(self.HASS_pathway)}' if len(self.HASS_pathway) != 0 else ''}")
+            f"{self.credits} credits, " + \
+            f"attributes: {self.attributes.keys()}" if len(self.attributes) > 0 else '' + '\n')
         return st.replace("set()", "none")
 
     def __str__(self):
@@ -141,13 +272,11 @@ class Course():
     def __eq__(self, other):
         if not isinstance(other, Course):
             return False
-        if (self.name == other.name and self.course_id == other.course_id and self.major == other.major and
-            self.CI == other.CI and self.concentration == other.concentration and 
-            self.HASS_pathway == other.HASS_pathway and self.credits == other.credits and 
-            self.HASS_inquiry == other.HASS_inquiry and self.cross_listed == other.cross_listed and
-            self.restricted == other.restricted and self.prerequisites == other.prerequisites):
+        if (self.name == other.name and self.course_id == other.course_id and self.course_id2 == other.course_id2 
+            and self.subject == other.subject and self.credits == other.credits and self.cross_listed == other.cross_listed
+            and self.attributes == other.attributes):
             return True
         return False
 
     def __hash__(self):
-        return self.course_id + len(self.HASS_pathway)*10 + len(self.concentration)*100 + len(self.prerequisites)*1000
+        return hash(self.course_id) + len(self.attributes)*10 + len(self.name)*100 + len(self.description)*1000

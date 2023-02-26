@@ -182,9 +182,9 @@ class Planner():
             # all commands after this requires an active schedule inside User
             schedule = user.get_current_schedule()
             if schedule == None:
-                await output.print(f"SCHEDULE{DELIMITER_TITLE}no schedule selected")
-                user.command_queue.task_done()
-                continue
+                await output.print(f"SCHEDULE{DELIMITER_TITLE}no schedule selected, creating one named {user.username}")
+                await self.set_active_schedule(user, user.username, output)
+                schedule = user.get_current_schedule()
 
             if command.command == CMD.ADD or command.command == CMD.REMOVE:
                 if Flag.CMD_PAUSED in user.flag:
@@ -194,7 +194,7 @@ class Planner():
                         await output.print(f"SCHEDULE{DELIMITER_TITLE}Please enter a valid selection number")
                         break
                     course:Course = courses[int(decision) - 1]
-                    command.arguments[1] = course.name
+                    command.arguments[1] = course.get_unique_name()
                     user.flag.remove(Flag.CMD_PAUSED)
 
                 semester = command.arguments[0]
@@ -242,7 +242,8 @@ class Planner():
                     await output.print(f"SCHEDULE{DELIMITER_TITLE}no degree specified")
                 else:
                     await output.print(f"SCHEDULE{DELIMITER_TITLE}{schedule.name} Fulfillment")
-                    output.print_hold(schedule.degree.fulfillment_msg(schedule.get_all_courses()))
+                    fulfillment = schedule.degree.fulfillment(schedule.get_all_courses())
+                    output.print_hold(schedule.degree.print_fulfillment(fulfillment))
                     await output.print_cache()
                 user.command_queue.task_done()
                 continue
@@ -302,19 +303,6 @@ class Planner():
     def cleanse(self, msg:str) -> str:
         re.sub(r'\W+', '', msg)
         return msg
-
-
-    def get_user(self, ctx) -> User:
-        userid = str(ctx.author.id)
-        if userid in self.users:
-            user = self.users[userid]
-            user.discord_user = ctx.author
-        else:
-            user = User(userid)
-            user.username = str(ctx.author)
-            user.discord_user = ctx.author
-            self.users.update({userid:user})
-        return user
 
     
     """ Runs test suite
@@ -417,6 +405,7 @@ class Planner():
         # the whole point of the searcher.
         return possible_courses
 
+
     def details(self, course_name:str) -> str:
         courses = self.search(course_name)
         if len(courses) == 0:
@@ -442,7 +431,7 @@ class Planner():
         i = 1
         for c in possible_courses:
             course = self.catalog.get_course(c)
-            output.print_hold(f"  {i}: {course.major} {course.course_id} {course.display_name}")
+            output.print_hold(f"  {i}: {course.subject} {course.course_id} {course.name}")
             i += 1
         await output.print_cache()
 
@@ -549,23 +538,23 @@ class Planner():
         catalog_file = "catalog_results.json"
         degree_file = "class_results.json"
 
-        try:
-            await parse_courses(catalog_file, self.catalog, output)
-            await output.print(f"ADMIN{DELIMITER_TITLE}Sucessfully parsed catalog data")
-            
-            # set up searcher for finding courses based on incomplete user input
-            self.course_search.update_items(self.catalog.get_all_course_names())
-            self.course_search.generate_index()
+        #try:
+        await parse_courses(catalog_file, self.catalog, output)
+        await output.print(f"ADMIN{DELIMITER_TITLE}Sucessfully parsed catalog data")
+        
+        # set up searcher for finding courses based on incomplete user input
+        self.course_search.update_items(self.catalog.get_all_course_names())
+        self.course_search.generate_index()
 
-            await parse_degrees(degree_file, self.catalog, output)
-            await output.print(f"ADMIN{DELIMITER_TITLE}Sucessfully parsed degree data")
-            await output.print(f"ADMIN{DELIMITER_TITLE}Printing catalog:", output_location=OUT.DEBUG)
-            output.print_hold(str(self.catalog))
-            await output.print_cache(OUT.DEBUG)
+        await parse_degrees(degree_file, self.catalog, output)
+        await output.print(f"ADMIN{DELIMITER_TITLE}Sucessfully parsed degree data")
+        await output.print(f"ADMIN{DELIMITER_TITLE}Printing catalog:", output_location=OUT.DEBUG)
+        output.print_hold(str(self.catalog))
+        await output.print_cache(OUT.DEBUG)
 
-        except Exception as e:
-            await output.print(f"ERROR{DELIMITER_TITLE}An exception has occurred during parsing: {e}", output_location=OUT.ERROR)
-            return e
+        #except Exception as e:
+        #    await output.print(f"ERROR{DELIMITER_TITLE}An exception has occurred during parsing: {e}", output_location=OUT.ERROR)
+        #    return e
 
-        else:
-            return None
+        #else:
+        #    return None

@@ -116,7 +116,7 @@ class Schedule():
         schedule = dict()
         schedule.update({self.name:dict()})
         for i in range(0, 12):
-            schedule[self.name].update({i:[e.display_name for e in self.get_semester(i)]})
+            schedule[self.name].update({i:[e.get_unique_name() for e in self.get_semester(i)]})
         return json.dumps(schedule)
 
     def __len__(self):
@@ -137,7 +137,7 @@ class Schedule():
             s+=f"  Semester {str(count)}:\n"
             count+=1
             for course in courselist:
-                s+=f"    Course info: {course.display_name} {course.major} {str(course.course_id)}\n"
+                s+=f"    Course info: {course.get_subject()} {str(course.get_id())} {course.get_name()}\n"
         return s
 
     def __hash__(self):
