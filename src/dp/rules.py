@@ -44,8 +44,7 @@ class Rule():
         taken_courses (set): all courses the user have taken
 
     Returns:
-        status_return (dict): returns fulfillment status in the form of
-            <template name : <attribute : value>>
+        status_return (list): returns list of Fulfillment_Status objects
     """
     def fulfillment(self, taken_courses:set) -> list:
         status_return = list()

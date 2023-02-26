@@ -6,7 +6,8 @@ import json
 
 class Fulfillment_Status():
 
-    def __init__(self, template:Template, required_count:int=0, fulfillment_set:set=set()):
+    def __init__(self, template:Template, required_count:int=0, fulfillment_set:set=None):
+        if fulfillment_set == None: fulfillment_set = set()
         self.template = template
         self.required = required_count
         self.fulfillment_set = fulfillment_set

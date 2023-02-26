@@ -1,6 +1,7 @@
 class Search():
 
-    def __init__(self, items_list:set={}, convert_items_to_string=False):
+    def __init__(self, items_list:set=None, convert_items_to_string=False):
+        if items_list == None: items_list = set()
         if convert_items_to_string:
             self.__items = set()
             for i in items_list:

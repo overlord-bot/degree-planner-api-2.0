@@ -105,18 +105,18 @@ class Test1():
         #------------------------------------------------------------------------------------------
         await output.print("\nBeginning testing of course attribute search")
         
-        course_target1 = Course("", "", 0) # all CI courses
+        course_target1 = Course('ANY', 'ANY', 'ANY') # all CI courses
         course_target1.add_attribute('ci.true')
         template_target1 = Template('1', course_target1)
 
-        course_target2 = Course("", "", 0) # all 4000 level courses
+        course_target2 = Course('ANY', 'ANY', 'ANY') # all 4000 level courses
         course_target2.add_attribute('level.4')
         template_target2 = Template('2', course_target2)
         
         course_target3 = Course("Data Structures", "CSCI", 1200) # data structures
         template_target3 = Template('3', course_target3)
 
-        course_target5 = Course("", "", 0) # all theory concentration courses
+        course_target5 = Course('ANY', 'ANY', 'ANY') # all theory concentration courses
         course_target5.add_attribute("concentration.Theory, Algorithms and Mathematics")
         template_target5 = Template('5', course_target5)
 
@@ -149,7 +149,7 @@ class Test1():
 
         catalog.add_course(course7)
 
-        tcourse1 = Course("", "", 0)
+        tcourse1 = Course('ANY', 'ANY', 'ANY')
         tcourse1.add_attribute('level.2')
         template1 = Template('t1', tcourse1)
         template1ans = {course2,course3}
@@ -157,7 +157,7 @@ class Test1():
             f"template1ans: {str(template1ans)}")
         assert catalog.get_best_course_match(template1) == template1ans
 
-        template2 = Template("Concentration requirement", Course("", "", 0))
+        template2 = Template("Concentration requirement", Course('ANY', 'ANY', 'ANY'))
         template2.template_course.add_attribute('level.4')
         template2.template_course.add_attribute('concentration.*')
         template2ans1 = {course5}
@@ -176,11 +176,11 @@ class Test1():
         rule1.add_template(template2, 2)
         status_return = rule1.fulfillment(catalog.get_all_courses())
         await output.print(f"status_return of rule fulfillment() method: \n{str(status_return)}")
-        status_return2 = rule1.fulfillment_return_message(catalog.get_all_courses())
+        status_return2 = rule1.fulfillment(catalog.get_all_courses())
         await output.print(f"status_return of rule fulfillment_return_message() method: \n{status_return2}")
         
-        for i in status_return.values():
-            assert template2ans2 in i.values()
+        for fulfillment_status in status_return:
+            assert len(template2ans2.union(fulfillment_status.get_fulfillment_set())) == 2
 
         await output.print(f"completed rules tests")
 

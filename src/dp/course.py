@@ -20,11 +20,11 @@ class Course():
         
         self.validate_course_id()
 
-        if name != '' and name != 'NA':
+        if name != '' and name != 'NA' and name != 'ANY':
             self.set_name(name)
-        if subject != '' and subject != 'NA':
+        if subject != '' and subject != 'NA' and subject != 'ANY':
             self.set_subject(subject)
-        if id != 0 and id != -1:
+        if id != 0 and id != -1 and id != 'ANY':
             self.set_id(id)
         if credits != -1:
             self.set_credits(credits)
@@ -53,12 +53,12 @@ class Course():
                 else:
                     logging.error(f"COURSE PARSING: 2 part ID not <int>.<int> for course " + self.name)
                     
-            elif not self.course_id.isdigit():
-                logging.error(f"COURSE PARSING: course number is not a number for course " + self.name)
-            else:
+            elif not self.course_id.isdigit() and self.course_id != 'ANY':
+                logging.error(f"COURSE PARSING: course id ({self.course_id}) is not a number for course " + self.name)
+            elif self.course_id != 'ANY':
                 self.course_id = int(self.course_id)
-        elif not isinstance(self.course_id, int):
-            logging.error(f"COURSE PARSING: course number is not a number for course " + self.name)
+        if not isinstance(self.course_id, int) and self.course_id != 'ANY':
+            logging.error(f"COURSE PARSING: course id ({self.course_id}) is not a number for course " + self.name)
 
 
     """ 
@@ -79,6 +79,8 @@ class Course():
         return self.subject
     
     def get_id(self):
+        if isinstance(self.course_id, int) or self.course_id.isdigit():
+            return int(self.course_id)
         return self.course_id
     
     def get_id2(self):
@@ -236,7 +238,6 @@ class Course():
             r_attr.append(e)
         return '.'.join(r_attr)
                 
-
     """
     Returns:
         course (OrderedDict): all course attributes within an ordered dictionary
@@ -278,4 +279,4 @@ class Course():
         return False
 
     def __hash__(self):
-        return int(self.course_id) + len(self.attributes)*10 + len(self.name)*100 + len(self.description)*1000
+        return hash(self.course_id) + len(self.attributes)*10 + len(self.name)*100 + len(self.description)*1000

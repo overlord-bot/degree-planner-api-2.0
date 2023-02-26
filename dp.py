@@ -29,7 +29,7 @@ def terminal():
     print("")
     while (1):
         cmd = input("(degree planner) >>> ")
-        if cmd == "quit": 
+        if cmd.casefold() == "quit": 
             return
         command(cmd)
 

@@ -84,10 +84,10 @@ async def parse_courses(file_name, catalog:Catalog, output:Output=None):
             course.description = element['course_description']
 
         ########### TESTING STUFF TEMPORARY ############
-        if course.get_id() == '4350' or course.get_id() == 4100 or course.get_id() == 4961:
+        if course.get_id() == 4350 or course.get_id() == 4100 or course.get_id() == 4961:
             course.add_attribute(f'concentration.AI')
 
-        if course.get_id() == '4020' or course.get_id() == 4260:
+        if course.get_id() == 4020 or course.get_id() == 4260:
             course.add_attribute(f'concentration.theory')
         ################################################
 
@@ -124,18 +124,17 @@ async def parse_degrees(file_name, catalog, output:Output=None):
 
     rule1 = Rule("concentration")
 
-    template1 = Template("concentration requirement", Course("NA", "NA", -1))
+    template1 = Template("concentration requirement", Course('ANY', 'ANY', 'ANY'))
     template1.template_course.add_attribute('concentration.*')
     template1.template_course.replace_attribute('level', 'level.4')
 
     rule2 = Rule("intensity")
-    rule2.no_replacement = True
 
-    template2 = Template("4000 level courses", Course("NA", "NA", -1))
+    template2 = Template("4000 level courses", Course('ANY', 'ANY', 'ANY'))
     template2.template_course.replace_attribute('level', 'level.4')
 
     rule3 = Rule("core")
-
+    
     template3 = Template("Data Structures", Course("Data Structures", "CSCI", 1200))
     template4 = Template("Programming Languages", Course("Programming Languages", "CSCI", 4430))
     template5 = Template("Algorithms", Course("Introduction to Algorithms", "CSCI", 2300))
@@ -146,6 +145,7 @@ async def parse_degrees(file_name, catalog, output:Output=None):
     rule3.add_template(template4)
     rule3.add_template(template5)
     rule3.high_priority = True
+    rule3.no_replacement = True
 
     degree.add_rule(rule1)
     degree.add_rule(rule2)
