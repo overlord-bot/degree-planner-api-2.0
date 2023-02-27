@@ -1,12 +1,17 @@
+'''
+Parsing functions specific for custom data structure
+
+You will need to make your own parser for every data input file
+'''
+
+import json
+import os
 from ..io.output import *
 from .course import Course
 from .course_template import Template
 from .catalog import Catalog
 from .degree import Degree
 from .rules import Rule
-import json
-import os
-
 
 """ Rarses json data of format [{course attribute : value}] 
     into a set of Course objects stored in Catalog
@@ -17,7 +22,7 @@ Args:
     output (Output): debug output, default is print to console
 """
 async def parse_courses(file_name, catalog:Catalog, output:Output=None):
-    if output == None: output = Output(OUT.CONSOLE)
+    if output is None: output = Output(OUT.CONSOLE)
     await output.print("Beginning parsing course data into catalog")
 
     # There are 1 location(s) for catalog_results and class_results, checked in this order:
@@ -43,7 +48,7 @@ async def parse_courses(file_name, catalog:Catalog, output:Output=None):
             continue
 
         if 'course_credit_hours' in element:
-            course.credits = element['course_credit_hours']
+            course.course_credits = element['course_credit_hours']
         
         if 'course_is_ci' in element and element['course_is_ci']:
             course.add_attribute('ci.true')
@@ -102,7 +107,7 @@ Args:
     output (Output): debug output, default is print to console
 """
 async def parse_degrees(file_name, catalog, output:Output=None):
-    if output == None: output = Output(OUT.CONSOLE)
+    if output is None: output = Output(OUT.CONSOLE)
     await output.print("Beginning parsing degree data into catalog")
     
     ''' NOT IMPLEMENTED FOR JSON INPUT YET

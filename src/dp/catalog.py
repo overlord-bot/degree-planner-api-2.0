@@ -1,4 +1,7 @@
-from array import *
+'''
+Catalog class and get_course_match functions
+'''
+
 import copy
 import json
 
@@ -9,9 +12,14 @@ from .search import Search
 from ..io.output import *
 
 class Catalog():
+    '''
+    A list of courses and degreees, one catalog should be generated for every planner
+
+    Contains functions to find course match based on a template course and pool of courses
+    to search from
+    '''
 
     def __init__(self, name="main"):
-        # catalog will be a list of courses and degrees
         # TODO also store graphs for further analysis and course prediction of free electives
         self.name = name
         self.output = Output(OUT.CONSOLE)
@@ -45,6 +53,13 @@ class Catalog():
             self.__degree_list.update({d.name:d})
 
     def get_course(self, course_name:str) -> Course:
+        '''
+        Parameters:
+            course_name (str): name of course to get. Must be a unique name
+
+        Returns:
+            course (Course): course if found, otherwise None
+        '''
         if self.reindex_flag:
             self.reindex()
             self.reindex_flag = False
@@ -58,10 +73,10 @@ class Catalog():
             return self.__course_list.get(name[0], None)
 
     def get_all_courses(self):
-        return self.__course_list.values()
+        return list(self.__course_list.values())
 
     def get_all_course_names(self):
-        return self.__course_list.keys()
+        return list(self.__course_list.keys())
 
     def get_degree(self, degree_name:str):
         return self.__degree_list.get(degree_name, None)
@@ -69,9 +84,13 @@ class Catalog():
     def get_all_degrees(self):
         return self.__degree_list.values()
 
-    """ Matches against entire catalog
-    """
     def get_course_match(self, target_template:Template) -> dict:
+        ''' Intakes a criteria of courses that we want returned
+            matches against the entire catalog
+
+            Returns:
+                matched dictionary (dict): { template : course set }
+        '''
         return get_course_match(target_template, self.__course_list.values(), True)
 
     def get_best_course_match(self, target_template:Template) -> set:
@@ -104,15 +123,15 @@ class Catalog():
         return len(self.__course_list)
 
 
-""" Intakes a criteria of courses that we want returned
-    For example, if the template specifies 2000 as course ID, then all 2000 level courses inside
-    the template's course list is returned
-    
-    Parameters: a template with ONLY the attributes we want to require changed to their required states
-
-    Returns: { fulfilled template (useful for when wildcards are used) : course set }
-"""
 def get_course_match(template:Template, course_pool=None, head=False) -> dict:
+    ''' Intakes a criteria of courses that we want returned
+        For example, if the template specifies 2000 as course ID, then all 2000 level courses inside
+        the template's course list is returned
+    
+        Parameters: a template with ONLY the attributes we want to require changed to their required states
+
+        Returns: { fulfilled template (useful for when wildcards are used) : course set }
+    '''
     output = Output(OUT.CONSOLE)
     course_sets = dict()
 
@@ -120,7 +139,7 @@ def get_course_match(template:Template, course_pool=None, head=False) -> dict:
         head = False
         if isinstance(template, Course):
             template = Template(template.get_unique_name() + ' template', template)
-        if course_pool == None:
+        if course_pool is None:
             course_pool = template.course_set
         elif template.course_set:
             course_pool = {e for e in course_pool if e in template.course_set}

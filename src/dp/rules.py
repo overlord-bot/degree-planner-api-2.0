@@ -1,8 +1,11 @@
-from array import *
-from .course import Course
+'''
+Rule class for storing a set of templates and various flags  such as
+no_replacement and high_priority
+'''
+
+import json
 from .course_template import Template
 from .catalog import *
-import json
 from .fulfillment_status import Fulfillment_Status
 
 class Rule():
@@ -39,14 +42,14 @@ class Rule():
         self.course_templates.pop(template)
     
 
-    """
-    Args:
-        taken_courses (set): all courses the user have taken
-
-    Returns:
-        status_return (list): returns list of Fulfillment_Status objects
-    """
     def fulfillment(self, taken_courses:set) -> list:
+        '''
+        Args:
+            taken_courses (set): all courses the user have taken
+
+        Returns:
+            status_return (list): returns list of Fulfillment_Status objects
+        '''
         status_return = list()
 
         for template, required_count in self.course_templates.items():
@@ -57,11 +60,11 @@ class Rule():
         return status_return
 
 
-    """ 
-    Returns:
-        status_return (str): formatted message instead of a dictionary, use this for easy debugging
-    """
     def fulfillment_return_message(self, taken_courses:set) -> str:
+        ''' 
+        Returns:
+            status_return (str): formatted message instead of a dictionary, use this for easy debugging
+        '''
         status = self.fulfillment(taken_courses)
         status_return = ""
 
@@ -74,11 +77,11 @@ class Rule():
         return status_return
 
 
-    """
-    Returns:
-        templates (dict): <template name : required course amount?
-    """
     def json(self) -> dict:
+        '''
+        Returns:
+            templates (dict): <template name : required course amount?
+        '''
         templates = dict()
         for k, v in self.course_templates.items():
             templates.update({k.name:v})

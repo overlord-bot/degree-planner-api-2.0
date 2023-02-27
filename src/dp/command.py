@@ -1,44 +1,61 @@
+'''
+Command class and command enums
+'''
+
 from enum import Enum
 
 class CMD(Enum):
+    '''
+    Command Enum
+    '''
 
-    # getting enums require unique values so ONLY THE LAST DIGIT of each enum 
-    # represents their actual value (number of arguments needed).
-    ADD = 12
-    REMOVE = 22
-    SCHEDULE = 11
-    PRINT = 10
-    FULFILLMENT = 20
-    DEGREE = 21
-    FIND = 31
-    DETAILS = 41
+    # the number presents minimum number of arguments for that command
+    ADD = '2.add'
+    REMOVE = '2.remove'
+    SCHEDULE = '1.schedule'
+    PRINT = '0.print'
+    FULFILLMENT = '0.fulfillment'
+    AUTOCOMPLETE = '0.autocomplete'
+    DEGREE = '1.degree '
+    FIND = '1.find'
+    DETAILS = '1.details'
 
-    TEST = 30
-    IMPORT = 40
-
-    TAG = 101 # tags all responses with given id
-
-    NONE = 50
-
+    TEST = '0.test'
+    IMPORT = '0.import'
+    TAG = '1.tag'
+    NONE = '0.none'
+    
     def get(string:str):
+        '''
+        gets command enum from string
+
+        Returns:
+            cmd enum (CMD): matched enum, CMD.NONE if cannot find enum
+        '''
         try:
-            enum = CMD[string.upper()]  
-        except Exception as e:
+            enum = CMD[string.upper()]
+        except:
             enum = CMD.NONE
         return enum
 
 class Command():
+    '''
+    User command object, contains the command as a enum
+    and a list of arguments
+    '''
 
     def __init__(self, command:str):
         self.command = CMD.get(command)
         self.arguments = []
         self.data_store = None
 
-    """ True means valid command, the last digit of the enum value
-        represents the number of arguments required
-    """
     def valid(self) -> bool:
-        return self.command.value % 10 <= len(self.arguments)
+        '''
+        A valid command means there are at least the number of required arguments
+        stored in this command. The amount of arguments required is stored as the
+        first digit in the enum value
+        '''
+        return int(self.command.value[0]) <= len(self.arguments)
 
     def __len__(self):
         return len(self.arguments) + 1

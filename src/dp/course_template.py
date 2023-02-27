@@ -1,12 +1,15 @@
-from array import *
+'''
+Course Template object
+'''
+
 from .course import Course
 
 class Template():
-
-    """ This class contains a template course, which contains attributes that
-        serves as a filter for courses, and a course set, which is the pool of
-        courses we filter from.
-    """
+    '''
+    This class contains a template course, which contains attributes that
+    serves as a filter for courses, and a course set, which is the pool of
+    courses we filter from.
+    '''
 
     def __init__(self, name, template_course=None, course_set=None):
         if template_course == None: template_course = Course('ANY', 'ANY', 'ANY')
@@ -47,5 +50,5 @@ class Template():
     def __hash__(self):
         i = hash(self.template_course)**2
         for course in self.course_set:
-            i+=hash(course)
+            i += hash(course)
         return i
