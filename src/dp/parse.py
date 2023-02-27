@@ -97,6 +97,24 @@ async def parse_courses(file_name, catalog:Catalog, output:Output=None):
         ################################################
 
         catalog.add_course(course)
+    course1 = Course('1', 'BINTEST', 1)
+    course1.add_attribute('bin.1')
+    course1.add_attribute('bin.2')
+    catalog.add_course(course1)
+
+    course2 = Course('2', 'BINTEST', 2)
+    course2.add_attribute('bin.1')
+    course2.add_attribute('bin.2')
+    catalog.add_course(course2)
+
+    course3 = Course('3', 'BINTEST', 3)
+    course3.add_attribute('bin.1')
+    catalog.add_course(course3)
+
+    course4 = Course('4', 'BINTEST', 4)
+    course4.add_attribute('bin.1')
+    course4.add_attribute('bin.3')
+    catalog.add_course(course4)
 
 
 """ Rarses json data degree objects stored in Catalog
@@ -143,18 +161,35 @@ async def parse_degrees(file_name, catalog, output:Output=None):
     template3 = Template("Data Structures", Course("Data Structures", "CSCI", 1200))
     template4 = Template("Programming Languages", Course("Programming Languages", "CSCI", 4430))
     template5 = Template("Algorithms", Course("Introduction to Algorithms", "CSCI", 2300))
+    template6 = Template("Test: any two 4000 level", Course("ANY", "ANY", "ANY"))
+    template6.template_course.replace_attribute('level', 'level.4')
 
     rule1.add_template(template1, 2)
     rule2.add_template(template2, 3)
+
+    rule3.add_template(template6, 2) # test whether template6 will relinquish pro lang
     rule3.add_template(template3)
     rule3.add_template(template4)
     rule3.add_template(template5)
     rule3.high_priority = True
     rule3.no_replacement = True
 
-    degree.add_rule(rule1)
-    degree.add_rule(rule2)
-    degree.add_rule(rule3)
+    rule4 = Rule("test")
+    testtemplate1 = Template('bin1', Course("ANY", "BINTEST", 'ANY'))
+    testtemplate1.template_course.add_attribute('bin.1')
+    testtemplate2 = Template('bin2', Course("ANY", "BINTEST", 'ANY'))
+    testtemplate2.template_course.add_attribute('bin.2')
+    testtemplate3 = Template('bin3', Course("ANY", "BINTEST", 'ANY'))
+    testtemplate3.template_course.add_attribute('bin.3')
+    rule4.add_template(testtemplate1, 2)
+    rule4.add_template(testtemplate2)
+    rule4.add_template(testtemplate3)
+    rule4.no_replacement = True
+
+    #degree.add_rule(rule1)
+    #degree.add_rule(rule2)
+    #degree.add_rule(rule3)
+    degree.add_rule(rule4)
 
     catalog.add_degree(degree)
 

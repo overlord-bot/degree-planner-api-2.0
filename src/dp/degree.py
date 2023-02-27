@@ -37,7 +37,7 @@ class Degree():
         self.rules = [e for e in self.rules if e != rule]
 
 
-    def fulfillment_of_rule(self, rule, all_fulfillment, taken_courses) -> list:
+    def fulfillment_of_rule(self, rule, all_fulfillment:dict, taken_courses:set) -> list:
         '''
         Computes fulfillment status of a single rule
 
@@ -50,14 +50,13 @@ class Degree():
         Returns:
             fulfillment ([Fulfillment_Status]): a list of fulfillment_status objects
         '''
-        if not rule.no_replacement:
-            return rule.fulfillment(taken_courses)
-        
+
         fulfilled_statuses = list()
         """
         all courses that can possibily fulfill this rule, we will choose a subset from this list
         that minimally impacts other rules
         """
+
         requested_statuses_return = rule.fulfillment(taken_courses)
         for requested_status_return in requested_statuses_return:
             """
@@ -68,25 +67,25 @@ class Degree():
             from its fulfillment set without impacting its fulfilled status
             """
             requested_courses_ordered = sort_courses_by_fulfillment_appearances(all_fulfillment, requested_status_return)
-            required_count = requested_status_return.get_required_count()
-            actual_count = 0
             fulfillment_set = set()
 
             """
             we greedily grab courses from requested_courses_ordered that won't disturb
-            the fulfillment of previous rules until this rule is fulfilled or we run out of courses
+            the fulfillment of previous rules
             """
             for course in requested_courses_ordered:
+                # a non no_replacement rule may share any course with another non no_replacement rule
+                if not rule.no_replacement and unbound_course(course, all_fulfillment):
+                    fulfillment_set.add(course)
+                    continue
                 if not can_remove_from_all_fulfillment_sets(all_fulfillment, course):
                     continue
-                actual_count += 1
                 remove_from_all_fulfillment_sets(all_fulfillment, course)
-                taken_courses.remove(course)
                 fulfillment_set.add(course)
-                if actual_count >= required_count:
-                    break
+
             requested_status_return.set_fulfillment_set(fulfillment_set)
             fulfilled_statuses.append(requested_status_return)
+            all_fulfillment.update({rule:fulfilled_statuses})
 
         return fulfilled_statuses
 
@@ -169,6 +168,18 @@ class Degree():
 ######################################
 # HELPER FUNCTIONS
 ######################################
+
+def unbound_course(course, status:dict):
+    '''
+    Course is not in any rule with no_replacement, meaning another non no_replacement
+    rule may use this rule for its fulfillment
+    '''
+    for rule, fulfillment_statuses in status.items():
+        for fulfillment_status in fulfillment_statuses:
+            if course in fulfillment_status.get_fulfillment_set() and rule.no_replacement:
+                return False
+    return True
+
 
 def sort_courses_by_fulfillment_appearances(status_return:dict, requested_status_return:list) -> list:
     """
