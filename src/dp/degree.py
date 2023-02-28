@@ -37,7 +37,7 @@ class Degree():
         self.rules = [e for e in self.rules if e != rule]
 
 
-    def fulfillment_of_rule(self, rule, all_fulfillment:dict, taken_courses:set) -> list:
+    def fulfillment_of_rule(self, rule, all_fulfillment:dict, taken_courses:set, no_recursion=False) -> list:
         '''
         Computes fulfillment status of a single rule
 
@@ -52,6 +52,7 @@ class Degree():
         '''
 
         fulfilled_statuses = list()
+        all_fulfillment.pop(rule, None)
         """
         all courses that can possibily fulfill this rule, we will choose a subset from this list
         that minimally impacts other rules
@@ -82,6 +83,18 @@ class Degree():
                     continue
                 remove_from_all_fulfillment_sets(all_fulfillment, course)
                 fulfillment_set.add(course)
+
+            if not no_recursion and len(fulfillment_set) < requested_status_return.get_required_count():
+                for prev_rule, prev_fulfillments in all_fulfillment.items():
+                    recompute = False
+                    for curr_course in requested_courses_ordered:
+                        if appearances_in_fulfillment_sets({'rule':prev_fulfillments}, curr_course):
+                            recompute = True
+                    if not recompute:
+                        continue
+                    self.fulfillment_of_rule(prev_rule, all_fulfillment, taken_courses, True)
+                    break
+                return self.fulfillment_of_rule(rule, all_fulfillment, taken_courses, True)
 
             requested_status_return.set_fulfillment_set(fulfillment_set)
             fulfilled_statuses.append(requested_status_return)
