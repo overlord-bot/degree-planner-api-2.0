@@ -4,7 +4,6 @@ Fulfillment_Status class
 
 import json
 from .course import Course
-from .course_template import Template
 from .catalog import *
 
 
@@ -13,7 +12,7 @@ class Fulfillment_Status():
     A data structure to store information on fulfillment status of a template
     '''
 
-    def __init__(self, template:Template, required_count:int=0, fulfillment_set:set=None):
+    def __init__(self, template, required_count:int=0, fulfillment_set:set=None):
         if fulfillment_set == None: fulfillment_set = set()
         self.template = template
         self.required = required_count
@@ -33,6 +32,12 @@ class Fulfillment_Status():
     
     def set_fulfillment_set(self, fulfillment_set:set) -> None:
         self.fulfillment_set = fulfillment_set
+
+    def set_template(self, template) -> None:
+        self.template = template
+
+    def get_template(self):
+        return self.template
 
     """
     returns whether the element is added (not previously present)

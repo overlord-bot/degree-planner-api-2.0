@@ -13,6 +13,7 @@ from .user import Flag
 from .search import Search
 from .command import *
 from .parse import *
+from .degree import *
 
 VERSION = "API 2.0"
 SEMESTERS_MAX = 12
@@ -243,8 +244,10 @@ class Planner():
                     await output.print(f"SCHEDULE{DELIMITER_TITLE}no degree specified")
                 else:
                     await output.print(f"SCHEDULE{DELIMITER_TITLE}{schedule.name} Fulfillment")
-                    fulfillment = schedule.degree.fulfillment(schedule.get_all_courses())
-                    output.print_hold(schedule.degree.print_fulfillment(fulfillment))
+                    #fulfillment = schedule.degree.fulfillment(schedule.get_all_courses())
+                    #output.print_hold(schedule.degree.print_fulfillment(fulfillment))
+                    fulfillment = schedule.degree.fulfillment_all_wildcard_combos(schedule.get_all_courses())
+                    output.print_hold(print_fulfillment(fulfillment))
                     await output.print_cache()
                 user.command_queue.task_done()
                 continue

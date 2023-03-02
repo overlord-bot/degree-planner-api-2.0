@@ -2,12 +2,11 @@
 Catalog class and get_course_match functions
 '''
 
-import copy
 import json
 
 from .course import Course
 from .degree import Degree
-from .course_template import Template
+from .course_template import *
 from .search import Search
 from ..io.output import *
 
@@ -45,12 +44,18 @@ class Catalog():
         for c in courses:
             self.__course_list.update({c.unique_name:c})
 
+    def remove_course(self, course:Course):
+        self.__course_list.pop(course, None)
+
     def add_degree(self, degree:Degree):
         self.__degree_list.update({degree.name:degree})
 
     def add_degrees(self, degrees:set):
         for d in degrees:
             self.__degree_list.update({d.name:d})
+
+    def remove_degree(self, degree:Degree):
+        self.__degree_list.pop(degree, None)
 
     def get_course(self, course_name:str) -> Course:
         '''
@@ -121,70 +126,3 @@ class Catalog():
 
     def __len__(self):
         return len(self.__course_list)
-
-
-def get_course_match(template:Template, course_pool=None, head=False) -> dict:
-    ''' Intakes a criteria of courses that we want returned
-        For example, if the template specifies 2000 as course ID, then all 2000 level courses inside
-        the template's course list is returned
-    
-        Parameters: a template with ONLY the attributes we want to require changed to their required states
-
-        Returns: { fulfilled template (useful for when wildcards are used) : course set }
-    '''
-    output = Output(OUT.CONSOLE)
-    course_sets = dict()
-
-    if head:
-        head = False
-        if isinstance(template, Course):
-            template = Template(template.get_unique_name() + ' template', template)
-        if course_pool is None:
-            course_pool = template.course_set
-        elif template.course_set:
-            course_pool = {e for e in course_pool if e in template.course_set}
-
-    leaf = True
-
-    for target_attribute in template.template_course.attributes.values():
-        if 'NA' in target_attribute or 'ANY' in target_attribute or '-1' in target_attribute:
-            continue
-        if '*' not in target_attribute:
-            course_pool = {e for e in course_pool if e.has_attribute(target_attribute)}
-        else:
-            leaf = False
-
-    for target_attribute in template.template_course.attributes.values():
-        if '*' in target_attribute:
-
-            ''' DEBUG
-            for course in course_pool:
-                print('all before wildcard: ' + str(course.get_all_before_wildcard(target_attribute)))
-                print('get next: ' + str(course.get_next(course.get_all_before_wildcard(target_attribute))))
-                break
-            '''
-
-            possible_values_sets = [course.get_next(course.get_all_before_wildcard(target_attribute)) for course in course_pool if len(course.get_next(course.get_all_before_wildcard(target_attribute)))]
-            possible_values = set()
-            for possible_values_set in possible_values_sets:
-                possible_values = possible_values.union(possible_values_set)
-            for val in possible_values:
-                template_copy = copy.deepcopy(template)
-                template_copy.template_course.replace_wildcard(target_attribute, val)
-                course_sets.update(get_course_match(template_copy, course_pool))
-    if leaf:
-        course_sets.update({template:copy.deepcopy(course_pool)})
-    return course_sets
-
-def get_best_course_match(target_template:Template, course_pool:set) -> set:
-    matched_pools = get_course_match(target_template, course_pool, True)
-    
-    size = 0
-    best_template = target_template
-    best_fulfillment = set()
-    for k, v in matched_pools.items():
-        if len(v) > size:
-            size = len(v)
-            best_template = k
-            best_fulfillment = v
-    return best_fulfillment

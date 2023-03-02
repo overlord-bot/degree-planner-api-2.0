@@ -144,7 +144,7 @@ async def parse_degrees(file_name, catalog, output:Output=None):
 
     # TESTING DEGREES FOR NOW:
     degree = Degree("computer science")
-
+    catalog.add_degree(degree)
     rule1 = Rule("concentration")
 
     template1 = Template("concentration requirement", Course('ANY', 'ANY', 'ANY'))
@@ -164,6 +164,7 @@ async def parse_degrees(file_name, catalog, output:Output=None):
     template5 = Template("Algorithms", Course("Introduction to Algorithms", "CSCI", 2300))
     template6 = Template("Test: any two same level", Course("ANY", "ANY", "ANY"))
     template6.template_course.replace_attribute('level', 'level.*')
+    template6.no_replacement = True
     template7 = Template("Test: any two same concentration", Course("ANY", "ANY", "ANY"))
     template7.template_course.add_attribute('concentration.*')
 
@@ -183,6 +184,7 @@ async def parse_degrees(file_name, catalog, output:Output=None):
     rule6 = Rule("test3")
     testtemplate1 = Template('bin1', Course("ANY", "BINTEST", 'ANY'))
     testtemplate1.template_course.add_attribute('bin.1')
+    testtemplate1.courses_required = 2
     testtemplate2 = Template('bin2', Course("ANY", "BINTEST", 'ANY'))
     testtemplate2.template_course.add_attribute('bin.2')
     testtemplate3 = Template('bin3', Course("ANY", "BINTEST", 'ANY'))
@@ -190,14 +192,24 @@ async def parse_degrees(file_name, catalog, output:Output=None):
     rule4.add_template(testtemplate1, 2)
     rule5.add_template(testtemplate2)
     rule6.add_template(testtemplate3)
-    rule4.no_replacement = True
-    rule5.no_replacement = True
-    rule6.no_replacement = True
+    testtemplate1.no_replacement = True
+    testtemplate2.no_replacement = True
+    testtemplate3.no_replacement = True
 
-    degree.add_rule(rule0)
-    degree.add_rule(rule1)
-    degree.add_rule(rule2)
-    degree.add_rule(rule3)
+    degree.templates.append(testtemplate1)
+    degree.templates.append(testtemplate2)
+    degree.templates.append(testtemplate3)
+
+    return
+    degree.templates.append(template3)
+    degree.templates.append(template4)
+    degree.templates.append(template5)
+    degree.templates.append(template6)
+    degree.templates.append(template7)
+    #degree.add_rule(rule0)
+    #degree.add_rule(rule1)
+    #degree.add_rule(rule2)
+    #degree.add_rule(rule3)
     #degree.add_rule(rule4)
     #degree.add_rule(rule5)
     #degree.add_rule(rule6)

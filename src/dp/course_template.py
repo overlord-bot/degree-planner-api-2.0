@@ -2,7 +2,9 @@
 Course Template object
 '''
 
+import copy
 from .course import Course
+from .fulfillment_status import Fulfillment_Status
 
 class Template():
     '''
@@ -11,12 +13,15 @@ class Template():
     courses we filter from.
     '''
 
-    def __init__(self, name, template_course=None, course_set=None):
+    def __init__(self, name, template_course=None, course_set=None, no_replacement=False, courses_required=1):
         if template_course == None: template_course = Course('ANY', 'ANY', 'ANY')
         if course_set == None: course_set = set()
+
         self.name = name
         self.template_course = template_course
         self.course_set = course_set
+        self.no_replacement = no_replacement
+        self.courses_required = courses_required
 
     def __repr__(self):
         s = f"Template {self.name}:\n"
@@ -52,3 +57,68 @@ class Template():
         for course in self.course_set:
             i += hash(course)
         return i
+
+def get_course_match(template:Template, course_pool=None, head=False) -> list:
+    ''' Intakes a criteria of courses that we want returned
+        For example, if the template specifies 2000 as course ID, then all 2000 level courses inside
+        the template's course list is returned
+    
+        Parameters: a template with ONLY the attributes we want to require changed to their required states
+
+        Returns: { fulfilled template (useful for when wildcards are used) : fulfillment_status }
+    '''
+    fulfillment_sets = list()
+
+    if head:
+        head = False
+        if isinstance(template, Course):
+            template = Template(template.get_unique_name() + ' template', template)
+        if course_pool is None:
+            course_pool = template.course_set
+        elif template.course_set:
+            course_pool = {e for e in course_pool if e in template.course_set}
+
+    leaf = True
+
+    for target_attribute in template.template_course.attributes.values():
+        if 'NA' in target_attribute or 'ANY' in target_attribute or '-1' in target_attribute:
+            continue
+        if '*' not in target_attribute:
+            course_pool = {e for e in course_pool if e.has_attribute(target_attribute)}
+        else:
+            leaf = False
+
+    for target_attribute in template.template_course.attributes.values():
+        if '*' in target_attribute:
+
+            ''' DEBUG
+            for course in course_pool:
+                print('all before wildcard: ' + str(course.get_all_before_wildcard(target_attribute)))
+                print('get next: ' + str(course.get_next(course.get_all_before_wildcard(target_attribute))))
+                break
+            '''
+
+            possible_values_sets = [course.get_next(course.get_all_before_wildcard(target_attribute)) for course in course_pool if len(course.get_next(course.get_all_before_wildcard(target_attribute)))]
+            possible_values = set()
+            for possible_values_set in possible_values_sets:
+                possible_values = possible_values.union(possible_values_set)
+            for val in possible_values:
+                template_copy = copy.deepcopy(template)
+                template_copy.template_course.replace_wildcard(target_attribute, val)
+                fulfillment_sets.extend(get_course_match(template_copy, course_pool))
+    if leaf:
+        fulfillment_sets.append(Fulfillment_Status(template, template.courses_required, course_pool))
+    return fulfillment_sets
+
+def get_best_course_match(target_template:Template, course_pool:set) -> set:
+    matched_pools = get_course_match(target_template, course_pool, True)
+    
+    size = 0
+    best_template = target_template
+    best_fulfillment = set()
+    for k, v in matched_pools.items():
+        if len(v) > size:
+            size = len(v)
+            best_template = k
+            best_fulfillment = v
+    return best_fulfillment
