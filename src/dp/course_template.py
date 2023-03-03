@@ -65,12 +65,12 @@ def get_course_match(template:Template, course_pool=None, head=False) -> list:
     
         Parameters: a template with ONLY the attributes we want to require changed to their required states
 
-        Returns: { fulfilled template (useful for when wildcards are used) : fulfillment_status }
+        Returns: [ fulfillment_status ] : a list of fulfillment_status objects each containing template course
+            used, required course count and fulfillment set
     '''
     fulfillment_sets = list()
 
     if head:
-        head = False
         if isinstance(template, Course):
             template = Template(template.get_unique_name() + ' template', template)
         if course_pool is None:
@@ -83,6 +83,8 @@ def get_course_match(template:Template, course_pool=None, head=False) -> list:
     for target_attribute in template.template_course.attributes.values():
         if 'NA' in target_attribute or 'ANY' in target_attribute or '-1' in target_attribute:
             continue
+
+        # any course without a wildcard is considered a leaf
         if '*' not in target_attribute:
             course_pool = {e for e in course_pool if e.has_attribute(target_attribute)}
         else:
@@ -98,27 +100,18 @@ def get_course_match(template:Template, course_pool=None, head=False) -> list:
                 break
             '''
 
-            possible_values_sets = [course.get_next(course.get_all_before_wildcard(target_attribute)) for course in course_pool if len(course.get_next(course.get_all_before_wildcard(target_attribute)))]
+            possible_values_sets = [course.get_next(course.get_all_before_wildcard(target_attribute)) for course in course_pool 
+                                    if len(course.get_next(course.get_all_before_wildcard(target_attribute)))]
             possible_values = set()
             for possible_values_set in possible_values_sets:
                 possible_values = possible_values.union(possible_values_set)
             for val in possible_values:
                 template_copy = copy.deepcopy(template)
                 template_copy.template_course.replace_wildcard(target_attribute, val)
-                fulfillment_sets.extend(get_course_match(template_copy, course_pool))
+                fulfillment_sets.extend(get_course_match(template_copy, course_pool, False))
     if leaf:
         fulfillment_sets.append(Fulfillment_Status(template, template.courses_required, course_pool))
+        
+    if head and not len(fulfillment_sets):
+        fulfillment_sets.append(Fulfillment_Status(template, template.courses_required, course_pool))
     return fulfillment_sets
-
-def get_best_course_match(target_template:Template, course_pool:set) -> set:
-    matched_pools = get_course_match(target_template, course_pool, True)
-    
-    size = 0
-    best_template = target_template
-    best_fulfillment = set()
-    for k, v in matched_pools.items():
-        if len(v) > size:
-            size = len(v)
-            best_template = k
-            best_fulfillment = v
-    return best_fulfillment

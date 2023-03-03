@@ -28,36 +28,39 @@ class Degree():
         max_fulfillment_sets = list() # max fulfillment set for every template
 
         for template in self.templates:
-            fulfillment_sets = get_course_match(template, taken_courses, True)
+            """
+            compute fulfillment sets for all template in the order they appear in self.templates
+            note that the order can influence fulfillment success, and earlier templates receive
+            priority to being fulfilled
+            """
+            max_fulfillment_sets.append(get_course_match(template, taken_courses, True))
 
-            # since get_course_match returns empty list if no fulfillment is found, we add
-            # a template with an empty fulfillment set to make sure generate_combinatorics works
-            if len(fulfillment_sets) == 0:
-                fulfillment_sets.append(Fulfillment_Status(template, template.courses_required, set()))
+        # number of actual templates/fulfillment sets per template
+        bound_array = [len(e) for e in max_fulfillment_sets]
 
-            max_fulfillment_sets.append(fulfillment_sets)
+        # all possible combinations
+        combos = generate_combinatorics(bound_array, 1)
 
-        bound_array = [len(e) for e in max_fulfillment_sets] # number of actual templates/fulfillment sets per template
-        combos = generate_combinatorics(bound_array, 1) # all possible combinations
-
+        # all fulfillment sets based on each possible combination of templates
+        # resulted from wildcard templates
         fulfillments = list()
 
         for combo in combos:
             templates_to_use = []
-            print(f'combo: {combo}')
             for i in range(0, len(combo)):
+                # gets the fulfillment status to use based on the number in combo
                 fulfillment_status = max_fulfillment_sets[i][combo[i] - 1]
+                # gets the template we should use
                 templates_to_use.append(fulfillment_status.get_template())
+            # runs fulfillment checking using this specific combination of templates
             fulfillment = self.fulfillment(templates_to_use, taken_courses)
             fulfillments.append(fulfillment)
 
-        best_fulfillment_missing_count = 10000000
+        # checks all fulfillment sets and return the best one
         best_fulfillment_set = None
         for fulfillment in fulfillments:
-            missing = degree_num_unfulfilled(fulfillment)
-            if missing < best_fulfillment_missing_count:
+            if best_fulfillment_set is None or degree_num_unfulfilled(fulfillment) < degree_num_unfulfilled(best_fulfillment_set):
                 best_fulfillment_set = fulfillment
-                best_fulfillment_missing_count = missing
 
         return best_fulfillment_set
 
