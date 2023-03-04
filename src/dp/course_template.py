@@ -112,6 +112,7 @@ def get_course_match(template:Template, course_pool=None, head=False) -> list:
     if leaf:
         fulfillment_sets.append(Fulfillment_Status(template, template.courses_required, course_pool))
         
+    # return an empty fulfillment set if there are no matches
     if head and not len(fulfillment_sets):
         fulfillment_sets.append(Fulfillment_Status(template, template.courses_required, course_pool))
     return fulfillment_sets

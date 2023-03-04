@@ -68,29 +68,33 @@ class Degree():
     def fulfillment(self, taken_courses, fulfillment_set) -> None:
     '''
 
-    def fulfillment_of_template(self, template:Template, all_fulfillment:dict, taken_courses:set, no_recursion=False) -> list:
+    def fulfillment_of_template(self, template:Template, all_fulfillment:dict, taken_courses:set, head=True) -> list:
         '''
-        Computes fulfillment status of a single rule
+        Computes fulfillment status of a single template
 
         Parameters:
-            rule (Rule): rule being fulfilled
-            all_fulfillment ({Rule:[Fulfillment_Status]}): all previously fulfilled statuses,
+            template (Template): template being fulfilled
+            all_fulfillment ({Template:[Fulfillment_Status]}): all previously fulfilled statuses,
                 passed by reference
             taken_courses (set): courses taken by user
 
         Returns:
             fulfillment ([Fulfillment_Status]): a list of fulfillment_status objects
+                this list will contain only one Fulfillment_Status if the template does not have wildcards
         '''
 
         fulfilled_statuses = list()
         all_fulfillment.pop(template, None)
+
         """
         all courses that can possibily fulfill this rule, we will choose a subset from this list
         that minimally impacts other rules
-        """
 
-        requested_statuses_return = get_course_match(template, taken_courses, True)
-        for requested_status_return in requested_statuses_return:
+        We get a list of all fulfillment sets possible if template contains wildcards, otherwise
+        this should just be a single fulfillment set
+        """
+        requested_status_returns = get_course_match(template, taken_courses, True)
+        for requested_status_return in requested_status_returns:
             """
             we order courses based on how many 'excessively fulfilled' sets it will impact
 
@@ -110,22 +114,40 @@ class Degree():
                 if not template.no_replacement and course_has_no_bindings(course, all_fulfillment):
                     fulfillment_set.add(course)
                     continue
+
+                """
+                from this point on, this template requires no replacement
+                """
+
+                # if we can't add this course without breaking already fulfilled templates,
+                # skip the course (for now)
                 if not course_num_weak_bindings(all_fulfillment, course):
                     continue
+
+                # otherwise, we are free to remove the course from its original places and add it here
                 course_destroy_bindings(all_fulfillment, course)
                 fulfillment_set.add(course)
             
-            if not no_recursion and len(fulfillment_set) < requested_status_return.get_required_count():
+            """
+            here we begin the 'fixing' algorithm. If we still don't have enough courses for fulfillment,
+            we go back and check which fulfillment sets contain courses that we can steal from. Those templates
+            won't have excess (since we already stole from all fulfillment sets with excess), but we see
+            if we can give that fulfillment set some excess by recomputing its fulfillment. If it manages
+            to obtain excess, then we steal all the courses we can from it.
+
+            the fixing algorithm requires only one layer of depth
+            """
+            if head and len(fulfillment_set) < requested_status_return.get_required_count():
                 for prev_template, prev_fulfillments in all_fulfillment.items():
-                    recompute = False
-                    for curr_course in requested_courses_ordered:
-                        if course_num_bindings({'rule':prev_fulfillments}, curr_course):
-                            recompute = True
-                    if not recompute:
+
+                    # check if this fulfillment set has any courses we want
+                    if not course_num_bindings({'template':prev_fulfillments}, requested_courses_ordered):
                         continue
-                    self.fulfillment_of_template(prev_template, all_fulfillment, taken_courses, True)
+                    
+                    # if it does, recompute it
+                    self.fulfillment_of_template(prev_template, all_fulfillment, taken_courses, False)
                     break
-                return self.fulfillment_of_template(template, all_fulfillment, taken_courses, True)
+                return self.fulfillment_of_template(template, all_fulfillment, taken_courses, False)
 
             requested_status_return.set_fulfillment_set(fulfillment_set)
             fulfilled_statuses.append(requested_status_return)
@@ -154,7 +176,7 @@ class Degree():
                 self.rules.insert(0, rule)
         """
         for template in templates:
-            status_return.update({template:self.fulfillment_of_template(template, status_return, taken_courses)})
+            status_return.update({template:self.fulfillment_of_template(template, status_return, taken_courses, True)})
 
         return status_return
 
@@ -291,7 +313,11 @@ def course_num_bindings(status:dict, course) -> int:
     count = 0
     for fulfillment_statuses in status.values():
         for fulfillment_status in fulfillment_statuses:
-            if course in fulfillment_status.get_fulfillment_set():
+            if isinstance(course, list):
+                for c in course:
+                    if c in fulfillment_status.get_fulfillment_set():
+                        count += 1
+            elif course in fulfillment_status.get_fulfillment_set():
                 count += 1
     return count
 
