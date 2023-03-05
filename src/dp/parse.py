@@ -97,6 +97,7 @@ async def parse_courses(file_name, catalog:Catalog, output:Output=None):
         ################################################
 
         catalog.add_course(course)
+    """
     course1 = Course('1', 'BINTEST', 1)
     course1.add_attribute('bin.1')
     course1.add_attribute('bin.2')
@@ -113,6 +114,27 @@ async def parse_courses(file_name, catalog:Catalog, output:Output=None):
 
     course4 = Course('4', 'BINTEST', 4)
     course4.add_attribute('bin.1')
+    course4.add_attribute('bin.3')
+    catalog.add_course(course4)
+    """
+
+    course1 = Course('1', 'BINTEST', 1)
+    course1.add_attribute('bin.1')
+    course1.add_attribute('bin.4')
+    catalog.add_course(course1)
+
+    course2 = Course('2', 'BINTEST', 2)
+    course2.add_attribute('bin.1')
+    course2.add_attribute('bin.2')
+    catalog.add_course(course2)
+
+    course3 = Course('3', 'BINTEST', 3)
+    course3.add_attribute('bin.2')
+    course3.add_attribute('bin.3')
+    catalog.add_course(course3)
+
+    course4 = Course('4', 'BINTEST', 4)
+    course4.add_attribute('bin.2')
     course4.add_attribute('bin.3')
     catalog.add_course(course4)
 
@@ -151,13 +173,8 @@ async def parse_degrees(file_name, catalog, output:Output=None):
     template1.template_course.add_attribute('concentration.*')
     # template1.template_course.replace_attribute('level', 'level.4')
 
-    rule2 = Rule("intensity")
-
     template2 = Template("4000 level courses", Course('ANY', 'ANY', 'ANY'))
     template2.template_course.replace_attribute('level', 'level.4')
-
-    rule3 = Rule("fluff")
-    rule0 = Rule('core')
     
     template3 = Template("Data Structures", Course("Data Structures", "CSCI", 1200))
     template4 = Template("Programming Languages", Course("Programming Languages", "CSCI", 4430))
@@ -168,37 +185,28 @@ async def parse_degrees(file_name, catalog, output:Output=None):
     template7 = Template("Test: any two same concentration", Course("ANY", "ANY", "ANY"))
     template7.template_course.add_attribute('concentration.*')
 
-    rule1.add_template(template1, 2)
-    rule2.add_template(template2, 3)
 
-    rule3.add_template(template6, 2) # test whether template6 will relinquish pro lang
-    rule3.add_template(template7, 2)
-    rule0.add_template(template3)
-    rule0.add_template(template4)
-    rule0.add_template(template5)
-    rule0.no_replacement = True
-    rule3.no_replacement = True
-
-    rule4 = Rule("test1")
-    rule5 = Rule("test2")
-    rule6 = Rule("test3")
     testtemplate1 = Template('bin1', Course("ANY", "BINTEST", 'ANY'))
     testtemplate1.template_course.add_attribute('bin.1')
-    testtemplate1.courses_required = 2
+    testtemplate1.courses_required = 1
     testtemplate2 = Template('bin2', Course("ANY", "BINTEST", 'ANY'))
     testtemplate2.template_course.add_attribute('bin.2')
     testtemplate3 = Template('bin3', Course("ANY", "BINTEST", 'ANY'))
     testtemplate3.template_course.add_attribute('bin.3')
-    rule4.add_template(testtemplate1, 2)
-    rule5.add_template(testtemplate2)
-    rule6.add_template(testtemplate3)
+    testtemplate4 = Template('bin4', Course("ANY", "BINTEST", 'ANY'))
+    testtemplate4.template_course.add_attribute('bin.4')
     testtemplate1.no_replacement = True
     testtemplate2.no_replacement = True
     testtemplate3.no_replacement = True
+    testtemplate3.no_replacement = True
+
+
+    
 
     degree.templates.append(testtemplate1)
     degree.templates.append(testtemplate2)
     degree.templates.append(testtemplate3)
+    degree.templates.append(testtemplate4)
 
     return
     degree.templates.append(template3)
