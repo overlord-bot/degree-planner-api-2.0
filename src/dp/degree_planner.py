@@ -1,22 +1,19 @@
-from array import *
-import asyncio
-import sys
-import os
-import re
+''' 
+DEGREE PLANNER MAIN CLASS
+'''
 
+import re
 from ..io.output import *
 from .course import Course
 from .catalog import Catalog
-from .degree import Degree
-from .rules import Rule
 from .schedule import Schedule
 from .test_suite import Test1
 from .user import User
 from .user import Flag
 from .search import Search
-from .course_template import Template
 from .command import *
 from .parse import *
+from .degree import *
 
 VERSION = "API 2.0"
 SEMESTERS_MAX = 12
@@ -28,10 +25,14 @@ OUTDEBUG = Output(OUT.DEBUG)
 OUTCONSOLE = Output(OUT.CONSOLE)
 
 class Planner():
-    """ DEGREE PLANNER COMMAND PARSER
+    '''
+    All interaction with a Planner is with this class using input_handler
 
-    message_handler function receives commands and arguments separated by 
-    cammas in a string. Multiple commands allowed within one entry.
+    One catalog shared within a Planner, with distinct users containing their
+    own schedules, eligible classes and degree selection
+
+    input_handler function receives commands and arguments separated by
+    commas in a string. Multiple commands allowed within one entry.
 
     Valid commands are:
         (developer only)
@@ -58,35 +59,36 @@ class Planner():
             find, <course>* (may list any number of courses)
                 - find courses that match with the inputted string. Useful
                 for browsing courses that contain certain keywords.
+            details, <course>
+                - course description
 
     NOTE: This class is created once and is not instigated for each user.
     It is essential to keep all user specific data inside the User class.
-    """
+    '''
 
     def __init__(self, name):
         # each user is assigned a User object and stored in this dictionary
         # Users = <user id, User>
-        # note that the User object is meant to represent any user and does not
-        # specifically have to be a discord user.
         self.name = name
         self.users = dict()
         self.catalog = Catalog()
         self.course_search = Search()
         self.flags = set()
 
-    """ MAIN FUNCTION FOR ACCEPTING COMMAND ENTRIES
 
-    Args:
-        user (User): user object containing all user data and unique user ID
-        message (str): string to be parsed as command or submitted to a waiting
-            active command
-        output (Output): user interface output
-
-    Returns:
-        bool: whether input was successfully executed
-    """
     async def input_handler(self, user:User, user_input:str, output:Output=None):
-        if output == None: output = Output(OUT.CONSOLE)
+        ''' MAIN FUNCTION FOR ACCEPTING COMMAND ENTRIES
+
+        Args:
+            user (User): user object containing all user data and unique user ID
+            message (str): string to be parsed as command or submitted to a waiting
+                active command
+            output (Output): user interface output
+
+        Returns:
+            bool: whether input was successfully executed
+        '''
+        if output is None: output = Output(OUT.CONSOLE)
         if Flag.CMD_PAUSED in user.flag:
             user.command_queue_locked = True
             await OUTDEBUG.print(f'user {user.username} locked command queue')
@@ -110,20 +112,20 @@ class Planner():
         return True
 
 
-    """ EXECUTES COMMANDS TAKEN FROM USER'S COMMAND QUEUE
-
-    Args:
-        user (User): user object containing all user data and unique user ID
-        output (Output): user interface output
-    """
     async def command_handler(self, user:User, output:Output=None) -> None:
-        if output == None: output = Output(OUT.CONSOLE)
+        ''' EXECUTES COMMANDS TAKEN FROM USER'S COMMAND QUEUE
+
+        Args:
+            user (User): user object containing all user data and unique user ID
+            output (Output): user interface output
+        '''
+        if output is None: output = Output(OUT.CONSOLE)
 
         """
         This while loop will keep running until all commands are executed with
         one exception: if user input is requested to finish running a command.
         
-        If that is the case, this loop will break, the current command will be 
+        If that is the case, this loop will break, the current command will be
         stored in User, and further user input will run this loop again where
         it first executes the stored command, and then continue as normal.
         
@@ -186,7 +188,7 @@ class Planner():
                 await self.set_active_schedule(user, user.username, output)
                 schedule = user.get_current_schedule()
 
-            if command.command == CMD.ADD or command.command == CMD.REMOVE:
+            if command.command in (CMD.ADD, CMD.REMOVE):
                 if Flag.CMD_PAUSED in user.flag:
                     decision = user.command_decision
                     courses = command.data_store
@@ -205,7 +207,7 @@ class Planner():
                 else:
                     possible_courses = await self.remove_course(user, course, semester, output)
 
-                if possible_courses != None:
+                if possible_courses is not None:
                     await output.print(f"SCHEDULE{DELIMITER_TITLE}entry {course} has multiple choices, please choose from list:")
                     i = 1
                     for c in possible_courses:
@@ -242,14 +244,32 @@ class Planner():
                     await output.print(f"SCHEDULE{DELIMITER_TITLE}no degree specified")
                 else:
                     await output.print(f"SCHEDULE{DELIMITER_TITLE}{schedule.name} Fulfillment")
-                    fulfillment = schedule.degree.fulfillment(schedule.get_all_courses())
-                    output.print_hold(schedule.degree.print_fulfillment(fulfillment))
+                    #fulfillment = schedule.degree.fulfillment(schedule.get_all_courses())
+                    #output.print_hold(schedule.degree.print_fulfillment(fulfillment))
+                    fulfillment = schedule.degree.fulfillment_all_wildcard_combos(schedule.get_all_courses())
+                    output.print_hold(print_fulfillment(fulfillment))
                     await output.print_cache()
                 user.command_queue.task_done()
                 continue
 
+            if command.command == CMD.AUTOCOMPLETE:
+                if schedule.degree == None:
+                    await output.print(f"SCHEDULE{DELIMITER_TITLE}no degree specified")
+                else:
+                    await output.print(f"SCHEDULE{DELIMITER_TITLE}{schedule.name} Recommended path of completion:")
+
+                user.command_queue.task_done()
+                continue
+
             if command.command == CMD.DETAILS:
-                await output.print(self.details(command.arguments[0]))
+                details = self.details(command.arguments[0])
+                if details is None: details = 'please enter valid full name of course'
+                await output.print(details)
+                user.command_queue.task_done()
+                continue
+
+            else:
+                await output.print(f"Unimplemented command {command.command} entered")
                 user.command_queue.task_done()
                 continue
 
@@ -258,19 +278,18 @@ class Planner():
     # HELPER FUNCTIONS
     #--------------------------------------------------------------------------
 
-    
-    """ Parse string into a list of Command objects
-
-    Args:
-        cmd (str): input string to be parsed
-        output (Output): user interface output
-
-    Returns:
-        list[Command]: list of Command objects each containing data
-            on command and arguments
-    """
     async def parse_command(self, cmd:str, output:Output=None) -> list:
-        if output == None: output = Output(OUT.CONSOLE)
+        ''' Parse string into a list of Command objects
+
+        Args:
+            cmd (str): input string to be parsed
+            output (Output): user interface output
+
+        Returns:
+            list[Command]: list of Command objects each containing data
+                on command and arguments
+        '''
+        if output is None: output = Output(OUT.CONSOLE)
 
         arg_list = [self.cleanse(e.strip().casefold()) for e in cmd.split(",") if e.strip()]
         cmd_queue = []
@@ -279,17 +298,17 @@ class Planner():
         for e in arg_list:
             # if we find a command, push the last command to the queue and create new command
             if CMD.get(e) != CMD.NONE:
-                if last_command != None:
+                if last_command is not None:
                     cmd_queue.append(last_command)
                 last_command = Command(e)
             # otherwise, add this as an argument to the last command
             else:
-                if last_command != None:
+                if last_command is not None:
                     last_command.arguments.append(e)
                 else:
                     await output.print(f"ERROR{DELIMITER_TITLE}invalid command '{e}'")
         # after exiting the loop, push the last command if it exists into the queue
-        if last_command != None:
+        if last_command is not None:
             cmd_queue.append(last_command)
 
         # verify all commands have the required number of arguments
@@ -298,34 +317,34 @@ class Planner():
                 await output.print(f"ERROR{DELIMITER_TITLE}invalid arguments for command {str(e)}")
         cmd_queue = [e for e in cmd_queue if e.valid()]
         return cmd_queue
-    
+
 
     def cleanse(self, msg:str) -> str:
         re.sub(r'\W+', '', msg)
         return msg
 
-    
-    """ Runs test suite
 
-    Args:
-        output (Output): user interface output
-    """
     async def test(self, output:Output=None):
-        if output == None: output = Output(output_location=OUT.DEBUG)
+        ''' Runs test suite
+
+        Args:
+            output (Output): user interface output
+        '''
+        if output is None: output = Output(output_location=OUT.DEBUG)
         test_suite = Test1()
         await test_suite.test(output)
 
 
-    """ Changes user's active schedule selection and creates new schedule if
-        specified schedule is not found
-
-    Args:
-        user (User): user to perform the action on
-        schedule_name (str): schedule name
-        output (Output): user interface output
-    """
     async def set_active_schedule(self, user:User, schedule_name:str, output:Output=None) -> None:
-        if output == None: output = Output(OUT.CONSOLE)
+        ''' Changes user's active schedule selection and creates new schedule if
+            specified schedule is not found
+
+        Args:
+            user (User): user to perform the action on
+            schedule_name (str): schedule name
+            output (Output): user interface output
+        '''
+        if output is None: output = Output(OUT.CONSOLE)
         schedule = user.get_schedule(schedule_name)
         if schedule == None:
             await output.print(f"SCHEDULE{DELIMITER_TITLE}Schedule {schedule_name} not found, generating new one!")
@@ -338,45 +357,46 @@ class Planner():
             return
 
 
-    """ Gets schedule currently being modified by user
 
-    Args:
-        user (User): get the active schedule of this user
-
-    Returns:
-        schedule (Schedule): active schedule object
-    """
     async def get_active_schedule(self, user:User) -> Schedule:
+        ''' Gets schedule currently being modified by user
+
+        Args:
+            user (User): get the active schedule of this user
+
+        Returns:
+            schedule (Schedule): active schedule object
+        '''
         return user.get_current_schedule()
 
 
-    """ Get all of user's schedule
-
-    Args:
-        user (User): get the active schedule of this user
-
-    Returns:
-        list (list(Schedule)): returns a list of all schedule
-            objects
-    """
     async def get_all_schedules(self, user:User) -> list:
+        ''' Get all of user's schedule
+
+        Args:
+            user (User): get the active schedule of this user
+
+        Returns:
+            list (list(Schedule)): returns a list of all schedule
+                objects
+        '''
         return user.get_all_schedules()
 
 
-    """ Changes user's active schedule's degree
-
-    Args:
-        user (User): user to perform the action on
-        schedule (Schedule): schedule to change degree on
-        degree_name (str): degree name
-        output (Output): user interface output
-
-    Returns:
-        bool: if degree was successfully changed. 
-            False usually means specified degree was not found
-    """
     async def set_degree(self, schedule:Schedule, degree_name:str, output:Output=None) -> bool:
-        if output == None: output = Output(OUT.CONSOLE)
+        ''' Changes user's active schedule's degree
+
+        Args:
+            user (User): user to perform the action on
+            schedule (Schedule): schedule to change degree on
+            degree_name (str): degree name
+            output (Output): user interface output
+
+        Returns:
+            bool: if degree was successfully changed. 
+                False usually means specified degree was not found
+        '''
+        if output is None: output = Output(OUT.CONSOLE)
         degree = self.catalog.get_degree(degree_name)
         if degree == None:
             await output.print(f"SCHEDULE{DELIMITER_TITLE}invalid degree entered: {degree_name}")
@@ -387,26 +407,31 @@ class Planner():
             return True
 
     
-    """ Returns list of courses to output that match input entry
-
-    Args:
-        course_name (str): search for courses that contains this string in its name
-        course_pool (set): pool of courses to search from
-    """
     def search(self, course_name:str, course_pool:set=None) -> list:
+        ''' Returns list of courses to output that match input entry
+
+        Args:
+            course_name (str): search for courses that contains this string in its name
+            course_pool (set): pool of courses to search from
+        '''
         possible_courses = self.course_search.search(course_name)
-        if course_pool != None:
+        if course_pool is not None:
             possible_courses = [e for e in possible_courses if self.catalog.get_course(e) in course_pool]
-        # Note that while it is possible to use 
-        #   search = Search(course_pool)
-        #   possible_courses = search.search(course_name)
-        # doing so means we're constructing a new search object and generating its index
-        # everytime we do a search, drastically slowing down the program and defeating
-        # the whole point of the searcher.
+        """ 
+        Note that while it is possible to use 
+        search = Search(course_pool)
+        possible_courses = search.search(course_name)
+        doing so means we're constructing a new search object and generating its index
+        everytime we do a search, drastically slowing down the program and defeating
+        the whole point of the searcher.
+        """
         return possible_courses
 
 
     def details(self, course_name:str) -> str:
+        ''' Returns:
+            description (string): the course description. Returns None if invalid name
+        '''
         courses = self.search(course_name)
         if len(courses) == 0:
             return 'Course not found'
@@ -414,17 +439,17 @@ class Planner():
             course = self.catalog.get_course(courses[0])
             s = f'{repr(course)}{DELIMITER_TITLE}{course.description}'
             return s
-        return 'Please write exact course name or ID'
+        return None
 
 
-    """ Print list of courses to output that match input entry, searches from entire catalog
-
-    Args:
-        course_name (str): search term
-        output (Output): user interface output
-    """
     async def print_matches(self, course_name:str, output:Output=None) -> None:
-        if output == None: output = Output(OUT.CONSOLE)
+        ''' Print list of courses to output that match input entry, searches from entire catalog
+
+        Args:
+            course_name (str): search term
+            output (Output): user interface output
+        '''
+        if output is None: output = Output(OUT.CONSOLE)
         possible_courses = self.course_search.search(course_name)
         possible_courses.sort()
         await output.print(f"FIND{DELIMITER_TITLE}courses matching {course_name}: ")
@@ -436,20 +461,20 @@ class Planner():
         await output.print_cache()
 
 
-    """ Add course to user's schedule
-
-    Args:
-        user (User): user to perform the action on
-        course_name (str): course name
-        semester (int or str): semester to add course into
-        output (Output): user interface output
-
-    Returns:
-        returned_courses (list): If there are multiple courses that match course_name, 
-            then this list will be returned in the form of a list of Courses.
-    """
     async def add_course(self, user:User, course_name:str, semester, output:Output=None):
-        if output == None: output = Output(OUT.CONSOLE)
+        ''' Add course to user's schedule
+
+        Args:
+            user (User): user to perform the action on
+            course_name (str): course name
+            semester (int or str): semester to add course into
+            output (Output): user interface output
+
+        Returns:
+            returned_courses (list): If there are multiple courses that match course_name, 
+                then this list will be returned in the form of a list of Courses.
+        '''
+        if output is None: output = Output(OUT.CONSOLE)
 
         # sanity checks
         if isinstance(semester, str) and not semester.isdigit():
@@ -466,7 +491,7 @@ class Planner():
         if len(returned_courses) == 0:
             await output.print(f"SCHEDULE{DELIMITER_TITLE}Course {course_name} not found")
             return None
-        elif len(returned_courses) > 1:
+        if len(returned_courses) > 1:
             return returned_courses
         
         # at this point, returned_courses have exactly one course, so we can perform the addition immediately
@@ -476,20 +501,20 @@ class Planner():
         return None
 
 
-    """ Remove course from user's schedule
-
-    Args:
-        user (User): user to perform the action on
-        course_name (str): course name
-        semester (int or str): semester to remove course from
-        output (Output): user interface output
-
-    Returns:
-        returned_courses (list): If there are multiple courses that match course_name, 
-            then this list will be returned in the form of a list of Courses.
-    """
     async def remove_course(self, user:User, course_name:str, semester, output:Output=None):
-        if output == None: output = Output(OUT.CONSOLE)
+        ''' Remove course from user's schedule
+
+        Args:
+            user (User): user to perform the action on
+            course_name (str): course name
+            semester (int or str): semester to remove course from
+            output (Output): user interface output
+
+        Returns:
+            returned_courses (list): If there are multiple courses that match course_name, 
+                then this list will be returned in the form of a list of Courses.
+        '''
+        if output is None: output = Output(OUT.CONSOLE)
 
         # sanity checks
         if isinstance(semester, str) and not semester.isdigit():
@@ -513,7 +538,7 @@ class Planner():
         if len(returned_courses) == 0:
             await output.print(f"SCHEDULE{DELIMITER_TITLE}Course {course_name} not found")
             return None
-        elif len(returned_courses) > 1:
+        if len(returned_courses) > 1:
             return returned_courses
         
         # at this point, returned_courses have exactly one course, so we can perform the removal immediately
@@ -523,16 +548,16 @@ class Planner():
         return None
 
     
-    """ Parse json data into a list of courses and degrees inside a catalog
-
-    Args:
-        output (Output): user interface output
-
-    Returns:
-        Exception: if exception occurs, returns exception, else None
-    """
     async def parse_data(self, output:Output=None) -> Exception:
-        if output == None: 
+        ''' Parse json data into a list of courses and degrees inside a catalog
+
+        Args:
+            output (Output): user interface output
+
+        Returns:
+            Exception: if exception occurs, returns exception, else None
+        '''
+        if output is None: 
             output = Output(OUT.CONSOLE)
 
         catalog_file = "catalog_results.json"

@@ -1,13 +1,23 @@
-from array import *
-from ..io.output import *
+'''
+Course class
+'''
+
 import json
 from collections import OrderedDict
-
 import logging
 
-class Course():
+from ..io.output import *
 
-    def __init__(self, name, subject, id, credits=0):
+class Course():
+    '''
+    Course object containing a dictionary of attributes that uniquely defines the course
+    and can be used to search/filter for it
+
+    It also has attributes for fast access which should remain consistent with the attribute
+    dictionary
+    '''
+
+    def __init__(self, name, subject, id, course_credits=0):
         # main attributes
         self.name = name
         self.unique_name = name
@@ -15,34 +25,35 @@ class Course():
         self.course_id = id
         self.course_id2 = 0
         self.level = str(id)[0]
-        self.credits = credits
-        self.attributes = dict() # dict of lists of items, e.g. {[concentration, AI], [CI, true]}
+        self.course_credits = course_credits
+
+        # dict of lists of items, e.g. {'concentration.ai':[concentration, ai], 'ci.true':[ci, true]}
+        self.attributes = dict()
         
         self.validate_course_id()
 
-        if name != '' and name != 'NA' and name != 'ANY':
+        if name not in ('', 'NA', 'ANY'):
             self.set_name(name)
-        if subject != '' and subject != 'NA' and subject != 'ANY':
+        if subject not in ('', 'NA', 'ANY'):
             self.set_subject(subject)
-        if id != 0 and id != -1 and id != 'ANY':
+        if id not in (0, -1, '', 'NA', 'ANY'):
             self.set_id(id)
-        if credits != -1:
-            self.set_credits(credits)
+        if course_credits != -1:
+            self.set_credits(course_credits)
 
         self.cross_listed = set() # set of cross listed courses that should be treated as same course
         self.description = "" # text to be displayed describing the class
         
-
-    """ Some input data for courses may not be in the desired format. 
-
-        For example, most courses have an ID in the form of ####, but some
-        have ####.##. We separate the latter form into 
-        courseid = #### (numbers prior to dot) and courseid2 = ## (after dot)
-        
-        All data is modified in place, no arguments and return necessary
-    """
     def validate_course_id(self, output:Output=None) -> None:
-        if output == None: output = Output(OUT.CONSOLE)
+        ''' Some input data for courses may not be in the desired format.
+
+            For example, most courses have an ID in the form of ####, but some
+            have ####.##. We separate the latter form into
+            courseid = #### (numbers prior to dot) and courseid2 = ## (after dot)
+
+            All data is modified in place, no arguments and return necessary
+        '''
+        if output is None: output = Output(OUT.CONSOLE)
         self.course_id = str(self.course_id)
         if isinstance(self.course_id, str):
             if '.' in self.course_id:
@@ -87,7 +98,7 @@ class Course():
         return self.course_id2
     
     def get_credits(self):
-        return self.credits
+        return self.course_credits
     
     def get_crosslisted(self):
         return self.cross_listed
@@ -117,22 +128,22 @@ class Course():
         self.remove_attribute_by_head('subject')
         self.add_attribute(f'subject.{subject}')
 
-    def set_id(self, id):
-        self.course_id = id
+    def set_id(self, course_id):
+        self.course_id = course_id
         self.remove_attribute_by_head('course_id')
-        self.add_attribute(f'course_id.{id}')
+        self.add_attribute(f'course_id.{course_id}')
         self.remove_attribute_by_head('level')
-        self.add_attribute(f'level.{str(id)[0]}')
+        self.add_attribute(f'level.{str(course_id)[0]}')
 
-    def set_id2(self, id):
-        self.course_id = id
+    def set_id2(self, course_id):
+        self.course_id = course_id
         self.remove_attribute_by_head('course_id')
-        self.add_attribute(f'course_id2.{id}')
+        self.add_attribute(f'course_id2.{course_id}')
 
-    def set_credits(self, credits):
-        self.credits = credits
-        self.remove_attribute_by_head('credits')
-        self.add_attribute(f'credits.{credits}')
+    def set_credits(self, course_credits):
+        self.course_credits = course_credits
+        self.remove_attribute_by_head('course_credits')
+        self.add_attribute(f'course_credits.{course_credits}')
     
 
     """
@@ -219,13 +230,13 @@ class Course():
         if isinstance(attr, list):
             attr = '.'.join(attr)
         matched_attrs = self.get_attributes_by_head(attr)
-        next = set()
+        next_elements = set()
         attr = attr.split('.')
         for matched_attr in matched_attrs:
             matched_attr = matched_attr.split('.')
             if len(matched_attr) > len(attr):
-                next.add(matched_attr[len(attr)])
-        return next
+                next_elements.add(matched_attr[len(attr)])
+        return next_elements
             
     def get_all_before_wildcard(self, attr) -> list:
         if isinstance(attr, list):
@@ -238,23 +249,23 @@ class Course():
             r_attr.append(e)
         return '.'.join(r_attr)
                 
-    """
-    Returns:
-        course (OrderedDict): all course attributes within an ordered dictionary
-            includes name, id, id2, major, credits, CI, HASS_inquiry, crosslisted,
-            concentrations, pathways, presequisites, restricted, description.
-
-            Some attributes will be omitted if empty, includes all attributes that
-            are the form of a list or set.
-    """
     def json(self) -> OrderedDict:
+        '''
+        Returns:
+            course (OrderedDict): all course attributes within an ordered dictionary
+                includes name, id, id2, major, credits, CI, HASS_inquiry, crosslisted,
+                concentrations, pathways, presequisites, restricted, description.
+
+                Some attributes will be omitted if empty, includes all attributes that
+                are the form of a list or set.
+        '''
         course = OrderedDict()
         course.update({'name':self.name})
         course.update({'id':self.course_id})
         if self.course_id2 != 0:
             course.update({'id2':self.course_id2})
         course.update({'subject':self.subject})
-        course.update({'credits':self.credits})
+        course.update({'course_credits':self.course_credits})
         course.update({'description':self.description})
         course.update(self.attributes)
         return json.dumps(course)
@@ -262,7 +273,7 @@ class Course():
     def __repr__(self):
         st = (f"{self.unique_name if self.unique_name else 'None'}: {self.subject if self.subject else 'None'} " + \
             f"{str(self.course_id)}{f'.{self.course_id2}' if self.course_id2 != 0 else ''}, " + \
-            f"{self.credits} credits, " + \
+            f"{self.course_credits} credits, " + \
             f"attributes: {self.attributes.keys()}" if len(self.attributes) > 0 else '' + '\n')
         return st.replace("set()", "none")
 
@@ -273,10 +284,11 @@ class Course():
         if not isinstance(other, Course):
             return False
         if (self.name == other.name and self.course_id == other.course_id and self.course_id2 == other.course_id2 
-            and self.subject == other.subject and self.credits == other.credits and self.cross_listed == other.cross_listed
+            and self.subject == other.subject and self.course_credits == other.course_credits and self.cross_listed == other.cross_listed
             and self.attributes == other.attributes):
             return True
         return False
 
     def __hash__(self):
         return hash(self.course_id) + len(self.attributes)*10 + len(self.name)*100 + len(self.description)*1000
+    

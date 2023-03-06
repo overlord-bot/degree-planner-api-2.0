@@ -1,16 +1,19 @@
-import logging
+'''
+Testing units for degree planner
+'''
 
 from .course import Course
 from .catalog import *
-from .degree import Degree
 from .rules import Rule
-from .schedule import Schedule
 from .course_template import Template
 from .search import Search
 from ..io.output import *
 from .user import *
 
-class Test1():    
+class Test1():
+    '''
+    general test cases
+    '''
     async def test(self, output:Output=None):
         if output == None: output = Output(output_location=OUT.DEBUG)
 

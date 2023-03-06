@@ -1,17 +1,23 @@
-from array import *
+'''
+User class and Flag enum that indicates command queue status for the user
+'''
+
 from enum import Enum
+import json
 from .schedule import Schedule
 from queue import Queue
-import json
-
 
 class Flag(Enum):
+    '''
+    For command queue use
+    '''
     CMD_PAUSED = 100
     CMD_RUNNING = 101
 
-
 class User():
-    
+    '''
+    Stores user identification, schedules, course eligibility and command queue operatons info
+    '''
     def __init__(self, id):
         self.id = id # unique id for user
         self.username = str(id) # username to display
@@ -26,31 +32,58 @@ class User():
         self.command_decision = None
         self.command_paused = None
 
+        # list of rules that determines the set of courses the student is allowed to take
+        # (need to statisify only one rule)
+        self.eligibility_rules = list()
 
-    def get_all_schedules(self) -> Schedule:
-        return self.__schedules.values()
+
+    def get_all_schedules(self) -> list:
+        '''
+        Creates a copied list of all current schedule objects
+        '''
+        return list(self.__schedules.values())
 
 
     def get_schedule(self, schedule_name:str) -> Schedule:
+        '''
+        Returns schedule if found, otherwise None
+        '''
         if schedule_name not in self.__schedules:
             return None
         return self.__schedules.get(schedule_name)
 
 
-    def new_schedule(self, schedule_name:str):
+    def new_schedule(self, schedule_name:str) -> None:
+        '''
+        Creates a new schedule if the schedule does not yet exist
+        '''
+        if self.__schedules.get(schedule_name, None) is not None:
+            return
         schedule = Schedule(schedule_name)
         self.__schedules.update({schedule_name : schedule})
 
 
     def add_schedule(self, schedule_name:str, schedule:Schedule):
+        '''
+        Add schedule from input to schedules
+        '''
         self.__schedules.update({schedule_name : schedule})
 
 
-    def get_current_schedule(self):
+    def get_current_schedule(self) -> str:
+        '''
+        Get schedule name being actively editted for this user
+        '''
         return self.get_schedule(self.curr_schedule)
 
 
     def rename_schedule(self, old_name:str, new_name:str) -> bool:
+        '''
+        Renames existing schedule only if new name does not already exist
+
+        Returns:
+            success (bool): whether rename was successful
+        '''
         if old_name not in self.__schedules or new_name in self.__schedules:
             return False
         else:
@@ -59,6 +92,9 @@ class User():
             return True
 
     def json(self):
+        '''
+        Creates json file of this class
+        '''
         user = dict()
         user.update({'username':self.username})
         user.update({'id':self.id})

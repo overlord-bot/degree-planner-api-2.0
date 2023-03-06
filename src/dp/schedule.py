@@ -1,104 +1,119 @@
-from array import *
+'''
+Schedule class
+'''
 
-from .course import Course
-from .catalog import Catalog
-from .degree import Degree
-from .rules import Rule
 import json
-
-
-#########################################################################
-#                              SCHEDULE:                                #
-#                                                                       #
-# This class is created for each schedule. A user should be able to     #
-# create multiple schedules. A schedule may contain user specific data  #
-#########################################################################
-
-# TODO: add export function that transfers course lists between schedules
-# without transferring any user specific data
-
+from .course import Course
 
 class Schedule():
+    '''
+    this class is created for each schedule. A user should be able to
+    create multiple schedules. A schedule may contain user specific data
+
+    TODO: add export function that transfers course lists between schedules
+    without transferring any user specific data
+    '''
 
     def __init__(self, name:str):
-        # needs to be initialized before every use by calling master_list_init()
-        # uses 2D array [semester][course]
-        self.__master_list = []
+        # 2D list, 1st dimension is semesters and 2nd dimension is courses for that semester
+        # NOTE: duplications are allowed both within semester and across semesters!
+        self.__master_list = list()
         self.SEMESTERS_MAX = 12
         self.name = name
         self.degree = None
+
+        # master_list must be initiated before use
         self.master_list_init()
 
-    """ Initializes the list storing all courses in the schedule, grouped by semester
-    """
+
     def master_list_init(self):
+        ''' 
+        Initializes the list storing all courses in the schedule, grouped by semester
+        '''
         self.__master_list.clear()
-        for x in range(0, 12):
+        for _ in range(0, 12):
             self.__master_list.append([])
 
-    """
-    Args:
-        course (Course): course to add
-        semester (int): add course only to this semester
 
-    Returns:
-        success (set): whether add was successful
-    """
+    def get_course_array(self) -> list:
+        ''' 
+        Directly returns the schedule's course array. If you wish to modify it without
+        affecting the schedule, remember to make a copy
+
+        Returns: 2D list, 1st dimension is semesters and 2nd dimension is courses for that semester
+
+        NOTE: duplications are allowed both within semester and across semesters!
+        '''
+        return self.__master_list
+
+
     def add_course(self, course:Course, semester:int) -> bool:
+        '''
+        Args:
+            course (Course): course to add
+            semester (int): add course only to this semester
+
+        Returns:
+            success (set): whether add was successful
+        '''
         if semester in self.find_course(course):
             return False
         else:
             self.__master_list[semester].append(course)
             return True
 
-    """
-    Args:
-        course (Course): course to remove
-        semester (int): remove course only from specified semester
 
-    Returns:
-        success (bool): whether removal was successful
-    """
     def remove_course(self, course:Course, semester:int) -> bool:
+        '''
+        Args:
+            course (Course): course to remove
+            semester (int): remove course only from specified semester
+
+        Returns:
+            success (bool): whether removal was successful
+        '''
         if semester not in self.find_course(course):
             return False
         else:
             self.__master_list[semester].remove(course)
             return True
 
-    """
-    Args:
-        semester (int): semester to find courses in
-    Returns:
-        courses (list): all courses in the specified semester,
-            None if invalid semester entered and empty list if
-            semester exists but no courses added.
-    """
+
     def get_semester(self, semester:int) -> list:
+        '''
+        Args:
+            semester (int): semester to find courses in
+        Returns:
+            courses (list): all courses in the specified semester,
+                None if invalid semester entered and empty list if
+                semester exists but no courses added.
+        '''
         if semester not in range(0, self.SEMESTERS_MAX):
             return None
         else:
             return self.__master_list[semester]
 
-    """
-    Returns:
-        courses (set): all courses within this schedule
-    """
+
     def get_all_courses(self) -> set:
+        '''
+        Returns:
+            courses (set): all courses within this schedule
+        '''
         courses = set()
         for a in self.__master_list:
             for c in a:
                 courses.add(c)
         return courses
 
-    """ 
-    Args:
-        course (Course): course to locate
-        
-    Returns:
-        present_in (list): list of semesters that the course is found in
-    """
+
     def find_course(self, course:Course) -> list:
+        '''
+        Args:
+            course (Course): course to locate
+
+        Returns:
+            present_in (list): list of semesters that the course is found in
+        '''
         i = 0
         present_in = []
         for courselist in self.__master_list:
@@ -107,12 +122,13 @@ class Schedule():
             i+=1
         return present_in
 
-    """
-    Returns:
-        schedule (dict): returns user's schedule in the form of
-            <schedule name : <semester : course list>>
-    """
+
     def json(self):
+        '''
+        Returns:
+            schedule (dict): returns user's schedule in the form of
+                <schedule name : <semester : course list>>
+        '''
         schedule = dict()
         schedule.update({self.name:dict()})
         for i in range(0, 12):

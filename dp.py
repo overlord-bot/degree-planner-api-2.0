@@ -1,20 +1,22 @@
+'''
+Command line shell for degree planner
+'''
+
 import asyncio
 import sys
+import logging
 
 from src.dp.degree_planner import Planner
 from src.dp.user import User
-from src.io.output import *
 
 planner = Planner('API2.0')
 user = User(1)
 
-def command(user_input):
-    asyncio.run(command_call(user_input))
-
-async def command_call(user_input):
-    await planner.input_handler(user, user_input)
-
 def terminal():
+    '''
+    Infinite loop that calls command(user_input) upon user input
+    and exits when it receives 'quit' input from user
+    '''
     print("Welcome to Degree Planner API 2.0")
     print("  open source under MIT License")
     print("  Project Overlord 2022")
@@ -27,11 +29,12 @@ def terminal():
             logging.getLogger().setLevel(logging.WARNING)
 
     print("")
-    while (1):
+    while 1:
         user_input = input("(degree planner) >>> ")
-        if user_input.casefold() == "quit": 
+        if user_input.casefold() == "quit":
             return
-        command(user_input)
+        asyncio.run(planner.input_handler(user, user_input))
 
 if __name__ == "__main__":
     terminal()
+    
