@@ -58,7 +58,7 @@ class Template():
             i += hash(course)
         return i
 
-def get_course_match(template:Template, course_pool=None, head=False) -> list:
+def get_course_match(template:Template, course_pool=None, head=True) -> list:
     ''' Intakes a criteria of courses that we want returned
         For example, if the template specifies 2000 as course ID, then all 2000 level courses inside
         the template's course list is returned
