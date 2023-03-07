@@ -6,61 +6,7 @@ import copy
 import timeit
 import queue
 
-"""
-class BFS_tree():
-
-    def __init__(self, start_nodes:set=None):
-        self.layers = []
-
-        if start_nodes is None:
-            return
-
-        root_layer = dict()
-        for node in start_nodes:
-            root_layer.update({node:[node]})
-        self.layers.append(root_layer)
-
-    def append_layer(self, layer):
-        self.layers.append(layer)
-
-    def insert_layer(self, layer, position):
-        if position < len(self.layers):
-            self.layers.insert(position, layer)
-        else:
-            self.layers.append(layer)
-
-    def pop_layer(self, position):
-        self.layers.pop(position)
-
-    def remove_layer(self, layer):
-        self.layers.remove(layer)
-
-    def replace_layer(self, layer, position):
-        if position < len(self.layers):
-            self.pop_layer(self, position)
-            self.insert_layer(self, layer, position)
-
-    def get_layer(self, position):
-        return self.layers[position]
-    
-    def in_layer(self, element, layer_index):
-        return element in self.get_layer(layer_index).keys()
-    
-    def __repr__(self):
-        rstr = f'\nbfs tree ( connected node : [trace] ): {len(self)} layers'
-        for i in range(0, len(self.layers)):
-            rstr += f"\n  layer {i}:\n    " 
-            rstr += '\n    '.join([f'{node} : {trace}' for node, trace in self.get_layer(i).items()])
-        return rstr
-    
-    def __eq__(self, other):
-        return self.layers == other.layers
-    
-    def __len__(self):
-        return len(self.layers)
-"""
-
-class BFS():
+class BFS_data():
 
     def __init__(self, start_nodes:set=None):
         if start_nodes is None:
@@ -168,13 +114,11 @@ class Graph():
         return self.nodes_name.get(id)
 
 
-    def build_bfs(self, start_nodes:set) -> BFS:
+    def bfs(self, start_nodes:set) -> BFS_data:
         '''
-        build BFS tree from links
+        find BFS paths from links
         '''
-        start = timeit.default_timer()
-
-        bfs = BFS(start_nodes)
+        bfs = BFS_data(start_nodes)
         while bfs.has_next():
             node_current = bfs.next()
             for node_next in self.outbound_connections(node_current):
@@ -184,35 +128,8 @@ class Graph():
                 trace.append(node_next)
                 bfs.add_node(node_next, trace)
 
-        stop = timeit.default_timer()
-        print('\nbfs time: ', stop - start)
         return bfs
 
-    """
-    def build_bfs(self, start_node) -> BFS_tree:
-        '''
-        build BFS tree from links
-        '''
-        start = timeit.default_timer()
-        tree = BFS_tree(start_node)
-        traversed = set()
-        while len(tree.get_layer(-1)):
-            next_layer = dict()
-            for node, trace in tree.get_layer(-1).items():
-                for next_node in self.outbound_connections(node):
-                    if next_node in traversed or next_node in trace:
-                        continue
-                    trace_copy = copy.deepcopy(trace)
-                    trace_copy.append(next_node)
-                    traversed.add(node)
-                    next_layer.update({next_node:trace_copy})
-            tree.append_layer(next_layer)
-        
-        tree.pop_layer(-1) # remove the last empty layer
-        stop = timeit.default_timer()
-        print('\nbfs time: ', stop - start)
-        return tree
-    """
 
     def __repr__(self):
         WIDTH = 8

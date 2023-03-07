@@ -7,7 +7,7 @@ from ..io.output import *
 from .course import Course
 from .catalog import Catalog
 from .schedule import Schedule
-from .test_suite import Test1
+from .old_test_suite import Test1
 from .user import User
 from .user import Flag
 from .search import Search
@@ -76,7 +76,7 @@ class Planner():
         self.flags = set()
 
 
-    async def input_handler(self, user:User, user_input:str, output:Output=None):
+    async def input_handler(self, user:User, user_input:str, output:Output=None) -> bool:
         ''' MAIN FUNCTION FOR ACCEPTING COMMAND ENTRIES
 
         Args:
