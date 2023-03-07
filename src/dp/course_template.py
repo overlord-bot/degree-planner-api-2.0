@@ -65,7 +65,7 @@ def get_course_match(template:Template, course_pool=None, head=True) -> list:
     
         Parameters: a template with ONLY the attributes we want to require changed to their required states
 
-        Returns: [ fulfillment_status ] : a list of fulfillment_status objects each containing template course
+        Returns: [ Fulfillment_Status ] : a list of fulfillment_status objects each containing template course
             used, required course count and fulfillment set
     '''
     fulfillment_sets = list()
@@ -99,12 +99,8 @@ def get_course_match(template:Template, course_pool=None, head=True) -> list:
                 print('get next: ' + str(course.get_next(course.get_all_before_wildcard(target_attribute))))
                 break
             '''
-
-            possible_values_sets = [course.get_next(course.get_all_before_wildcard(target_attribute)) for course in course_pool 
-                                    if len(course.get_next(course.get_all_before_wildcard(target_attribute)))]
-            possible_values = set()
-            for possible_values_set in possible_values_sets:
-                possible_values = possible_values.union(possible_values_set)
+            for course in course_pool:
+                possible_values = possible_values.union(course.get_next(course.get_all_before_wildcard(target_attribute)))
             for val in possible_values:
                 template_copy = copy.deepcopy(template)
                 template_copy.template_course.replace_wildcard(target_attribute, val)
@@ -115,4 +111,5 @@ def get_course_match(template:Template, course_pool=None, head=True) -> list:
     # return an empty fulfillment set if there are no matches
     if head and not len(fulfillment_sets):
         fulfillment_sets.append(Fulfillment_Status(template, template.courses_required, course_pool))
+        
     return fulfillment_sets
