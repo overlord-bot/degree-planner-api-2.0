@@ -94,11 +94,11 @@ def test_fulfillment():
     testtemplate4.no_replacement = True
     testtemplate5.no_replacement = True
 
-    degree.templates.append(testtemplate1)
-    degree.templates.append(testtemplate2)
-    degree.templates.append(testtemplate3)
-    degree.templates.append(testtemplate4)
-    degree.templates.append(testtemplate5)
+    degree.add_template(testtemplate1)
+    degree.add_template(testtemplate2)
+    degree.add_template(testtemplate3)
+    degree.add_template(testtemplate4)
+    degree.add_template(testtemplate5)
 
     print('template 1 + template 2: ' + repr(testtemplate1 + testtemplate2))
 
@@ -165,11 +165,11 @@ def test_fulfillment2():
     testtemplate4.no_replacement = True
     testtemplate5.no_replacement = True
 
-    degree.templates.append(testtemplate1)
-    degree.templates.append(testtemplate2)
-    degree.templates.append(testtemplate3)
-    degree.templates.append(testtemplate4)
-    degree.templates.append(testtemplate5)
+    degree.add_template(testtemplate1)
+    degree.add_template(testtemplate2)
+    degree.add_template(testtemplate3)
+    degree.add_template(testtemplate4)
+    degree.add_template(testtemplate5)
 
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6, print, fulfillment')
 

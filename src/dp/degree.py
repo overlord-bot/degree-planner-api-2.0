@@ -24,26 +24,39 @@ class Degree():
         self.templates = list() # rules should be inserted in order of importance
 
 
+    def add_template(self, template:Template):
+        if not len(self.templates):
+            template.importance = 0
+        else:
+            template.importance = self.templates[-1].importance - 1
+        self.templates.append(template)
+
+    def remove_template(self, template:Template):
+        self.templates.remove(template)
+
+    def has_template(self, template:Template):
+        return template in self.templates
+    
+
+    ##############################################################################################
+    # fulfillment computation
+    ##############################################################################################
+
     def generate_template_combinations(self, taken_courses) -> list:
         '''
         generates a list of all possible template combinations resulted from wildcard usage
         '''
-        max_fulfillment_sets = list() # max fulfillment set for every template
-
+        max_fulfillments = list() # max fulfillment set for every template, including wildcards
         for template in self.templates:
-            """
-            compute fulfillment sets for all template in the order they appear in self.templates
-            note that the order can influence fulfillment success, and earlier templates receive
-            priority to being fulfilled
-            """
-            max_fulfillment_sets.append(get_course_match(template, taken_courses))
+            max_fulfillments.append(get_course_match(template, taken_courses))
 
         # if template contains wildcards, this is how many templates can result from the wildcard
-        bound_array = [len(e) for e in max_fulfillment_sets]
+        bound_array = [len(e) for e in max_fulfillments]
 
         # all possible combinations using all generated templates
         combos = generate_combinatorics(bound_array, 1)
 
+        # we make a list of all the template combinations
         all_template_combinations = list()
 
         for combo in combos:
@@ -52,31 +65,26 @@ class Degree():
             # generates the combination of templates to use
             for i in range(0, len(combo)):
                 # gets the fulfillment status to use based on the number in combo
-                fulfillment_status = max_fulfillment_sets[i][combo[i] - 1]
+                fulfillment_status = max_fulfillments[i][combo[i] - 1]
                 # gets the template we should use
                 templates_to_use.append(fulfillment_status.get_template())
-
             all_template_combinations.append(templates_to_use)
         
         return all_template_combinations
 
 
-    def fulfillment(self, taken_courses) -> None:
+    def fulfillment(self, taken_courses:set) -> None:
         '''
         Run fulfillment checking by generating all actual templates from wildcard templates
         and trying every combination to see which one is the best
         '''
         start = timeit.default_timer()
         # all fulfillment sets based on each possible combination of templates resulted from wildcard templates
-        fulfillments = list()
+        potential_fulfillments = list()
 
         for template_set in self.generate_template_combinations(taken_courses):
-            
-            """
-            all courses that can possibily fulfill this rule, we will choose a subset from this list
-            that minimally impacts other rules
-            """
-            max_fulfillments = dict()
+
+            max_fulfillments = dict() # all courses that fulfills each template
             for template in template_set:
                 max_fulfillments.update({template:get_course_match(template, taken_courses)[0]})
 
@@ -88,17 +96,17 @@ class Degree():
             for template in template_set:
                 self.template_steal(template, all_fulfillment, max_fulfillments)
 
-            fulfillments.append(all_fulfillment)
+            potential_fulfillments.append(all_fulfillment)
 
         # checks all fulfillment sets and return the best one
-        best_fulfillment_set = None
-        for fulfillment in fulfillments:
-            if best_fulfillment_set is None or degree_num_unfulfilled(fulfillment) < degree_num_unfulfilled(best_fulfillment_set):
-                best_fulfillment_set = fulfillment
+        best_fulfillment = None
+        for fulfillment in potential_fulfillments:
+            if best_fulfillment is None or degree_num_unfulfilled(fulfillment) < degree_num_unfulfilled(best_fulfillment):
+                best_fulfillment = fulfillment
 
         end = timeit.default_timer()
         print('\nfulfillment runtime: ', end - start, '\n')
-        return best_fulfillment_set
+        return best_fulfillment
 
 
     def template_fill(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, order_courses:bool=False, force:bool=False) -> Fulfillment_Status:
