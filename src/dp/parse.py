@@ -97,47 +97,6 @@ async def parse_courses(file_name, catalog:Catalog, output:Output=None):
         ################################################
 
         catalog.add_course(course)
-    """
-    course1 = Course('1', 'BINTEST', 1)
-    course1.add_attribute('bin.1')
-    course1.add_attribute('bin.2')
-    catalog.add_course(course1)
-
-    course2 = Course('2', 'BINTEST', 2)
-    course2.add_attribute('bin.1')
-    course2.add_attribute('bin.2')
-    catalog.add_course(course2)
-
-    course3 = Course('3', 'BINTEST', 3)
-    course3.add_attribute('bin.1')
-    catalog.add_course(course3)
-
-    course4 = Course('4', 'BINTEST', 4)
-    course4.add_attribute('bin.1')
-    course4.add_attribute('bin.3')
-    catalog.add_course(course4)
-    """
-
-    course1 = Course('1', 'BINTEST', 1)
-    course1.add_attribute('bin.1')
-    course1.add_attribute('bin.4')
-    catalog.add_course(course1)
-
-    course2 = Course('2', 'BINTEST', 2)
-    course2.add_attribute('bin.1')
-    course2.add_attribute('bin.2')
-    catalog.add_course(course2)
-
-    course3 = Course('3', 'BINTEST', 3)
-    course3.add_attribute('bin.2')
-    course3.add_attribute('bin.3')
-    catalog.add_course(course3)
-
-    course4 = Course('4', 'BINTEST', 4)
-    course4.add_attribute('bin.2')
-    course4.add_attribute('bin.3')
-    catalog.add_course(course4)
-
 
 """ Rarses json data degree objects stored in Catalog
 
@@ -167,8 +126,8 @@ async def parse_degrees(file_name, catalog, output:Output=None):
     # TESTING DEGREES FOR NOW:
     degree = Degree("computer science")
     catalog.add_degree(degree)
-    rule1 = Rule("concentration")
 
+    '''
     template1 = Template("concentration requirement", Course('ANY', 'ANY', 'ANY'))
     template1.template_course.add_attribute('concentration.*')
     # template1.template_course.replace_attribute('level', 'level.4')
@@ -185,45 +144,12 @@ async def parse_degrees(file_name, catalog, output:Output=None):
     template7 = Template("Test: any two same concentration", Course("ANY", "ANY", "ANY"))
     template7.template_course.add_attribute('concentration.*')
 
-
-    testtemplate1 = Template('bin1', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate1.template_course.add_attribute('bin.1')
-    testtemplate1.courses_required = 1
-    testtemplate2 = Template('bin2', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate2.template_course.add_attribute('bin.2')
-    testtemplate3 = Template('bin3', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate3.template_course.add_attribute('bin.3')
-    testtemplate4 = Template('bin4', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate4.template_course.add_attribute('bin.4')
-    testtemplate1.no_replacement = True
-    testtemplate2.no_replacement = True
-    testtemplate3.no_replacement = True
-    testtemplate3.no_replacement = True
-
-
-    
-
-    degree.templates.append(testtemplate1)
-    degree.templates.append(testtemplate2)
-    degree.templates.append(testtemplate3)
-    degree.templates.append(testtemplate4)
-
-    return
     degree.templates.append(template3)
     degree.templates.append(template4)
     degree.templates.append(template5)
     degree.templates.append(template6)
     degree.templates.append(template7)
-    #degree.add_rule(rule0)
-    #degree.add_rule(rule1)
-    #degree.add_rule(rule2)
-    #degree.add_rule(rule3)
-    #degree.add_rule(rule4)
-    #degree.add_rule(rule5)
-    #degree.add_rule(rule6)
-
-    catalog.add_degree(degree)
-
+    '''
     await output.print(f"added degree {repr(degree)} to catalog")
 
     '''

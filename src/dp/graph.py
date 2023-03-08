@@ -18,6 +18,11 @@ class Course_Overlap():
 
 
 class BFS_data():
+    '''
+    stores shortest paths that traces from any root to that node
+
+    if node isn't found, that means it isn't connected to any roots
+    '''
 
     def __init__(self, start_nodes:set):
         self.paths = dict()
@@ -39,6 +44,11 @@ class BFS_data():
     def contains_node(self, node):
         return self.paths.get(node, None) is not None
     
+    def contains_child(self, node):
+        if not self.contains_node(node):
+            return False
+        return len(self.paths.get(node)) > 1
+    
     def next(self):
         return self.bfs_queue.get()
     
@@ -56,6 +66,9 @@ class BFS_data():
 
 
 class Graph():
+    '''
+    adjacency graph that can store sets as edge data
+    '''
 
     def __init__(self, nodes_set:set, edge_data_gen=None):
         nodes = list(nodes_set)
@@ -184,6 +197,7 @@ class Graph():
 
     def __eq__(self, other):
         return self.grid == other.grid and self.nodes_id == other.nodes_id
-    
+   
+
     def __len__(self):
         return len(self.grid)

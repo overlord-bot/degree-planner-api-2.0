@@ -563,7 +563,6 @@ class Planner():
         catalog_file = "catalog_results.json"
         degree_file = "class_results.json"
 
-        #try:
         await parse_courses(catalog_file, self.catalog, output)
         await output.print(f"ADMIN{DELIMITER_TITLE}Sucessfully parsed catalog data")
         
@@ -576,10 +575,3 @@ class Planner():
         await output.print(f"ADMIN{DELIMITER_TITLE}Printing catalog:", output_location=OUT.DEBUG)
         output.print_hold(str(self.catalog))
         await output.print_cache(OUT.DEBUG)
-
-        #except Exception as e:
-        #    await output.print(f"ERROR{DELIMITER_TITLE}An exception has occurred during parsing: {e}", output_location=OUT.ERROR)
-        #    return e
-
-        #else:
-        #    return None

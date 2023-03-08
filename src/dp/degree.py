@@ -3,6 +3,8 @@ contains degree class and a set of helper functions
 '''
 
 import json
+import timeit
+import logging
 from .course_template import *
 from .graph import Graph
 from .graph import Course_Overlap
@@ -64,14 +66,26 @@ class Degree():
         Run fulfillment checking by generating all actual templates from wildcard templates
         and trying every combination to see which one is the best
         '''
+        start = timeit.default_timer()
         # all fulfillment sets based on each possible combination of templates resulted from wildcard templates
         fulfillments = list()
 
         for template_combo in self.generate_template_combinations(taken_courses):
+            max_fulfillments = dict() # max fulfillment set for every template
+
+            for template in template_combo:
+                """
+                compute all desired courses for all templates
+                """
+                max_fulfillments.update({template:get_course_match(template, taken_courses)[0]})
+
             # runs fulfillment checking using this specific combination of templates
             fulfillment_set = dict()
             for template in template_combo:
                 fulfillment_set.update({template:self.fulfillment_of_template(template, fulfillment_set, taken_courses)})
+
+            for template in template_combo:
+                self.steal(template, fulfillment_set, max_fulfillments)
 
             fulfillments.append(fulfillment_set)
 
@@ -81,6 +95,8 @@ class Degree():
             if best_fulfillment_set is None or degree_num_unfulfilled(fulfillment) < degree_num_unfulfilled(best_fulfillment_set):
                 best_fulfillment_set = fulfillment
 
+        end = timeit.default_timer()
+        print('\nfulfillment runtime: ', end - start, '\n')
         return best_fulfillment_set
 
     '''
@@ -99,15 +115,6 @@ class Degree():
         Returns:
             fulfillment (Fulfillment_Status): fulfillment status of the current template
         '''
-        max_fulfillments = dict() # max fulfillment set for every template
-
-        for t in self.templates:
-            """
-            compute all desired courses for all templates
-            """
-            max_fulfillments.update({t:get_course_match(t, taken_courses)[0]})
-
-        # all_fulfillment.pop(template, None)
 
         """
         all courses that can possibily fulfill this rule, we will choose a subset from this list
@@ -145,11 +152,17 @@ class Degree():
                 course_destroy_bindings(all_fulfillment, course)
                 this_fulfillment.add_fulfillment_course(course)
                 all_fulfillment.update({template:this_fulfillment})
+                continue
 
+        return this_fulfillment
+    
+
+    def steal(self, template, all_fulfillment, max_fulfillments):
+        this_fulfillment = all_fulfillment.get(template)
+        while this_fulfillment.unfulfilled_count() > 0:
             """
             here is the inverse bfs search algorithm
             """
-            print('beginning bfs')
             # initial layer is all fulfillment statuses with excess
             bfs_roots = set()
             overlap_calculator = Course_Overlap(max_fulfillments)
@@ -165,8 +178,8 @@ class Degree():
             print('graph: ' + str(graph))
 
             bfs = graph.bfs(bfs_roots)
-            if not bfs.contains_node(this_fulfillment):
-                continue
+            if not bfs.contains_child(this_fulfillment):
+                break
             
             # calculates path to move courses
             path = bfs.get_path(this_fulfillment)
@@ -184,9 +197,6 @@ class Degree():
                 all_fulfillment.update({giver.get_template():giver})
             
             all_fulfillment.update({path[-1].get_template():path[-1]})
-            continue
-
-        return this_fulfillment
 
     def json(self):
         '''
