@@ -274,7 +274,7 @@ class Course():
         st = (f"{self.unique_name if self.unique_name else 'None'}: {self.subject if self.subject else 'None'} " + \
             f"{str(self.course_id)}{f'.{self.course_id2}' if self.course_id2 != 0 else ''}, " + \
             f"{self.course_credits} credits, " + \
-            f"attributes: {self.attributes.keys()}" if len(self.attributes) > 0 else '' + '\n')
+            f"attributes: {list(self.attributes.keys())}" if len(self.attributes) > 0 else '' + '\n')
         return st.replace("set()", "none")
 
     def __str__(self):
@@ -288,6 +288,16 @@ class Course():
             and self.attributes == other.attributes):
             return True
         return False
+    
+    def __add__(self, other):
+        course = Course('ANY', 'ANY', 'ANY')
+        for attr in self.attributes:
+            course.add_attribute(attr)
+        for attr in other.attributes:
+            course.add_attribute(attr)
+        course.description = self.description + '\n\n' + other.description
+        course.cross_listed = self.cross_listed.union(other.cross_listed)
+        return course
 
     def __hash__(self):
         return hash(self.course_id) + len(self.attributes)*10 + len(self.name)*100 + len(self.description)*1000

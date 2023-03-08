@@ -20,12 +20,15 @@ class Template():
         self.name = name
         self.template_course = template_course
         self.course_set = course_set
-        self.no_replacement = no_replacement
         self.courses_required = courses_required
+
+        self.no_replacement = no_replacement
+        self.importance = 0 # used internally by degree, higher the number the more important it is
+
 
     def __repr__(self):
         s = f"Template {self.name}:\n"
-        s += f"  {str(self.template_course)}\n"
+        s += f"  {repr(self.template_course)}\n"
         s += f"course_set: "
         s += ",".join(self.course_set)
         return s
@@ -54,6 +57,16 @@ class Template():
             if other.template_course != self.template_course:
                 return False
         return True
+    
+    def __lt__(self, other):
+        return self.importance < other.importance
+
+    def __gt__(self, other):
+        return self.importance > other.importance
+
+    def __add__(self, other):
+        return Template(f'{self.name} + {other.name}', self.template_course + other.template_course, 
+            self.course_set.union(other.course_set), self.no_replacement | other.no_replacement, self.courses_required + other.courses_required)
 
     def __hash__(self):
         i = hash(self.template_course)**2

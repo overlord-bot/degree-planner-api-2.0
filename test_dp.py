@@ -72,6 +72,8 @@ def test_fulfillment():
     course5.add_attribute('bin.4')
     catalog.add_course(course5)
 
+    print('course 1 + course 2: ' + repr(course1 + course2))
+
     planner.course_search.update_items(catalog.get_all_course_names())
     planner.course_search.generate_index()
 
@@ -97,6 +99,8 @@ def test_fulfillment():
     degree.templates.append(testtemplate3)
     degree.templates.append(testtemplate4)
     degree.templates.append(testtemplate5)
+
+    print('template 1 + template 2: ' + repr(testtemplate1 + testtemplate2))
 
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, print, fulfillment')
 

@@ -83,10 +83,10 @@ class Degree():
             # runs fulfillment checking using this specific combination of templates
             all_fulfillment = dict()
             for template in template_set:
-                all_fulfillment.update({template:self.fulfillment_of_template(template, all_fulfillment, taken_courses, True, max_fulfillments)})
+                all_fulfillment.update({template:self.template_fill(template, all_fulfillment, max_fulfillments)})
 
             for template in template_set:
-                self.steal(template, all_fulfillment, max_fulfillments)
+                self.template_steal(template, all_fulfillment, max_fulfillments)
 
             fulfillments.append(all_fulfillment)
 
@@ -101,7 +101,7 @@ class Degree():
         return best_fulfillment_set
 
 
-    def fulfillment_of_template(self, template:Template, all_fulfillment:dict, taken_courses:set, order_courses:bool=False, max_fulfillments:dict=None) -> Fulfillment_Status:
+    def template_fill(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, order_courses:bool=False, force:bool=False) -> Fulfillment_Status:
         '''
         Computes fulfillment status of a single template
 
@@ -114,19 +114,19 @@ class Degree():
             fulfillment (Fulfillment_Status): fulfillment status of the current template
         '''
 
-        requested_fulfillment = get_course_match(template, taken_courses)[0]
-        if order_courses and max_fulfillments is not None:
-            ordered_courses = courses_sort_bindings(max_fulfillments, requested_fulfillment)
+        requested_fulfillment = max_fulfillments.get(template)
+        if order_courses:
+            potential_courses = courses_sort_bindings(max_fulfillments, requested_fulfillment)
         else:
-            ordered_courses = requested_fulfillment.get_fulfillment_set()
+            potential_courses = requested_fulfillment.get_fulfillment_set()
 
         this_fulfillment = Fulfillment_Status(template, template.courses_required, set())
 
         """
-        we grab all courses from requested_courses_ordered that won't disturb
+        we grab all courses from potential_courses that won't disturb
         the fulfillment of previous rules
         """
-        for course in ordered_courses:
+        for course in potential_courses:
             if course_num_bindings(all_fulfillment, course) == 0:
                 # course hasn't been added to any fulfillment sets yet
                 this_fulfillment.add_fulfillment_course(course)
@@ -143,7 +143,7 @@ class Degree():
         return this_fulfillment
 
 
-    def steal(self, template, all_fulfillment, max_fulfillments):
+    def template_steal(self, template:Template, all_fulfillment:dict, max_fulfillments:dict):
         '''
         try to steal any courses it can from other templates
         '''
@@ -161,7 +161,7 @@ class Degree():
                 for fulfillment_status2 in all_fulfillment.values():
                     graph.try_add_connection(fulfillment_status1, fulfillment_status2)
 
-            print('graph: ' + str(graph))
+            #print('graph: ' + str(graph))
 
             bfs = graph.bfs(bfs_roots)
             if not bfs.contains_child(this_fulfillment):
@@ -184,7 +184,7 @@ class Degree():
             all_fulfillment.update({path[-1].get_template():path[-1]})
 
 
-    def trade(self, template, all_fulfillment, max_fulfillments):
+    def template_trade(self, template, all_fulfillment, max_fulfillments):
         '''
         try to exchange courses from other replacement templates by receiving
         a course that fulfills both self and the other replacement template
