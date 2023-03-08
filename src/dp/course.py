@@ -276,9 +276,6 @@ class Course():
             f"{self.course_credits} credits, " + \
             f"attributes: {self.attributes.keys()}" if len(self.attributes) > 0 else '' + '\n')
         return st.replace("set()", "none")
-    
-    def __str__(self):
-        return self.unique_name
 
     def __str__(self):
         return self.name

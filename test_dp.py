@@ -1,7 +1,7 @@
 import timeit
 import asyncio
 from datetime import datetime
-from src.dp.graph import *
+from src.dp.graph import Graph
 from src.dp.degree_planner import *
 
 def test_graph():

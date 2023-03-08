@@ -5,6 +5,7 @@ contains degree class and a set of helper functions
 import json
 from .course_template import *
 from .graph import Graph
+from .graph import Course_Overlap
 
 class Degree():
     '''
@@ -139,38 +140,51 @@ class Degree():
             # if we can't add this course without breaking already fulfilled templates,
             # use inverse bfs to "wiggle" previous fulfllment sets to get ourselves the
             # course we want
-            if not course_can_unbind(all_fulfillment, course):
-                """
-                TODO: here is the inverse bfs search algorithm
-                """
-                print('beginning bfs')
-                # initial layer is all fulfillment statuses with excess
-                bfs_roots = set()
-                graph = Graph(set(all_fulfillment.values()))
-                
-                # generate links between fulfillment statuses
-                for fulfillment_status1 in all_fulfillment.values():
-                    if fulfillment_status1.excess_count() > 0:
-                        bfs_roots.add(fulfillment_status1)
-                    for fulfillment_status2 in all_fulfillment.values():
-                        if any(i in max_fulfillments.get(fulfillment_status2.get_template()).get_fulfillment_set() for i in fulfillment_status1.get_fulfillment_set()):
-                            graph.add_connection(fulfillment_status1, fulfillment_status2)
+            if course_can_unbind(all_fulfillment, course):
+                # we are free to remove the course from its original places and add it here
+                course_destroy_bindings(all_fulfillment, course)
+                this_fulfillment.add_fulfillment_course(course)
+                all_fulfillment.update({template:this_fulfillment})
 
-                print('graph: ' + str(graph))
+            """
+            here is the inverse bfs search algorithm
+            """
+            print('beginning bfs')
+            # initial layer is all fulfillment statuses with excess
+            bfs_roots = set()
+            overlap_calculator = Course_Overlap(max_fulfillments)
+            graph = Graph(set(all_fulfillment.values()), overlap_calculator)
+            
+            # generate links between fulfillment statuses
+            for fulfillment_status1 in all_fulfillment.values():
+                if fulfillment_status1.excess_count() > 0:
+                    bfs_roots.add(fulfillment_status1)
+                for fulfillment_status2 in all_fulfillment.values():
+                    graph.try_add_connection(fulfillment_status1, fulfillment_status2)
 
-                bfs = graph.bfs(bfs_roots)
-                if not bfs.contains_node(this_fulfillment):
-                    continue
+            print('graph: ' + str(graph))
 
-                path = bfs.get_path(this_fulfillment)
-
-                print('path: ' + ' -> '.join([str(e) for e in path]))
+            bfs = graph.bfs(bfs_roots)
+            if not bfs.contains_node(this_fulfillment):
                 continue
+            
+            # calculates path to move courses
+            path = bfs.get_path(this_fulfillment)
 
-            # otherwise, we are free to remove the course from its original places and add it here
-            course_destroy_bindings(all_fulfillment, course)
-            this_fulfillment.add_fulfillment_course(course)
-            all_fulfillment.update({template:this_fulfillment})
+            print('path: ' + ' -> '.join([str(e) for e in path]))
+
+            # shifts courses along the path such that we obtain a new course
+            for i in range(0, len(path) - 1):
+                giver = path[i]
+                receiver = path[i + 1]
+                transferred_course = graph.edge_data(giver, receiver, True)
+                print('transferring course: ' + str(transferred_course))
+                giver.remove_fulfillment_course(transferred_course)
+                receiver.add_fulfillment_course(transferred_course)
+                all_fulfillment.update({giver.get_template():giver})
+            
+            all_fulfillment.update({path[-1].get_template():path[-1]})
+            continue
 
         return this_fulfillment
 

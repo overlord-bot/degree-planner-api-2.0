@@ -6,12 +6,20 @@ import copy
 import timeit
 import queue
 
+from .fulfillment_status import Fulfillment_Status
+
+class Course_Overlap():
+
+    def __init__(self, max_fulfillment:dict):
+        self.max_fulfillment = max_fulfillment
+
+    def edge_data(self, node1:Fulfillment_Status, node2:Fulfillment_Status):
+        return node1.get_fulfillment_set().intersection(self.max_fulfillment.get(node2.get_template()).get_fulfillment_set())
+
+
 class BFS_data():
 
-    def __init__(self, start_nodes:set=None):
-        if start_nodes is None:
-            start_nodes = set()
-
+    def __init__(self, start_nodes:set):
         self.paths = dict()
         self.bfs_queue = queue.SimpleQueue()
 
@@ -49,23 +57,42 @@ class BFS_data():
 
 class Graph():
 
-    def __init__(self, nodes_set:set):
+    def __init__(self, nodes_set:set, edge_data_gen=None):
         nodes = list(nodes_set)
-        self.grid = [[False for j in range(len(nodes))] for i in range(len(nodes))]
+        self.grid = [[{} for j in range(len(nodes))] for i in range(len(nodes))]
         self.nodes_id = dict()
         self.nodes_name = dict()
+        self.edge_data_gen = edge_data_gen
         for i in range(0, len(nodes)):
             self.nodes_id.update({nodes[i]:i})
             self.nodes_name.update({i:nodes[i]})
 
+    
+    def compute_overlap(self, node1, node2):
+        if self.edge_data_gen is None:
+            return {'1'}
+        return self.edge_data_gen.edge_data(node1, node2)
 
-    def add_connection(self, node_origin, node_to):
+
+    def add_connection(self, node_origin, node_to, data_set:set=None):
         '''
         add a connection from node_origin to node_to
         '''
         if node_origin == node_to:
             return
-        self.grid[self.node_id(node_origin)][self.node_id(node_to)] = True
+        if data_set is None:
+            data_set = self.compute_overlap(node_origin, node_to)
+        self.grid[self.node_id(node_origin)][self.node_id(node_to)] = data_set
+
+
+    def try_add_connection(self, node_origin, node_to):
+        if node_origin == node_to:
+            return
+        data_set = self.compute_overlap(node_origin, node_to)
+        if len(data_set):
+            self.grid[self.node_id(node_origin)][self.node_id(node_to)] = data_set
+            return True
+        return False
 
 
     def remove_connection(self, node_origin, node_to):
@@ -74,7 +101,7 @@ class Graph():
         '''
         if node_origin == node_to:
             return
-        self.grid[self.node_id(node_origin)][self.node_id(node_to)] = False
+        self.grid[self.node_id(node_origin)][self.node_id(node_to)] = {}
 
 
     def outbound_connections(self, node) -> set:
@@ -84,7 +111,7 @@ class Graph():
         id = self.node_id(node)
         connected_nodes = set()
         for i in range(0, len(self.grid)):
-            if self.grid[id][i]:
+            if len(self.grid[id][i]):
                 connected_nodes.add(self.node_name(i))
         return connected_nodes
 
@@ -96,9 +123,17 @@ class Graph():
         id = self.node_id(node)
         connected_nodes = set()
         for i in range(0, len(self.grid)):
-            if self.grid[i][id]:
+            if len(self.grid[i][id]):
                 connected_nodes.add(self.node_name(i))
         return connected_nodes
+    
+    
+    def edge_data(self, node1, node2, first_element_only:bool=False):
+        elements = self.grid[self.node_id(node1)][self.node_id(node2)]
+        if first_element_only and len(elements):
+            for e in elements:
+                return e
+        return elements
 
 
     def node_id(self, node) -> int:
@@ -133,11 +168,17 @@ class Graph():
 
 
     def __repr__(self):
-        WIDTH = 12
+        WIDTH = 16
         rstr = f"\n{'links'.ljust(WIDTH)}{''.join([str(self.node_name(i)).ljust(WIDTH) for i in range(0, len(self))])}\n"
         for i in range(0, len(self.grid)):
-            node_name = str(self.node_name(i)).ljust(WIDTH)
-            rstr += f"{node_name}{''.join(['False'.ljust(WIDTH) if e == False else 'True'.ljust(WIDTH) for e in self.grid[i]])}\n"
+            rstr += str(self.node_name(i)).ljust(WIDTH)
+            for j in range(0, len(self.grid)):
+                data_set = self.grid[i][j]
+                if not len(data_set):
+                    rstr += '-'.ljust(WIDTH)
+                    continue
+                rstr += f"{', '.join([str(e) for e in data_set])}".ljust(WIDTH)
+            rstr += '\n'
         return rstr
     
 
