@@ -74,6 +74,9 @@ class Fulfillment_Status():
     def __repr__(self) -> str:
         return f"template: {self.template}\nrequired count: {self.required}\nfulfillment set: {self.fulfillment_set}"
     
+    def __str__(self):
+        return str(self.template.name)
+    
     def __eq__(self, other):
         return self.template == other.template and self.required == other.required and self.fulfillment_set == other.fulfillment_set
     

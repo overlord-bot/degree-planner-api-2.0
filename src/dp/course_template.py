@@ -29,6 +29,9 @@ class Template():
         s += f"course_set: "
         s += ",".join(self.course_set)
         return s
+    
+    def __str__(self):
+        return self.name
 
     def __len__(self):
         return len(self.course_set)

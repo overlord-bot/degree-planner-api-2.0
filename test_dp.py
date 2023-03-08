@@ -1,5 +1,6 @@
 import timeit
 import asyncio
+from datetime import datetime
 from src.dp.graph import *
 from src.dp.degree_planner import *
 
@@ -46,6 +47,7 @@ def run_cmd(planner, user, string):
 
 start = timeit.default_timer()
 
+print(f'beginning test {datetime.now()}')
 test_graph()
 input('press enter to continue')
 test_fulfillment()

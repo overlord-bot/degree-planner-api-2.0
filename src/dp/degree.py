@@ -4,6 +4,7 @@ contains degree class and a set of helper functions
 
 import json
 from .course_template import *
+from .graph import Graph
 
 class Degree():
     '''
@@ -120,7 +121,9 @@ class Degree():
         from its fulfillment set without impacting its fulfilled status
         """
         requested_courses_ordered = courses_sort_bindings(all_fulfillment, requested_status_return)
-        fulfillment_set = set()
+
+        this_fulfillment = Fulfillment_Status(template, template.courses_required, set())
+        all_fulfillment.update({template:this_fulfillment})
 
         """
         we greedily grab courses from requested_courses_ordered that won't disturb
@@ -129,7 +132,8 @@ class Degree():
         for course in requested_courses_ordered:
             # a non no_replacement rule may share any course with another non no_replacement rule
             if course_has_no_bindings(course, all_fulfillment):
-                fulfillment_set.add(course)
+                this_fulfillment.add_fulfillment_course(course)
+                all_fulfillment.update({template:this_fulfillment})
                 continue
 
             # if we can't add this course without breaking already fulfilled templates,
@@ -141,36 +145,34 @@ class Degree():
                 """
                 print('beginning bfs')
                 # initial layer is all fulfillment statuses with excess
-                bfs_roots = [e for e in all_fulfillment.values() if e.excess_count() > 0]
+                bfs_roots = set()
+                graph = Graph(set(all_fulfillment.values()))
                 
+                # generate links between fulfillment statuses
+                for fulfillment_status1 in all_fulfillment.values():
+                    if fulfillment_status1.excess_count() > 0:
+                        bfs_roots.add(fulfillment_status1)
+                    for fulfillment_status2 in all_fulfillment.values():
+                        if any(i in max_fulfillments.get(fulfillment_status2.get_template()).get_fulfillment_set() for i in fulfillment_status1.get_fulfillment_set()):
+                            graph.add_connection(fulfillment_status1, fulfillment_status2)
 
-                for root in bfs_roots:
-                    bfs_tree = list()
-                    bfs_tree.append([root])
+                print('graph: ' + str(graph))
 
-                    last_layer = 0
-                    while (len(bfs_tree[last_layer])):
-                        bfs_tree.append([])
-                        for parent_node in bfs_tree[last_layer]:
-                            for fulfillment_status in all_fulfillment.values():
-                                if in_2dlist(fulfillment_status, bfs_tree):
-                                    continue
-                                if any(i in max_fulfillments.get(fulfillment_status.get_template()).get_fulfillment_set() for i in parent_node.get_fulfillment_set()):
-                                    bfs_tree[last_layer + 1].append(fulfillment_status)
-                        last_layer += 1
-                    print(str(bfs_tree))
-                    
+                bfs = graph.bfs(bfs_roots)
+                if not bfs.contains_node(this_fulfillment):
+                    continue
 
+                path = bfs.get_path(this_fulfillment)
+
+                print('path: ' + ' -> '.join([str(e) for e in path]))
                 continue
 
             # otherwise, we are free to remove the course from its original places and add it here
             course_destroy_bindings(all_fulfillment, course)
-            fulfillment_set.add(course)
+            this_fulfillment.add_fulfillment_course(course)
+            all_fulfillment.update({template:this_fulfillment})
 
-        requested_status_return.set_fulfillment_set(fulfillment_set)
-        all_fulfillment.update({template:requested_status_return})
-
-        return requested_status_return
+        return this_fulfillment
 
     def json(self):
         '''

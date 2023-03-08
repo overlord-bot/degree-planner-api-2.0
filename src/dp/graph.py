@@ -43,13 +43,14 @@ class BFS_data():
     def __repr__(self):
         rstr = f'\nbfs paths:\n'
         for node, path in self.paths.items():
-            rstr += f"  {str(node).ljust(5)}: {' -> '.join(path)}\n"
+            rstr += f"  {str(node).ljust(10)}: {' -> '.join([str(e) for e in path])}\n"
         return rstr
 
 
 class Graph():
 
-    def __init__(self, nodes:list):
+    def __init__(self, nodes_set:set):
+        nodes = list(nodes_set)
         self.grid = [[False for j in range(len(nodes))] for i in range(len(nodes))]
         self.nodes_id = dict()
         self.nodes_name = dict()
@@ -132,7 +133,7 @@ class Graph():
 
 
     def __repr__(self):
-        WIDTH = 8
+        WIDTH = 12
         rstr = f"\n{'links'.ljust(WIDTH)}{''.join([str(self.node_name(i)).ljust(WIDTH) for i in range(0, len(self))])}\n"
         for i in range(0, len(self.grid)):
             node_name = str(self.node_name(i)).ljust(WIDTH)
