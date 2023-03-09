@@ -4,9 +4,15 @@ contains degree class and a set of helper functions
 
 import json
 import timeit
+from enum import Enum
 from .course_template import *
 from .graph import Graph
 from .graph import Course_Overlap
+
+class Bind_Type(Enum):
+    NR = 1
+    R = 2
+    ALL = 3
 
 class Degree():
     '''
@@ -21,10 +27,12 @@ class Degree():
 
     def __init__(self, name):
         self.name = name
-        self.templates = list() # rules should be inserted in order of importance
-
+        self.templates = list()
 
     def add_template(self, template:Template):
+        '''
+        templates should be inserted in order of importance
+        '''
         if not len(self.templates):
             template.importance = 0
         else:
@@ -46,7 +54,8 @@ class Degree():
         '''
         generates a list of all possible template combinations resulted from wildcard usage
         '''
-        max_fulfillments = list() # max fulfillment set for every template, including wildcards
+        # max fulfillment set for every template, including wildcards
+        max_fulfillments = list()
         for template in self.templates:
             max_fulfillments.append(get_course_match(template, taken_courses))
 
@@ -84,7 +93,8 @@ class Degree():
 
         for template_set in self.generate_template_combinations(taken_courses):
 
-            max_fulfillments = dict() # all courses that fulfills each template
+            # all courses that fulfills each template
+            max_fulfillments = dict()
             for template in template_set:
                 max_fulfillments.update({template:get_course_match(template, taken_courses)[0]})
 
@@ -101,7 +111,7 @@ class Degree():
         # checks all fulfillment sets and return the best one
         best_fulfillment = None
         for fulfillment in potential_fulfillments:
-            if best_fulfillment is None or degree_num_unfulfilled(fulfillment) < degree_num_unfulfilled(best_fulfillment):
+            if best_fulfillment is None or num_unfulfilled_course_slots(fulfillment) < num_unfulfilled_course_slots(best_fulfillment):
                 best_fulfillment = fulfillment
 
         end = timeit.default_timer()
@@ -124,7 +134,7 @@ class Degree():
 
         requested_fulfillment = max_fulfillments.get(template)
         if order_courses:
-            potential_courses = courses_sort_bindings(max_fulfillments, requested_fulfillment)
+            potential_courses = sort_by_num_bindings(max_fulfillments, requested_fulfillment)
         else:
             potential_courses = requested_fulfillment.get_fulfillment_set()
 
@@ -132,18 +142,19 @@ class Degree():
 
         """
         we grab all courses from potential_courses that won't disturb
-        the fulfillment of previous rules
+        the fulfillment of previous templates
         """
         for course in potential_courses:
-            if course_num_bindings(all_fulfillment, course) == 0:
-                # course hasn't been added to any fulfillment sets yet
+            if not len(bindings_all(all_fulfillment, course)) or (not template.no_replacement and not len(bindings_with_NR_templates(all_fulfillment, course))):
+                # course hasn't been added to any fulfillment sets yet, or if both this and
+                # other templates this course is in are replacement enabled templates
                 this_fulfillment.add_fulfillment_course(course)
                 all_fulfillment.update({template:this_fulfillment})
                 continue
 
-            if course_can_unbind(all_fulfillment, course):
+            if has_only_weak_bindings(all_fulfillment, course):
                 # we are free to remove the course from its original places and add it here
-                course_destroy_bindings(all_fulfillment, course)
+                bindings_clear(all_fulfillment, course)
                 this_fulfillment.add_fulfillment_course(course)
                 all_fulfillment.update({template:this_fulfillment})
                 continue
@@ -168,8 +179,6 @@ class Degree():
                     bfs_roots.add(fulfillment_status1)
                 for fulfillment_status2 in all_fulfillment.values():
                     graph.try_add_connection(fulfillment_status1, fulfillment_status2)
-
-            #print('graph: ' + str(graph))
 
             bfs = graph.bfs(bfs_roots)
             if not bfs.contains_child(this_fulfillment):
@@ -198,14 +207,13 @@ class Degree():
         a course that fulfills both self and the other replacement template
         '''
         this_fulfillment = all_fulfillment.get(template)
+        while this_fulfillment.unfulfilled_count() > 0:
+            pass
 
 
-    def json(self):
-        '''
-        Return this class as a json file
-        '''
+    def json(self) -> json:
         degree = dict()
-        degree.update({self.name:self.rules})
+        degree.update({self.name:self.templates})
         return json.dumps(degree)
 
 
@@ -235,9 +243,9 @@ class Degree():
 ######################################
 
 def print_fulfillment(all_fulfillment:dict) -> str:
-    """
+    '''
     Print status_return dictionary in a neat string format
-    """
+    '''
     printout = ''
     for status in all_fulfillment.values():
         printout += (f"  Template '{status.template.name}':" + \
@@ -264,73 +272,104 @@ def generate_combinatorics(bound:list, start_index=1) -> list:
     return nth_combo
 
 
-def generate_bound(all_fulfillment:dict):
+def possible_combinations_of_wildcard_templates(all_fulfillment:dict):
     bound = list()
     for fulfill_set in all_fulfillment.values():
         bound.append(len(fulfill_set))
     return bound
 
 
-def courses_sort_bindings(all_fulfillment:dict, requested_fulfillment:list) -> list:
-    """
-    bucket sort algorithm O(n) time, can be replaced by priority queue
-    that runs in O(log(n)) time but I value my sanity
-    
-    if you wish to implement a priority queue system in this God forsakened chaos
-    of a program then knock yourself out
-    """
+def sort_by_num_bindings(all_fulfillment:dict, requested_courses:list, sort_type:Bind_Type=Bind_Type.ALL) -> list:
+    '''
+    Bucket sort that sorts courses inside requested_courses by the number of bindings they have
+    with courses within all_fulfillment
+    '''
     requested_courses_ordered = list()
 
-    requested_courses_bucket_sort = list()
-    for course in requested_fulfillment.get_fulfillment_set():
-        num_appear = course_num_bindings(all_fulfillment, course)
-        for _ in range(0, num_appear - len(requested_courses_bucket_sort) + 1):
-            requested_courses_bucket_sort.append(list())
-        requested_courses_bucket_sort[num_appear].append(course)
-    for bucket in requested_courses_bucket_sort:
+    buckets = list()
+
+    for course in requested_courses.get_fulfillment_set():
+        # determine the appropriate bucket to put each course in
+        if sort_type == Bind_Type.ALL:
+            num_appear = len(bindings_all(all_fulfillment, course))
+        elif sort_type == Bind_Type.NR:
+            num_appear = len(bindings_with_NR_templates(all_fulfillment, course))
+        elif sort_type == Bind_Type.R:
+            num_appear = len(bindings_with_R_templates(all_fulfillment, course))
+        else:
+            print('error in sort_by_num_bindings, invalid sort_type given')
+            return requested_courses
+
+        # generate the necessary empty buckets
+        for _ in range(0, num_appear - len(buckets) + 1):
+            buckets.append(list())
+
+        # append to the appropriate bucket
+        buckets[num_appear].append(course)
+
+    # condense the buckets into a single list
+    for bucket in buckets:
         requested_courses_ordered.extend(bucket)
     return requested_courses_ordered
 
 
-def course_can_unbind(all_fulfillment:dict, course) -> bool:
-    """
+def has_only_weak_bindings(all_fulfillment:dict, course) -> bool:
+    '''
     true if removing this course from all existing fulfillment sets will not cause a fulfilled
     template to become unfulfilled
-    """
+    '''
     for fulfillment_status in all_fulfillment.values():
         if course in fulfillment_status.get_fulfillment_set() and fulfillment_status.excess_count() == 0:
             return False
     return True
 
 
-def course_destroy_bindings(all_fulfillment:dict, course) -> None:
-    """
+def bindings_clear(all_fulfillment:dict, course) -> None:
+    '''
     Removes course from all existing fulfillment sets
-    """
+    '''
     for fulfillment_status in all_fulfillment.values():
         if course in fulfillment_status.get_fulfillment_set():
             fulfillment_status.remove_fulfillment_course(course)
 
 
-def course_num_bindings(all_fulfillment:dict, course) -> int:
-    """
-    Total number of appearances of course in all fulfillment sets
-    """
-    count = 0
+def bindings_with_R_templates(all_fulfillment:dict, course:Course) -> int:
+    '''
+    Total number of appearances of course in fulfillment sets that allow replacement
+    '''
+    host_fulfillment_statuses = list()
     for fulfillment_status in all_fulfillment.values():
-        if isinstance(course, list):
-            for c in course:
-                if c in fulfillment_status.get_fulfillment_set():
-                    count += 1
-        elif course in fulfillment_status.get_fulfillment_set():
-            count += 1
-    return count
+        if not fulfillment_status.get_template().no_replacement and course in fulfillment_status.get_fulfillment_set():
+            host_fulfillment_statuses.append(fulfillment_status)
+    return host_fulfillment_statuses
 
 
-def degree_num_unfulfilled(all_fulfillment:dict) -> int:
-    """
+def bindings_with_NR_templates(all_fulfillment:dict, course) -> int:
+    '''
+    Total number of appearances of course in fulfillment sets that do not allow replacement
+    '''
+    host_fulfillment_statuses = list()
+    for fulfillment_status in all_fulfillment.values():
+        if fulfillment_status.get_template().no_replacement and course in fulfillment_status.get_fulfillment_set():
+            host_fulfillment_statuses.append(fulfillment_status)
+    return host_fulfillment_statuses
+
+
+def bindings_all(all_fulfillment:dict, course) -> int:
+    '''
+    Total number of appearances of course in all fulfillment sets
+    '''
+    host_fulfillment_statuses = list()
+    for fulfillment_status in all_fulfillment.values():
+        if course in fulfillment_status.get_fulfillment_set():
+            host_fulfillment_statuses.append(fulfillment_status)
+    return host_fulfillment_statuses
+
+
+def num_unfulfilled_course_slots(all_fulfillment:dict) -> int:
+    '''
     Total number of unfulfilled courses across all fulfillment sets
-    """
+    '''
     count = 0
     for fulfillment_status in all_fulfillment.values():
         count += max(0, fulfillment_status.get_required_count() - fulfillment_status.get_actual_count())
