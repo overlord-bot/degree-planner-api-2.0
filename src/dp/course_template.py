@@ -13,7 +13,7 @@ class Template():
     courses we filter from.
     '''
 
-    def __init__(self, name, template_course=None, course_set=None, no_replacement=False, courses_required=1):
+    def __init__(self, name, template_course=None, course_set=None, replacement=False, courses_required=1):
         if template_course == None: template_course = Course('ANY', 'ANY', 'ANY')
         if course_set == None: course_set = set()
 
@@ -22,7 +22,7 @@ class Template():
         self.course_set = course_set
         self.courses_required = courses_required
 
-        self.no_replacement = no_replacement
+        self.replacement = replacement
         self.importance = 0 # used internally by degree, higher the number the more important it is
 
 
@@ -66,7 +66,7 @@ class Template():
 
     def __add__(self, other):
         return Template(f'{self.name} + {other.name}', self.template_course + other.template_course, 
-            self.course_set.union(other.course_set), self.no_replacement | other.no_replacement, self.courses_required + other.courses_required)
+            self.course_set.union(other.course_set), self.replacement & other.replacement, self.courses_required + other.courses_required)
 
     def __hash__(self):
         i = hash(self.template_course)**2

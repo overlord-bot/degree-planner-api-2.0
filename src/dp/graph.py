@@ -8,7 +8,15 @@ import queue
 
 from .fulfillment_status import Fulfillment_Status
 
-class Course_Overlap():
+class Backwards_Overlap():
+
+    def __init__(self, max_fulfillment:dict):
+        self.max_fulfillment = max_fulfillment
+
+    def edge_data(self, node1:Fulfillment_Status, node2:Fulfillment_Status):
+        return node1.get_fulfillment_set().intersection(self.max_fulfillment.get(node2.get_template()).get_fulfillment_set())
+    
+class Forwards_Overlap():
 
     def __init__(self, max_fulfillment:dict):
         self.max_fulfillment = max_fulfillment
@@ -29,13 +37,13 @@ class BFS_data():
         self.bfs_queue = queue.SimpleQueue()
 
         for node in start_nodes:
-            self.add_node(node, [node])
+            self.add_path(node, [node])
 
-    def add_node(self, node, path:list):
+    def add_path(self, node, path:list):
         self.paths.update({node:path})
         self.bfs_queue.put(node)
 
-    def remove_node(self, node):
+    def remove_path(self, node):
         self.paths.pop(node, None)
 
     def get_path(self, node):
@@ -125,7 +133,7 @@ class Graph():
         connected_nodes = set()
         for i in range(0, len(self.grid)):
             if len(self.grid[id][i]):
-                connected_nodes.add(self.node_name(i))
+                connected_nodes.add(self.node_object(i))
         return connected_nodes
 
 
@@ -137,7 +145,7 @@ class Graph():
         connected_nodes = set()
         for i in range(0, len(self.grid)):
             if len(self.grid[i][id]):
-                connected_nodes.add(self.node_name(i))
+                connected_nodes.add(self.node_object(i))
         return connected_nodes
     
     
@@ -156,7 +164,7 @@ class Graph():
         return self.nodes_id.get(node)
 
 
-    def node_name(self, id):
+    def node_object(self, id):
         '''
         node object from node id
         '''
@@ -175,16 +183,16 @@ class Graph():
                     continue
                 trace = copy.deepcopy(bfs.get_path(node_current))
                 trace.append(node_next)
-                bfs.add_node(node_next, trace)
+                bfs.add_path(node_next, trace)
 
         return bfs
 
 
     def __repr__(self):
         WIDTH = 16
-        rstr = f"\n{'links'.ljust(WIDTH)}{''.join([str(self.node_name(i)).ljust(WIDTH) for i in range(0, len(self))])}\n"
+        rstr = f"\n{'links'.ljust(WIDTH)}{''.join([str(self.node_object(i)).ljust(WIDTH) for i in range(0, len(self))])}\n"
         for i in range(0, len(self.grid)):
-            rstr += str(self.node_name(i)).ljust(WIDTH)
+            rstr += str(self.node_object(i)).ljust(WIDTH)
             for j in range(0, len(self.grid)):
                 data_set = self.grid[i][j]
                 if not len(data_set):

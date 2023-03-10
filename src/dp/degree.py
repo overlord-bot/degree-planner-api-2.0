@@ -7,7 +7,8 @@ import timeit
 from enum import Enum
 from .course_template import *
 from .graph import Graph
-from .graph import Course_Overlap
+from .graph import Backwards_Overlap
+from .graph import Forwards_Overlap
 
 class Bind_Type(Enum):
     NR = 1
@@ -106,6 +107,9 @@ class Degree():
             for template in template_set:
                 self.template_steal(template, all_fulfillment, max_fulfillments)
 
+            for template in template_set:
+                self.template_trade(template, all_fulfillment, max_fulfillments)
+
             potential_fulfillments.append(all_fulfillment)
 
         # checks all fulfillment sets and return the best one
@@ -119,7 +123,7 @@ class Degree():
         return best_fulfillment
 
 
-    def template_fill(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, order_courses:bool=False, force:bool=False) -> Fulfillment_Status:
+    def template_fill(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, force:bool=False) -> Fulfillment_Status:
         '''
         Computes fulfillment status of a single template
 
@@ -132,22 +136,17 @@ class Degree():
             fulfillment (Fulfillment_Status): fulfillment status of the current template
         '''
 
-        requested_fulfillment = max_fulfillments.get(template)
-        if order_courses:
-            potential_courses = sort_by_num_bindings(max_fulfillments, requested_fulfillment)
-        else:
-            potential_courses = requested_fulfillment.get_fulfillment_set()
-
+        requested_courses = max_fulfillments.get(template).get_fulfillment_set()
         this_fulfillment = Fulfillment_Status(template, template.courses_required, set())
 
         """
         we grab all courses from potential_courses that won't disturb
         the fulfillment of previous templates
         """
-        for course in potential_courses:
-            if not len(bindings_all(all_fulfillment, course)) or (not template.no_replacement and not len(bindings_with_NR_templates(all_fulfillment, course))):
-                # course hasn't been added to any fulfillment sets yet, or if both this and
-                # other templates this course is in are replacement enabled templates
+        for course in requested_courses:
+            if not len(bindings_all(all_fulfillment, course)) or (template.replacement and not len(bindings_with_NR_templates(all_fulfillment, course))):
+                # course hasn't been added to any fulfillment sets yet, or if this template is replacement enabled
+                # and the course is not in any no replacement templates
                 this_fulfillment.add_fulfillment_course(course)
                 all_fulfillment.update({template:this_fulfillment})
                 continue
@@ -162,15 +161,16 @@ class Degree():
         return this_fulfillment
 
 
-    def template_steal(self, template:Template, all_fulfillment:dict, max_fulfillments:dict):
+    def template_steal(self, template:Template, all_fulfillment:dict, max_fulfillments:dict) -> None:
         '''
         try to steal any courses it can from other templates
         '''
         this_fulfillment = all_fulfillment.get(template)
+
         while this_fulfillment.unfulfilled_count() > 0:
             # initial layer is all fulfillment statuses with excess
             bfs_roots = set()
-            overlap_calculator = Course_Overlap(max_fulfillments)
+            overlap_calculator = Backwards_Overlap(max_fulfillments)
             graph = Graph(set(all_fulfillment.values()), overlap_calculator)
             
             # generate links between fulfillment statuses
@@ -192,7 +192,23 @@ class Degree():
             for i in range(0, len(path) - 1):
                 giver = path[i]
                 receiver = path[i + 1]
-                transferred_course = graph.edge_data(giver, receiver, True)
+                # for the ultimate transfer into this template, pick the course the maximizes the number of fulfillments
+                # for other R templates
+                if i == len(path) - 2:
+                    transferred_courses = graph.edge_data(giver, receiver, False)
+                    # if replacement, get courses that fill the maximum amount of bindings
+                    if template.replacement:
+                        transferred_course = sort_by_num_bindings(max_fulfillments, transferred_courses, Bind_Type.R)
+                        transferred_course.reverse()
+                        transferred_course = transferred_course[0]
+
+                    # otherwise, avoid being greedy and taking courses that fulfill replaceable templates for yourself!
+                    else:
+                        transferred_course = sort_by_num_bindings(max_fulfillments, transferred_courses, Bind_Type.R)
+                        transferred_course = transferred_course[0]
+
+                else:
+                    transferred_course = graph.edge_data(giver, receiver, True)
                 print('transferring course: ' + str(transferred_course))
                 giver.remove_fulfillment_course(transferred_course)
                 receiver.add_fulfillment_course(transferred_course)
@@ -201,14 +217,39 @@ class Degree():
             all_fulfillment.update({path[-1].get_template():path[-1]})
 
 
-    def template_trade(self, template, all_fulfillment, max_fulfillments):
+    def template_trade(self, template:Template, all_fulfillment:dict, max_fulfillments:dict) -> None:
         '''
         try to exchange courses from other replacement templates by receiving
         a course that fulfills both self and the other replacement template
+
+        note that input template must be a replacement enabled tempalte
         '''
+        if not template.replacement:
+            return
+
         this_fulfillment = all_fulfillment.get(template)
         while this_fulfillment.unfulfilled_count() > 0:
-            pass
+            requested_courses = max_fulfillments.get(template).get_fulfillment_set().difference(all_fulfillment.get(template).get_fulfillment_set())
+            
+            bfs_roots = set()
+            overlap_calculator = Forwards_Overlap(max_fulfillments)
+            graph = Graph(set(all_fulfillment.values()), overlap_calculator)
+            
+            # generate links between fulfillment statuses
+            for fulfillment_status1 in all_fulfillment.values():
+                if fulfillment_status1.excess_count() > 0:
+                    bfs_roots.add(fulfillment_status1)
+                for fulfillment_status2 in all_fulfillment.values():
+                    graph.try_add_connection(fulfillment_status1, fulfillment_status2)
+
+            bfs = graph.bfs(bfs_roots)
+            # get donatable courses
+            # donate those courses
+            # see if this allows this course to be stolen via a dummy non-replacement template
+            # if not, retract donations
+            for course in requested_courses:
+                bind_to_R_templates(all_fulfillment, max_fulfillments, course)
+    
 
 
     def json(self) -> json:
@@ -282,13 +323,13 @@ def possible_combinations_of_wildcard_templates(all_fulfillment:dict):
 def sort_by_num_bindings(all_fulfillment:dict, requested_courses:list, sort_type:Bind_Type=Bind_Type.ALL) -> list:
     '''
     Bucket sort that sorts courses inside requested_courses by the number of bindings they have
-    with courses within all_fulfillment
+    with courses within all_fulfillment, from least to most
     '''
     requested_courses_ordered = list()
 
     buckets = list()
 
-    for course in requested_courses.get_fulfillment_set():
+    for course in requested_courses:
         # determine the appropriate bucket to put each course in
         if sort_type == Bind_Type.ALL:
             num_appear = len(bindings_all(all_fulfillment, course))
@@ -333,29 +374,39 @@ def bindings_clear(all_fulfillment:dict, course) -> None:
             fulfillment_status.remove_fulfillment_course(course)
 
 
-def bindings_with_R_templates(all_fulfillment:dict, course:Course) -> int:
+def bind_to_R_templates(all_fulfillment:dict, max_fulfillments:dict, course:Course) -> None:
+    '''
+    add the course to all fulfillment sets that are replacement enabled
+    '''
+    for fulfillment_status in all_fulfillment.values():
+        if fulfillment_status.get_template().replacement and course in max_fulfillments.get(fulfillment_status.get_template()).get_fulfillment_set():
+            fulfillment_status.add_fulfillment_course(course)
+            print('added course ' + repr(course) + ' to R template')
+
+
+def bindings_with_R_templates(all_fulfillment:dict, course:Course) -> list:
     '''
     Total number of appearances of course in fulfillment sets that allow replacement
     '''
     host_fulfillment_statuses = list()
     for fulfillment_status in all_fulfillment.values():
-        if not fulfillment_status.get_template().no_replacement and course in fulfillment_status.get_fulfillment_set():
+        if not fulfillment_status.get_template().replacement and course in fulfillment_status.get_fulfillment_set():
             host_fulfillment_statuses.append(fulfillment_status)
     return host_fulfillment_statuses
 
 
-def bindings_with_NR_templates(all_fulfillment:dict, course) -> int:
+def bindings_with_NR_templates(all_fulfillment:dict, course) -> list:
     '''
     Total number of appearances of course in fulfillment sets that do not allow replacement
     '''
     host_fulfillment_statuses = list()
     for fulfillment_status in all_fulfillment.values():
-        if fulfillment_status.get_template().no_replacement and course in fulfillment_status.get_fulfillment_set():
+        if fulfillment_status.get_template().replacement and course in fulfillment_status.get_fulfillment_set():
             host_fulfillment_statuses.append(fulfillment_status)
     return host_fulfillment_statuses
 
 
-def bindings_all(all_fulfillment:dict, course) -> int:
+def bindings_all(all_fulfillment:dict, course) -> list:
     '''
     Total number of appearances of course in all fulfillment sets
     '''

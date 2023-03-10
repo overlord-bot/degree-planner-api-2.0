@@ -101,3 +101,6 @@ class Output():
         else:
             await self.print(self.__msg_cache_hold, output_location=output_redirect)
         self.__msg_cache_hold = ''
+
+    
+
