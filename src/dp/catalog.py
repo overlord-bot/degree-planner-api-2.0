@@ -98,9 +98,6 @@ class Catalog():
         '''
         return get_course_match(target_template, self.__course_list.values(), True)
 
-    def get_best_course_match(self, target_template:Template) -> set:
-        return get_best_course_match(target_template, self.__course_list.values())
-
     def json(self):
         catalog = dict()
         catalog.update({'courses':list(self.__course_list.keys())})

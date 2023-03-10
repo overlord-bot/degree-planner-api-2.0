@@ -106,7 +106,7 @@ def test_fulfillment():
 
 
 def test_fulfillment2():
-    planner = Planner('test_planner2')
+    planner = Planner('test_planner2', 12)
     user = User(1)
     
     catalog = planner.catalog
@@ -175,7 +175,7 @@ def test_fulfillment2():
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6, print, fulfillment')
 
 def test_fulfillment3():
-    planner = Planner('test_planner2')
+    planner = Planner('test_planner2', 20)
     user = User(1)
     
     catalog = planner.catalog
@@ -243,7 +243,7 @@ def test_fulfillment3():
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6')
 
 def run_cmd(planner, user, string):
-    asyncio.run(planner.input_handler(user, string))
+    planner.input_handler(user, string)
 
 
 start = timeit.default_timer()

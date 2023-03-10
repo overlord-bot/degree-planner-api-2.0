@@ -14,11 +14,11 @@ class Schedule():
     without transferring any user specific data
     '''
 
-    def __init__(self, name:str):
+    def __init__(self, name:str, SEMESTERS_MAX:int=10):
         # 2D list, 1st dimension is semesters and 2nd dimension is courses for that semester
         # NOTE: duplications are allowed both within semester and across semesters!
         self.__master_list = list()
-        self.SEMESTERS_MAX = 12
+        self.SEMESTERS_MAX = SEMESTERS_MAX
         self.name = name
         self.degree = None
 
@@ -31,7 +31,7 @@ class Schedule():
         Initializes the list storing all courses in the schedule, grouped by semester
         '''
         self.__master_list.clear()
-        for _ in range(0, 12):
+        for _ in range(0, self.SEMESTERS_MAX):
             self.__master_list.append([])
 
 

@@ -16,7 +16,6 @@ from .parse import *
 from .degree import *
 
 VERSION = "API 2.0"
-SEMESTERS_MAX = 12
 
 OUTERROR = Output(OUT.ERROR)
 OUTWARNING = Output(OUT.WARN)
@@ -66,7 +65,7 @@ class Planner():
     It is essential to keep all user specific data inside the User class.
     '''
 
-    def __init__(self, name):
+    def __init__(self, name, SEMESTERS_MAX:int=10):
         # each user is assigned a User object and stored in this dictionary
         # Users = <user id, User>
         self.name = name
@@ -75,8 +74,10 @@ class Planner():
         self.course_search = Search()
         self.flags = set()
 
+        self.SEMESTERS_MAX = SEMESTERS_MAX
 
-    async def input_handler(self, user:User, user_input:str, output:Output=None) -> bool:
+
+    def input_handler(self, user:User, user_input:str, output:Output=None) -> bool:
         ''' MAIN FUNCTION FOR ACCEPTING COMMAND ENTRIES
 
         Args:
@@ -91,28 +92,28 @@ class Planner():
         if output is None: output = Output(OUT.CONSOLE)
         if Flag.CMD_PAUSED in user.flag:
             user.command_queue_locked = True
-            await OUTDEBUG.print(f'user {user.username} locked command queue')
+            OUTDEBUG.print(f'user {user.username} locked command queue')
             user.command_decision = user_input.strip().casefold()
-            await OUTDEBUG.print(f'passed user {user.username} decision {user_input} to command loop')
+            OUTDEBUG.print(f'passed user {user.username} decision {user_input} to command loop')
         else:
             # if queue is locked, do not proceed
             if user.command_queue_locked:
-                await OUTDEBUG.print(f'user {user.username} tried to access busy queue lmao')
-                await output.print(f"ERROR{DELIMITER_TITLE}queue busy, please try again later")
+                OUTDEBUG.print(f'user {user.username} tried to access busy queue lmao')
+                output.print(f"ERROR{DELIMITER_TITLE}queue busy, please try again later")
                 return False
             user.command_queue_locked = True
-            await OUTDEBUG.print(f'user {user.username} locked command queue')
+            OUTDEBUG.print(f'user {user.username} locked command queue')
             user.command_queue.join()
-            commands = await self.parse_command(user_input, output)
+            commands = self.parse_command(user_input, output)
             for command in commands:
                 user.command_queue.put(command)
-        await self.command_handler(user, output)
+        self.command_handler(user, output)
         user.command_queue_locked = False
-        await OUTDEBUG.print(f'user {user.username} unlocked command queue')
+        OUTDEBUG.print(f'user {user.username} unlocked command queue')
         return True
 
 
-    async def command_handler(self, user:User, output:Output=None) -> None:
+    def command_handler(self, user:User, output:Output=None) -> None:
         ''' EXECUTES COMMANDS TAKEN FROM USER'S COMMAND QUEUE
 
         Args:
@@ -133,59 +134,59 @@ class Planner():
         and add Flag.CMD_PAUSED in user.flag, otherwise the loop can never
         be entered again.
         """
-        await OUTDEBUG.print(f'user {user.username} entered command loop')
+        OUTDEBUG.print(f'user {user.username} entered command loop')
         while(not user.command_queue.empty() or Flag.CMD_PAUSED in user.flag):
             if Flag.CMD_PAUSED in user.flag:
                 command:Command = user.command_paused
             else:
                 command:Command = user.command_queue.get()
-                await OUTDEBUG.print(f'user {user.username} fetched command {str(command)}')
+                OUTDEBUG.print(f'user {user.username} fetched command {str(command)}')
 
             if command.command == CMD.NONE:
-                await output(f"ERROR{DELIMITER_TITLE}there was an error understanding your command")
+                output(f"ERROR{DELIMITER_TITLE}there was an error understanding your command")
                 user.command_queue.task_done()
                 continue
 
             if command.command == CMD.TEST:
-                await output.print("BEGINNING TEST", output_location=OUT.INFO)
-                await output.print(f"ADMIN{DELIMITER_TITLE}Testing Degree Planner {VERSION}")
-                await self.test(Output(OUT.DEBUG))
-                await output.print("FINISHED TEST", output_location=OUT.INFO)
-                await output.print(f"ADMIN{DELIMITER_TITLE}Test completed successfully, all assertions met")
+                output.print("BEGINNING TEST", output_location=OUT.INFO)
+                output.print(f"ADMIN{DELIMITER_TITLE}Testing Degree Planner {VERSION}")
+                self.test(Output(OUT.DEBUG))
+                output.print("FINISHED TEST", output_location=OUT.INFO)
+                output.print(f"ADMIN{DELIMITER_TITLE}Test completed successfully, all assertions met")
                 user.command_queue.task_done()
                 continue
 
             if command.command == CMD.IMPORT:
-                await output.print("BEGINNING DATA IMPORTING", output_location=OUT.INFO)
-                await output.print(f"ADMIN{DELIMITER_TITLE}begin parsing data")
-                await self.parse_data(Output(OUT.DEBUG))
-                await output.print("FINISHED DATA IMPORTING", output_location=OUT.INFO)
-                await output.print(f"ADMIN{DELIMITER_TITLE}parsing completed")
+                output.print("BEGINNING DATA IMPORTING", output_location=OUT.INFO)
+                output.print(f"ADMIN{DELIMITER_TITLE}begin parsing data")
+                self.parse_data(Output(OUT.DEBUG))
+                output.print("FINISHED DATA IMPORTING", output_location=OUT.INFO)
+                output.print(f"ADMIN{DELIMITER_TITLE}parsing completed")
                 user.command_queue.task_done()
                 continue
 
             if command.command == CMD.FIND:
                 if len(command.arguments) == 0:
-                    await output.print(f"FIND{DELIMITER_TITLE}no arguments found. Use find, [courses] to find courses")
+                    output.print(f"FIND{DELIMITER_TITLE}no arguments found. Use find, [courses] to find courses")
                 else:
                     for entry in command.arguments:
-                        await self.print_matches(entry, output)
+                        self.print_matches(entry, output)
                 user.command_queue.task_done()
                 continue
 
             if command.command == CMD.SCHEDULE:
                 if not command.arguments:
-                    await output.print(f"SCHEDULE{DELIMITER_TITLE}not enough arguments, please specify a schedule name")
+                    output.print(f"SCHEDULE{DELIMITER_TITLE}not enough arguments, please specify a schedule name")
                 else:
-                    await self.set_active_schedule(user, command.arguments[0], output)
+                    self.set_active_schedule(user, command.arguments[0], output)
                 user.command_queue.task_done()
                 continue
 
             # all commands after this requires an active schedule inside User
             schedule = user.get_current_schedule()
             if schedule == None:
-                await output.print(f"SCHEDULE{DELIMITER_TITLE}no schedule selected, creating one named {user.username}")
-                await self.set_active_schedule(user, user.username, output)
+                output.print(f"SCHEDULE{DELIMITER_TITLE}no schedule selected, creating one named {user.username}")
+                self.set_active_schedule(user, user.username, output)
                 schedule = user.get_current_schedule()
 
             if command.command in (CMD.ADD, CMD.REMOVE):
@@ -193,7 +194,7 @@ class Planner():
                     decision = user.command_decision
                     courses = command.data_store
                     if not decision.isdigit() or int(decision) not in range(1, len(courses) + 1):
-                        await output.print(f"SCHEDULE{DELIMITER_TITLE}Please enter a valid selection number")
+                        output.print(f"SCHEDULE{DELIMITER_TITLE}Please enter a valid selection number")
                         break
                     course:Course = courses[int(decision) - 1]
                     command.arguments[1] = course.get_unique_name()
@@ -203,17 +204,17 @@ class Planner():
                 course = command.arguments[1]
 
                 if command.command == CMD.ADD:
-                    possible_courses = await self.add_course(user, course, semester, output)
+                    possible_courses = self.add_course(user, course, semester, output)
                 else:
-                    possible_courses = await self.remove_course(user, course, semester, output)
+                    possible_courses = self.remove_course(user, course, semester, output)
 
                 if possible_courses is not None:
-                    await output.print(f"SCHEDULE{DELIMITER_TITLE}entry {course} has multiple choices, please choose from list:")
+                    output.print(f"SCHEDULE{DELIMITER_TITLE}entry {course} has multiple choices, please choose from list:")
                     i = 1
                     for c in possible_courses:
-                        output.print_hold(f"  {i}: {repr(c)}")
+                        output.print(f"  {i}: {repr(c)}", output_location=OUT.STORE)
                         i += 1
-                    await output.print_cache()
+                    output.print_cache()
                     # pause command, set temporary variables/storage and break from the loop
                     command.data_store = possible_courses
                     user.command_paused = command
@@ -224,39 +225,36 @@ class Planner():
                 continue
 
             if command.command == CMD.PRINT:
-                await output.print(f"SCHEDULE{DELIMITER_TITLE}{schedule.name}")
-                output.print_hold(f"{str(schedule)}")
-                await output.print_cache()
+                output.print(f"SCHEDULE{DELIMITER_TITLE}{schedule.name}")
+                output.print(f"{str(schedule)}")
                 user.command_queue.task_done()
                 continue
 
             if command.command == CMD.DEGREE:
                 if not command.arguments:
-                    await output.print(f"SCHEDULE{DELIMITER_TITLE}no arguments found. " + \
+                    output.print(f"SCHEDULE{DELIMITER_TITLE}no arguments found. " + \
                         "Use degree, <degree name> to set your schedule's degree")
                 else:
-                    await self.set_degree(schedule, command.arguments[0], output)
+                    self.set_degree(schedule, command.arguments[0], output)
                 user.command_queue.task_done()
                 continue
 
             if command.command == CMD.FULFILLMENT:
                 if schedule.degree == None:
-                    await output.print(f"SCHEDULE{DELIMITER_TITLE}no degree specified")
+                    output.print(f"SCHEDULE{DELIMITER_TITLE}no degree specified")
                 else:
-                    await output.print(f"SCHEDULE{DELIMITER_TITLE}{schedule.name} Fulfillment")
-                    #fulfillment = schedule.degree.fulfillment(schedule.get_all_courses())
-                    #output.print_hold(schedule.degree.print_fulfillment(fulfillment))
+                    output.print(f"SCHEDULE{DELIMITER_TITLE}{schedule.name} Fulfillment")
                     fulfillment = schedule.degree.fulfillment(schedule.get_all_courses())
-                    output.print_hold(print_fulfillment(fulfillment))
-                    await output.print_cache()
+                    output.print(print_fulfillment(fulfillment), output_location=OUT.STORE)
+                    output.print_cache()
                 user.command_queue.task_done()
                 continue
 
             if command.command == CMD.AUTOCOMPLETE:
                 if schedule.degree == None:
-                    await output.print(f"SCHEDULE{DELIMITER_TITLE}no degree specified")
+                    output.print(f"SCHEDULE{DELIMITER_TITLE}no degree specified")
                 else:
-                    await output.print(f"SCHEDULE{DELIMITER_TITLE}{schedule.name} Recommended path of completion:")
+                    output.print(f"SCHEDULE{DELIMITER_TITLE}{schedule.name} Recommended path of completion:")
 
                 user.command_queue.task_done()
                 continue
@@ -264,12 +262,12 @@ class Planner():
             if command.command == CMD.DETAILS:
                 details = self.details(command.arguments[0])
                 if details is None: details = 'please enter valid full name of course'
-                await output.print(details)
+                output.print(details)
                 user.command_queue.task_done()
                 continue
 
             else:
-                await output.print(f"Unimplemented command {command.command} entered")
+                output.print(f"Unimplemented command {command.command} entered")
                 user.command_queue.task_done()
                 continue
 
@@ -278,7 +276,7 @@ class Planner():
     # HELPER FUNCTIONS
     #--------------------------------------------------------------------------
 
-    async def parse_command(self, cmd:str, output:Output=None) -> list:
+    def parse_command(self, cmd:str, output:Output=None) -> list:
         ''' Parse string into a list of Command objects
 
         Args:
@@ -306,7 +304,7 @@ class Planner():
                 if last_command is not None:
                     last_command.arguments.append(e)
                 else:
-                    await output.print(f"ERROR{DELIMITER_TITLE}invalid command '{e}'")
+                    output.print(f"ERROR{DELIMITER_TITLE}invalid command '{e}'")
         # after exiting the loop, push the last command if it exists into the queue
         if last_command is not None:
             cmd_queue.append(last_command)
@@ -314,7 +312,7 @@ class Planner():
         # verify all commands have the required number of arguments
         for e in cmd_queue:
             if not e.valid():
-                await output.print(f"ERROR{DELIMITER_TITLE}invalid arguments for command {str(e)}")
+                output.print(f"ERROR{DELIMITER_TITLE}invalid arguments for command {str(e)}")
         cmd_queue = [e for e in cmd_queue if e.valid()]
         return cmd_queue
 
@@ -324,7 +322,7 @@ class Planner():
         return msg
 
 
-    async def test(self, output:Output=None):
+    def test(self, output:Output=None):
         ''' Runs test suite
 
         Args:
@@ -332,10 +330,10 @@ class Planner():
         '''
         if output is None: output = Output(output_location=OUT.DEBUG)
         test_suite = Test1()
-        await test_suite.test(output)
+        test_suite.test(output)
 
 
-    async def set_active_schedule(self, user:User, schedule_name:str, output:Output=None) -> None:
+    def set_active_schedule(self, user:User, schedule_name:str, output:Output=None) -> None:
         ''' Changes user's active schedule selection and creates new schedule if
             specified schedule is not found
 
@@ -347,18 +345,18 @@ class Planner():
         if output is None: output = Output(OUT.CONSOLE)
         schedule = user.get_schedule(schedule_name)
         if schedule == None:
-            await output.print(f"SCHEDULE{DELIMITER_TITLE}Schedule {schedule_name} not found, generating new one!")
-            user.new_schedule(schedule_name)
+            output.print(f"SCHEDULE{DELIMITER_TITLE}Schedule {schedule_name} not found, generating new one!")
+            user.new_schedule(schedule_name, self.SEMESTERS_MAX)
             user.curr_schedule = schedule_name
             return
         else:
-            await output.print(f"SCHEDULE{DELIMITER_TITLE}Successfully switched to schedule {schedule_name}!")
+            output.print(f"SCHEDULE{DELIMITER_TITLE}Successfully switched to schedule {schedule_name}!")
             user.curr_schedule = schedule_name
             return
 
 
 
-    async def get_active_schedule(self, user:User) -> Schedule:
+    def get_active_schedule(self, user:User) -> Schedule:
         ''' Gets schedule currently being modified by user
 
         Args:
@@ -370,7 +368,7 @@ class Planner():
         return user.get_current_schedule()
 
 
-    async def get_all_schedules(self, user:User) -> list:
+    def get_all_schedules(self, user:User) -> list:
         ''' Get all of user's schedule
 
         Args:
@@ -383,7 +381,7 @@ class Planner():
         return user.get_all_schedules()
 
 
-    async def set_degree(self, schedule:Schedule, degree_name:str, output:Output=None) -> bool:
+    def set_degree(self, schedule:Schedule, degree_name:str, output:Output=None) -> bool:
         ''' Changes user's active schedule's degree
 
         Args:
@@ -399,11 +397,11 @@ class Planner():
         if output is None: output = Output(OUT.CONSOLE)
         degree = self.catalog.get_degree(degree_name)
         if degree == None:
-            await output.print(f"SCHEDULE{DELIMITER_TITLE}invalid degree entered: {degree_name}")
+            output.print(f"SCHEDULE{DELIMITER_TITLE}invalid degree entered: {degree_name}")
             return False
         else:
             schedule.degree = degree
-            await output.print(f"SCHEDULE{DELIMITER_TITLE}set your degree to {degree.name}")
+            output.print(f"SCHEDULE{DELIMITER_TITLE}set your degree to {degree.name}")
             return True
 
     
@@ -442,7 +440,7 @@ class Planner():
         return None
 
 
-    async def print_matches(self, course_name:str, output:Output=None) -> None:
+    def print_matches(self, course_name:str, output:Output=None) -> None:
         ''' Print list of courses to output that match input entry, searches from entire catalog
 
         Args:
@@ -452,16 +450,16 @@ class Planner():
         if output is None: output = Output(OUT.CONSOLE)
         possible_courses = self.course_search.search(course_name)
         possible_courses.sort()
-        await output.print(f"FIND{DELIMITER_TITLE}courses matching {course_name}: ")
+        output.print(f"FIND{DELIMITER_TITLE}courses matching {course_name}: ")
         i = 1
         for c in possible_courses:
             course = self.catalog.get_course(c)
-            output.print_hold(f"  {i}: {course.subject} {course.course_id} {course.name}")
+            output.print(f"  {i}: {course.subject} {course.course_id} {course.name}", output_location=OUT.STORE)
             i += 1
-        await output.print_cache()
+        output.print_cache()
 
 
-    async def add_course(self, user:User, course_name:str, semester, output:Output=None):
+    def add_course(self, user:User, course_name:str, semester, output:Output=None):
         ''' Add course to user's schedule
 
         Args:
@@ -478,18 +476,18 @@ class Planner():
 
         # sanity checks
         if isinstance(semester, str) and not semester.isdigit():
-            await output.print(f"SCHEDULE{DELIMITER_TITLE}semester must be a number")
+            output.print(f"SCHEDULE{DELIMITER_TITLE}semester must be a number")
             return None
         semester = int(semester)
-        if semester not in range(0, SEMESTERS_MAX):
-            await output.print(f"SCHEDULE{DELIMITER_TITLE}Invalid semester {semester}, enter number between 0 and 11")
+        if semester not in range(0, self.SEMESTERS_MAX):
+            output.print(f"SCHEDULE{DELIMITER_TITLE}Invalid semester {semester}, enter number between 0 and 11")
             return None
         
         # list of courses matching course_name
         returned_courses = [self.catalog.get_course(c) for c in self.course_search.search(course_name)]
 
         if len(returned_courses) == 0:
-            await output.print(f"SCHEDULE{DELIMITER_TITLE}Course {course_name} not found")
+            output.print(f"SCHEDULE{DELIMITER_TITLE}Course {course_name} not found")
             return None
         if len(returned_courses) > 1:
             return returned_courses
@@ -497,11 +495,11 @@ class Planner():
         # at this point, returned_courses have exactly one course, so we can perform the addition immediately
         course = returned_courses[0]
         user.get_current_schedule().add_course(course, semester)
-        await output.print(f"SCHEDULE{DELIMITER_TITLE}Added course {course.name} to semester {semester}")
+        output.print(f"SCHEDULE{DELIMITER_TITLE}Added course {course.name} to semester {semester}")
         return None
 
 
-    async def remove_course(self, user:User, course_name:str, semester, output:Output=None):
+    def remove_course(self, user:User, course_name:str, semester, output:Output=None):
         ''' Remove course from user's schedule
 
         Args:
@@ -518,17 +516,17 @@ class Planner():
 
         # sanity checks
         if isinstance(semester, str) and not semester.isdigit():
-            await output.print(f"SCHEDULE{DELIMITER_TITLE}semester must be a number")
+            output.print(f"SCHEDULE{DELIMITER_TITLE}semester must be a number")
             return None
         semester = int(semester)
-        if semester not in range(0, SEMESTERS_MAX):
-            await output.print(f"SCHEDULE{DELIMITER_TITLE}Invalid semester {semester}, enter number between 0 and 11")
+        if semester not in range(0, self.SEMESTERS_MAX):
+            output.print(f"SCHEDULE{DELIMITER_TITLE}Invalid semester {semester}, enter number between 0 and 11")
             return None
         
         this_semester_courses = user.get_current_schedule().get_semester(semester)
 
         if len(this_semester_courses) == 0:
-            await output.print(f"SCHEDULE{DELIMITER_TITLE}No courses in semester {semester}")
+            output.print(f"SCHEDULE{DELIMITER_TITLE}No courses in semester {semester}")
             return None
         
         # list of courses matching course_name
@@ -536,7 +534,7 @@ class Planner():
         returned_courses = [self.catalog.get_course(c) for c in self.search(course_name, this_semester_courses)]
 
         if len(returned_courses) == 0:
-            await output.print(f"SCHEDULE{DELIMITER_TITLE}Course {course_name} not found")
+            output.print(f"SCHEDULE{DELIMITER_TITLE}Course {course_name} not found")
             return None
         if len(returned_courses) > 1:
             return returned_courses
@@ -544,11 +542,11 @@ class Planner():
         # at this point, returned_courses have exactly one course, so we can perform the removal immediately
         course = returned_courses[0]
         user.get_current_schedule().remove_course(course, semester)
-        await output.print(f"SCHEDULE{DELIMITER_TITLE}Removed course {course.name} from semester {semester}")
+        output.print(f"SCHEDULE{DELIMITER_TITLE}Removed course {course.name} from semester {semester}")
         return None
 
     
-    async def parse_data(self, output:Output=None) -> Exception:
+    def parse_data(self, output:Output=None) -> Exception:
         ''' Parse json data into a list of courses and degrees inside a catalog
 
         Args:
@@ -563,15 +561,14 @@ class Planner():
         catalog_file = "catalog_results.json"
         degree_file = "class_results.json"
 
-        await parse_courses(catalog_file, self.catalog, output)
-        await output.print(f"ADMIN{DELIMITER_TITLE}Sucessfully parsed catalog data")
+        parse_courses(catalog_file, self.catalog, output)
+        output.print(f"ADMIN{DELIMITER_TITLE}Sucessfully parsed catalog data")
         
         # set up searcher for finding courses based on incomplete user input
         self.course_search.update_items(self.catalog.get_all_course_names())
         self.course_search.generate_index()
 
-        await parse_degrees(degree_file, self.catalog, output)
-        await output.print(f"ADMIN{DELIMITER_TITLE}Sucessfully parsed degree data")
-        await output.print(f"ADMIN{DELIMITER_TITLE}Printing catalog:", output_location=OUT.DEBUG)
-        output.print_hold(str(self.catalog))
-        await output.print_cache(OUT.DEBUG)
+        parse_degrees(degree_file, self.catalog, output)
+        output.print(f"ADMIN{DELIMITER_TITLE}Sucessfully parsed degree data")
+        output.print(f"ADMIN{DELIMITER_TITLE}Printing catalog:", output_location=OUT.DEBUG)
+        output.print(str(self.catalog), output_location=OUT.DEBUG)

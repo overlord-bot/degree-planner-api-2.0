@@ -2,7 +2,6 @@
 Command line shell for degree planner
 '''
 
-import asyncio
 import sys
 import logging
 
@@ -33,8 +32,7 @@ def terminal():
         user_input = input("(degree planner) >>> ")
         if user_input.casefold() == "quit":
             return
-        asyncio.run(planner.input_handler(user, user_input))
+        planner.input_handler(user, user_input)
 
 if __name__ == "__main__":
     terminal()
-    

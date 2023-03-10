@@ -21,17 +21,17 @@ Args:
     catalog (Catalog): catalog object to store parsed information into
     output (Output): debug output, default is print to console
 """
-async def parse_courses(file_name, catalog:Catalog, output:Output=None):
+def parse_courses(file_name, catalog:Catalog, output:Output=None):
     if output is None: output = Output(OUT.CONSOLE)
-    await output.print("Beginning parsing course data into catalog")
+    output.print("Beginning parsing course data into catalog")
 
     # There are 1 location(s) for catalog_results and class_results, checked in this order:
     # 1) data/
     if os.path.isfile(os.getcwd() + "/data/" + file_name):
-        await output.print(f"file found: {os.getcwd()}/data/" + file_name)
+        output.print(f"file found: {os.getcwd()}/data/" + file_name)
         file_catalog_results = open(os.getcwd() + "/data/" + file_name)
     else:
-        await output.print("catalog file not found")
+        output.print("catalog file not found")
         return
 
     json_data = json.load(file_catalog_results)
@@ -105,9 +105,9 @@ Args:
     catalog (Catalog): catalog object to store parsed information into
     output (Output): debug output, default is print to console
 """
-async def parse_degrees(file_name, catalog, output:Output=None):
+def parse_degrees(file_name, catalog, output:Output=None):
     if output is None: output = Output(OUT.CONSOLE)
-    await output.print("Beginning parsing degree data into catalog")
+    output.print("Beginning parsing degree data into catalog")
     
     ''' NOT IMPLEMENTED FOR JSON INPUT YET
     # There are 1 location(s) for degree_results and class_results, checked in this order:
@@ -150,7 +150,7 @@ async def parse_degrees(file_name, catalog, output:Output=None):
     degree.templates.append(template6)
     degree.templates.append(template7)
     '''
-    await output.print(f"added degree {repr(degree)} to catalog")
+    output.print(f"added degree {repr(degree)} to catalog")
 
     '''
     #----------------------------------------------------------------------

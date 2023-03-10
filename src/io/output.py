@@ -1,6 +1,7 @@
 import logging
 from enum import Enum
 import os
+import copy
 
 DELIMITER_TITLE = '---'
 DELIMITER_BLOCK = '###'
@@ -14,7 +15,7 @@ class OUT(Enum):
     WARN = 4
     ERROR = 5
 
-    CACHE = 6
+    STORE = 6
     FILE = 7
 
 class OUTTYPE(Enum):
@@ -39,8 +40,8 @@ class Output():
         self.file = file
         self.user = user
 
-        self.__msg_cache_hold = ""
-        self.message_max_length = 2000
+        self.cache = list()
+        self.MAX_MSG_LENGTH = 2000
         self.signature = signature
 
 
@@ -52,55 +53,49 @@ class Output():
         logging_flag (OUT): temporary prints to this output location
             without altering the stored location within this object
     """
-    async def print(self, msg:str, json_output:dict=None, output_location:OUT=None, file_name:str=None) -> None:
+    def print(self, msg, output_location:OUT=None, file_name:str=None) -> None:
         
         outlocation = self.output_location if output_location == None else output_location
 
-        if json_output != None:
-            json_output.update({'' if msg.find(DELIMITER_TITLE) == -1 else msg.split(DELIMITER_TITLE)[0] : msg if msg.find(DELIMITER_TITLE) == -1 else msg.split(DELIMITER_TITLE)[1]})
-            return
-
-        msg = msg.replace(DELIMITER_TITLE, ' :: ')
-
-        if outlocation == OUT.INFO:
-            logging.info(msg)
-        elif outlocation == OUT.DEBUG:
-            logging.debug(msg)
-        elif outlocation == OUT.WARN:
-            logging.warning(msg)
-        elif outlocation == OUT.ERROR:
-            logging.error(msg)
-
-        elif outlocation == OUT.CONSOLE:
-            print(msg)
-
-        elif (self.output_location == OUT.FILE):
-            f = open(file_name, 'a')
-            f.write(msg)
-            f.close
-    
-
-    """ Creates a temporary cache to store strings, which can then be
-        outputted at once when print_cache is called.
-
-    Args:
-        msg (string): message to hold
-    """
-    def print_hold(self, msg):
-        msg = msg.replace(DELIMITER_BLOCK, '\n')
-        msg = msg.replace(DELIMITER_TITLE, ' :: ')
-        self.__msg_cache_hold += msg + "\n"
-        return
-
-
-    """ Prints all content inside message cache, calls upon print() for printing
-    """
-    async def print_cache(self, output_redirect=None):
-        if output_redirect == None:
-            await self.print(self.__msg_cache_hold)
+        json_output = dict()
+        if self.output_type == OUTTYPE.JSON:
+            json_output.update({'UNNAMED BLOCK' if msg.find(DELIMITER_TITLE) == -1 else msg.split(DELIMITER_TITLE)[0] : msg if msg.find(DELIMITER_TITLE) == -1 else msg.split(DELIMITER_TITLE)[1]})
         else:
-            await self.print(self.__msg_cache_hold, output_location=output_redirect)
-        self.__msg_cache_hold = ''
+            msg = msg.replace(DELIMITER_TITLE, ' :: ')
 
+            if outlocation == OUT.INFO:
+                logging.info(msg)
+            elif outlocation == OUT.DEBUG:
+                logging.debug(msg)
+            elif outlocation == OUT.WARN:
+                logging.warning(msg)
+            elif outlocation == OUT.ERROR:
+                logging.error(msg)
+            elif outlocation == OUT.CONSOLE:
+                print(msg)
+
+        if (self.output_location == OUT.FILE):
+            f = open(file_name, 'a')
+            f.write(str(msg))
+            f.close
+
+        elif (self.output_location == OUT.STORE):
+            self.cache.append(msg)
+            return
     
 
+    def print_cache(self, output_redirect=None):
+        if output_redirect == None:
+            for line in self.cache:
+                self.print(line)
+        else:
+            for line in self.cache:
+                self.print(line, output_location=output_redirect)
+        self.cache.clear()
+
+    
+    def get_cache(self):
+        cache_copy = copy.deepcopy(self.cache)
+        self.cache.clear()
+        return cache_copy
+        
