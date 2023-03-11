@@ -91,7 +91,7 @@ class User():
             self.__schedules.pop(old_name)
             return True
 
-    def json(self):
+    def json(self) -> json:
         '''
         Creates json file of this class
         '''

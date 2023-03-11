@@ -131,7 +131,7 @@ class Schedule():
         '''
         schedule = dict()
         schedule.update({self.name:dict()})
-        for i in range(0, 12):
+        for i in range(0, self.SEMESTERS_MAX):
             schedule[self.name].update({i:[e.get_unique_name() for e in self.get_semester(i)]})
         return json.dumps(schedule)
 

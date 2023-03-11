@@ -260,14 +260,14 @@ class Course():
                 are the form of a list or set.
         '''
         course = OrderedDict()
-        course.update({'name':self.name})
-        course.update({'id':self.course_id})
-        if self.course_id2 != 0:
-            course.update({'id2':self.course_id2})
-        course.update({'subject':self.subject})
-        course.update({'course_credits':self.course_credits})
-        course.update({'description':self.description})
-        course.update(self.attributes)
+        for v in self.attributes.keys():
+            elements = v.split('.')
+            key = elements.pop(0)
+            if (len(elements) == 1):
+                rest = elements[0]
+            else:
+                rest = elements
+            course.update({key : rest})
         return json.dumps(course)
 
     def __repr__(self):

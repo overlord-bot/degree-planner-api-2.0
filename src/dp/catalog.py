@@ -89,7 +89,7 @@ class Catalog():
     def get_all_degrees(self):
         return self.__degree_list.values()
 
-    def get_course_match(self, target_template:Template) -> dict:
+    def get_course_match(self, target_template:Template) -> list:
         ''' Intakes a criteria of courses that we want returned
             matches against the entire catalog
 

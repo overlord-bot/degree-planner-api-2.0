@@ -9,6 +9,7 @@ from .course_template import *
 from .graph import Graph
 from .graph import Backwards_Overlap
 from .graph import Forwards_Overlap
+from ..io.output import *
 
 class Bind_Type(Enum):
     NR = 1
@@ -29,6 +30,7 @@ class Degree():
     def __init__(self, name):
         self.name = name
         self.templates = list()
+        self.DEBUG = Output(OUT.DEBUG, signature='DEGREE')
 
     def add_template(self, template:Template):
         '''
@@ -186,7 +188,7 @@ class Degree():
             
             # calculates path to move courses
             path = bfs.get_path(this_fulfillment)
-            print('path: ' + ' -> '.join([str(e) for e in path]))
+            self.DEBUG.print('path: ' + ' -> '.join([str(e) for e in path]))
 
             # shifts courses along the path such that we obtain a new course
             for i in range(0, len(path) - 1):
@@ -209,7 +211,7 @@ class Degree():
 
                 else:
                     transferred_course = graph.edge_data(giver, receiver, True)
-                print('transferring course: ' + str(transferred_course))
+                self.DEBUG.print('transferring course: ' + str(transferred_course))
                 giver.remove_fulfillment_course(transferred_course)
                 receiver.add_fulfillment_course(transferred_course)
                 all_fulfillment.update({giver.get_template():giver})
@@ -230,6 +232,10 @@ class Degree():
         this_fulfillment = all_fulfillment.get(template)
         while this_fulfillment.unfulfilled_count() > 0:
             requested_courses = max_fulfillments.get(template).get_fulfillment_set().difference(all_fulfillment.get(template).get_fulfillment_set())
+
+            for course in requested_courses:
+                donateable_courses = set()
+                
             
             bfs_roots = set()
             overlap_calculator = Forwards_Overlap(max_fulfillments)
@@ -251,17 +257,19 @@ class Degree():
                 bind_to_R_templates(all_fulfillment, max_fulfillments, course)
     
 
-
     def json(self) -> json:
         degree = dict()
         degree.update({self.name:self.templates})
         return json.dumps(degree)
 
+    def __str__(self):
+        return self.name
 
     def __repr__(self):
         rep = f"{self.name}: \n"
+        for template in self.templates:
+            rep += str(template)
         return rep
-
 
     def __eq__(self, other):
         if not isinstance(other, Degree):
@@ -270,14 +278,12 @@ class Degree():
             return True
         return False
 
-
     def __hash__(self):
         i = 0
         for rule in self.rules:
             i += hash(rule)
         i += hash(self.name)
         return i
-
 
 ######################################
 # HELPER FUNCTIONS

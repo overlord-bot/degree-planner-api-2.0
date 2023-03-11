@@ -7,6 +7,7 @@ import logging
 
 from src.dp.degree_planner import Planner
 from src.dp.user import User
+from src.io.output import *
 
 planner = Planner('API2.0')
 user = User(1)
@@ -28,11 +29,13 @@ def terminal():
             logging.getLogger().setLevel(logging.WARNING)
 
     print("")
+    output = Output(OUT.CONSOLE, output_type=OUTTYPE.STRING, signature='Alan', auto_clear=True)
+    io = DPIO(user, output, output)
     while 1:
         user_input = input("(degree planner) >>> ")
         if user_input.casefold() == "quit":
             return
-        planner.input_handler(user, user_input)
+        planner.input_handler(user, user_input, io)
 
 if __name__ == "__main__":
     terminal()
