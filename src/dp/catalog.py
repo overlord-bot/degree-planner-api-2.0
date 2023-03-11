@@ -89,7 +89,7 @@ class Catalog():
     def get_all_degrees(self):
         return self.__degree_list.values()
 
-    def get_course_match(self, target_template:Template) -> dict:
+    def get_course_match(self, target_template:Template) -> list:
         ''' Intakes a criteria of courses that we want returned
             matches against the entire catalog
 
@@ -97,9 +97,6 @@ class Catalog():
                 matched dictionary (dict): { template : course set }
         '''
         return get_course_match(target_template, self.__course_list.values(), True)
-
-    def get_best_course_match(self, target_template:Template) -> set:
-        return get_best_course_match(target_template, self.__course_list.values())
 
     def json(self):
         catalog = dict()

@@ -4,7 +4,6 @@ Fulfillment_Status class
 
 import json
 from .course import Course
-from .catalog import *
 
 
 class Fulfillment_Status():
@@ -74,14 +73,14 @@ class Fulfillment_Status():
     def __repr__(self) -> str:
         return f"template: {self.template}\nrequired count: {self.required}\nfulfillment set: {self.fulfillment_set}"
     
+    def __str__(self):
+        return str(self.template.name)
+    
     def __eq__(self, other):
-        return self.template == other.template and self.required == other.required and self.fulfillment_set == other.fulfillment_set
+        return self.template == other.template and self.required == other.required
     
     def __len__(self):
         return self.get_actual_count()
     
     def __hash__(self):
-        c = 0
-        for course in self.fulfillment_set:
-            c += hash(course.get_unique_name())
-        return hash(self.template) + self.required + c
+        return hash(self.template) + self.required + 10

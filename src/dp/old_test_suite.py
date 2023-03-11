@@ -14,17 +14,17 @@ class Test1():
     '''
     general test cases
     '''
-    async def test(self, output:Output=None):
+    def test(self, output:Output=None):
         if output == None: output = Output(output_location=OUT.DEBUG)
 
-        await output.print("Generating synthetic test data set")
+        output.print("Generating synthetic test data set")
         user = User("testuser")
 
         if user.get_schedule("test") == None:
-            await output.print("No previous schedule named 'test' exists, creating new test schedule")
+            output.print("No previous schedule named 'test' exists, creating new test schedule")
             user.new_schedule("test")
         else:
-            await output.print("Previously created schedule named 'test' exists, deleting its content...")
+            output.print("Previously created schedule named 'test' exists, deleting its content...")
             user.get_schedule("test").master_list_init()
 
         #------------------------------------------------------------------------------------------
@@ -58,7 +58,7 @@ class Test1():
         #------------------------------------------------------------------------------------------
         # Add courses to the a catalog
         #------------------------------------------------------------------------------------------
-        await output.print("\nAdding courses to catalog")
+        output.print("Adding courses to catalog")
         catalog = Catalog()
         catalog.add_course(course1)
         catalog.add_course(course2)
@@ -67,11 +67,11 @@ class Test1():
         catalog.add_course(course5)
         catalog.add_course(course6)
 
-        output.print_hold("\nPrinting courses:")
+        output.print("Printing courses:")
 
         for course in catalog.get_all_courses():
-            output.print_hold(str(course))
-        await output.print_cache()
+            output.print(str(course), output_location=OUT.STORE)
+        output.view_cache()
 
         #------------------------------------------------------------------------------------------
         # Add courses to user's schedule
@@ -93,9 +93,9 @@ class Test1():
         # checks to make sure add and remove worked properly
         # no duplicates within one semester but allowing for duplicates across semesters
         #------------------------------------------------------------------------------------------
-        await output.print("\nAdded courses to schedule, printing schedule")
-        output.print_hold(str(user.get_schedule("test")))
-        await output.print_cache()
+        output.print("Added courses to schedule, printing schedule")
+        output.print(str(user.get_schedule("test")), output_location=OUT.STORE)
+        output.view_cache()
 
         assert len(user.get_schedule("test").get_semester(0)) == 1
         assert len(user.get_schedule("test").get_semester(1)) == 1
@@ -106,7 +106,7 @@ class Test1():
         #------------------------------------------------------------------------------------------
         # testing course attribute search with get_best_course_match
         #------------------------------------------------------------------------------------------
-        await output.print("\nBeginning testing of course attribute search")
+        output.print("Beginning testing of course attribute search")
         
         course_target1 = Course('ANY', 'ANY', 'ANY') # all CI courses
         course_target1.add_attribute('ci.true')
@@ -123,74 +123,37 @@ class Test1():
         course_target5.add_attribute("concentration.Theory, Algorithms and Mathematics")
         template_target5 = Template('5', course_target5)
 
-        bundle1 = catalog.get_best_course_match(template_target1)
-        await output.print(f"Bundle1: {str(bundle1)}")
+        bundle1 = catalog.get_course_match(template_target1)[0].get_fulfillment_set()
+        output.print(f"Bundle1: {[str(e) for e in bundle1]}")
         bundle1_ans = {catalog.get_course("networking in the linux kernel"),catalog.get_course("Cryptography 1")}
-        await output.print(f"Bundle1_ans: {str(bundle1_ans)}")
+        output.print(f"Bundle1_ans: {[str(e) for e in bundle1_ans]}")
         assert bundle1 == bundle1_ans
 
-        bundle2 = catalog.get_best_course_match(template_target2)
-        await output.print(f"Bundle2: {set(bundle2)}")
+        bundle2 = catalog.get_course_match(template_target2)[0].get_fulfillment_set()
+        output.print(f"Bundle2: {[str(e) for e in bundle2]}")
         bundle2_ans = {course4, course5, course6}
-        await output.print(f"Bundle2_ans: {str(bundle2_ans)}")
+        output.print(f"Bundle2_ans: {[str(e) for e in bundle2_ans]}")
         assert bundle2 == bundle2_ans
 
-        bundle3 = catalog.get_best_course_match(template_target3)
+        bundle3 = catalog.get_course_match(template_target3)[0].get_fulfillment_set()
         bundle3_ans = {course1}
         assert bundle3 == bundle3_ans
 
-        bundle5 = catalog.get_best_course_match(template_target5)
-        await output.print(f"Bundle5: {str(bundle5)}")
+        bundle5 = catalog.get_course_match(template_target5)[0].get_fulfillment_set()
+        output.print(f"Bundle5: {[str(e) for e in bundle5]}")
         bundle5_ans = {course6}
-        await output.print(f"Bundle5_ans: {str(bundle5_ans)}")
+        output.print(f"Bundle5_ans: {[str(e) for e in bundle5]}")
         assert bundle5 == bundle5_ans
 
         #------------------------------------------------------------------------------------------
         # testing wildcards with get_course_match()
         #------------------------------------------------------------------------------------------
-        await output.print(f"\nBeginning wildcard course matching tests!")
 
-        catalog.add_course(course7)
-
-        tcourse1 = Course('ANY', 'ANY', 'ANY')
-        tcourse1.add_attribute('level.2')
-        template1 = Template('t1', tcourse1)
-        template1ans = {course2,course3}
-        await output.print(f"template1response: {str(catalog.get_course_match(template1))}\n" + \
-            f"template1ans: {str(template1ans)}")
-        assert catalog.get_best_course_match(template1) == template1ans
-
-        template2 = Template("Concentration requirement", Course('ANY', 'ANY', 'ANY'))
-        template2.template_course.add_attribute('level.4')
-        template2.template_course.add_attribute('concentration.*')
-        template2ans1 = {course5}
-        template2ans2 = {course6, course7}
-        await output.print(f"template2response: {str(catalog.get_course_match(template2))}\n" + \
-            f"template2ans: course5, course6 course7")
-        assert template2ans1 in catalog.get_course_match(template2).values()
-        assert template2ans2 in catalog.get_course_match(template2).values()
-        assert catalog.get_best_course_match(template2) == template2ans2
-
-        #------------------------------------------------------------------------------------------
-        # Rule object testing
-        #------------------------------------------------------------------------------------------
-        await output.print(f"\nbeginning rules tests!")
-        rule1 = Rule("concentration requirement")
-        rule1.add_template(template2, 2)
-        status_return = rule1.fulfillment(catalog.get_all_courses())
-        await output.print(f"status_return of rule fulfillment() method: \n{str(status_return)}")
-        status_return2 = rule1.fulfillment(catalog.get_all_courses())
-        await output.print(f"status_return of rule fulfillment_return_message() method: \n{status_return2}")
-        
-        for fulfillment_status in status_return:
-            assert len(template2ans2.union(fulfillment_status.get_fulfillment_set())) == 2
-
-        await output.print(f"completed rules tests")
 
         #------------------------------------------------------------------------------------------
         # Search testing
         #------------------------------------------------------------------------------------------
-        await output.print(f"\nbeginning search tests!")
+        output.print(f"beginning search tests!")
         search = Search(catalog.get_all_course_names())
         assert search.search("dat str") == ["csci 1200 data structures"]
 
@@ -200,15 +163,29 @@ class Test1():
 
         # testing json dumps:
         y = json.loads(user.json())
-        await output.print('user json dump: \n' + str(y))
-        y = json.loads(catalog.json())
-        await output.print('catalog json dump: \n' + str(y))
-        y = json.loads(user.get_schedule('test').json())
-        await output.print('schedule json dump: \n' + str(y))
-        y = json.loads(course6.json())
-        await output.print('course json dump: \n' + str(y))
+        y_str = ''
+        justify = 20
+        for k, v in y.items():
+            y_str += '    ' + str(k).ljust(justify) + ' : ' + str(v) + '\n'
+        output.print("user json dump: \n" + y_str)
 
-        await output.print(f"\nPrinting user data: {str(user)}")
+        y = json.loads(catalog.json())
+        y_str = ''
+        for k, v in y.items():
+            y_str += '    ' + str(k).ljust(justify) + ' : ' + str(v) + '\n'
+        output.print('catalog json dump: \n' + y_str)
+
+        y = json.loads(user.get_schedule('test').json())
+        y_str = ''
+        for k, v in y.items():
+            y_str += '    ' + str(k).ljust(justify) + ' : ' + str(v) + '\n'
+        output.print('schedule json dump: \n' + y_str)
+
+        y = json.loads(course6.json())
+        y_str = ''
+        for k, v in y.items():
+            y_str += '    ' + str(k).ljust(justify) + ' : ' + str(v) + '\n'
+        output.print('course json dump: \n' + y_str)
 
         # resetting master_list and conclude test module
         user.get_schedule("test").master_list_init()

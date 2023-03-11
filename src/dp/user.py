@@ -53,13 +53,13 @@ class User():
         return self.__schedules.get(schedule_name)
 
 
-    def new_schedule(self, schedule_name:str) -> None:
+    def new_schedule(self, schedule_name:str, SEMESTERS_MAX:int=10) -> None:
         '''
         Creates a new schedule if the schedule does not yet exist
         '''
         if self.__schedules.get(schedule_name, None) is not None:
             return
-        schedule = Schedule(schedule_name)
+        schedule = Schedule(schedule_name, SEMESTERS_MAX)
         self.__schedules.update({schedule_name : schedule})
 
 
@@ -91,7 +91,7 @@ class User():
             self.__schedules.pop(old_name)
             return True
 
-    def json(self):
+    def json(self) -> json:
         '''
         Creates json file of this class
         '''

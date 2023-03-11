@@ -260,21 +260,21 @@ class Course():
                 are the form of a list or set.
         '''
         course = OrderedDict()
-        course.update({'name':self.name})
-        course.update({'id':self.course_id})
-        if self.course_id2 != 0:
-            course.update({'id2':self.course_id2})
-        course.update({'subject':self.subject})
-        course.update({'course_credits':self.course_credits})
-        course.update({'description':self.description})
-        course.update(self.attributes)
+        for v in self.attributes.keys():
+            elements = v.split('.')
+            key = elements.pop(0)
+            if (len(elements) == 1):
+                rest = elements[0]
+            else:
+                rest = elements
+            course.update({key : rest})
         return json.dumps(course)
 
     def __repr__(self):
         st = (f"{self.unique_name if self.unique_name else 'None'}: {self.subject if self.subject else 'None'} " + \
             f"{str(self.course_id)}{f'.{self.course_id2}' if self.course_id2 != 0 else ''}, " + \
             f"{self.course_credits} credits, " + \
-            f"attributes: {self.attributes.keys()}" if len(self.attributes) > 0 else '' + '\n')
+            f"attributes: {list(self.attributes.keys())}" if len(self.attributes) > 0 else '' + '\n')
         return st.replace("set()", "none")
 
     def __str__(self):
@@ -288,6 +288,16 @@ class Course():
             and self.attributes == other.attributes):
             return True
         return False
+    
+    def __add__(self, other):
+        course = Course('ANY', 'ANY', 'ANY')
+        for attr in self.attributes:
+            course.add_attribute(attr)
+        for attr in other.attributes:
+            course.add_attribute(attr)
+        course.description = self.description + '\n\n' + other.description
+        course.cross_listed = self.cross_listed.union(other.cross_listed)
+        return course
 
     def __hash__(self):
         return hash(self.course_id) + len(self.attributes)*10 + len(self.name)*100 + len(self.description)*1000

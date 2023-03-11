@@ -21,17 +21,17 @@ Args:
     catalog (Catalog): catalog object to store parsed information into
     output (Output): debug output, default is print to console
 """
-async def parse_courses(file_name, catalog:Catalog, output:Output=None):
-    if output is None: output = Output(OUT.CONSOLE)
-    await output.print("Beginning parsing course data into catalog")
+def parse_courses(file_name, catalog:Catalog, io:DPIO=None):
+
+    io.log("Beginning parsing course data into catalog")
 
     # There are 1 location(s) for catalog_results and class_results, checked in this order:
     # 1) data/
     if os.path.isfile(os.getcwd() + "/data/" + file_name):
-        await output.print(f"file found: {os.getcwd()}/data/" + file_name)
+        io.log(f"file found: {os.getcwd()}/data/" + file_name)
         file_catalog_results = open(os.getcwd() + "/data/" + file_name)
     else:
-        await output.print("catalog file not found")
+        io.log("catalog file not found")
         return
 
     json_data = json.load(file_catalog_results)
@@ -44,7 +44,7 @@ async def parse_courses(file_name, catalog:Catalog, output:Output=None):
         if 'course_name' in element and 'course_subject' in element and 'course_number' in element:
             course = Course(element['course_name'], element['course_subject'], element['course_number'])
         else:
-            output.print("PARSING ERROR: course name, subject or number not found " + str(element), OUT.WARN)
+            io.log("PARSING ERROR: course name, subject or number not found " + str(element), OUT.WARN)
             continue
 
         if 'course_credit_hours' in element:
@@ -97,47 +97,6 @@ async def parse_courses(file_name, catalog:Catalog, output:Output=None):
         ################################################
 
         catalog.add_course(course)
-    """
-    course1 = Course('1', 'BINTEST', 1)
-    course1.add_attribute('bin.1')
-    course1.add_attribute('bin.2')
-    catalog.add_course(course1)
-
-    course2 = Course('2', 'BINTEST', 2)
-    course2.add_attribute('bin.1')
-    course2.add_attribute('bin.2')
-    catalog.add_course(course2)
-
-    course3 = Course('3', 'BINTEST', 3)
-    course3.add_attribute('bin.1')
-    catalog.add_course(course3)
-
-    course4 = Course('4', 'BINTEST', 4)
-    course4.add_attribute('bin.1')
-    course4.add_attribute('bin.3')
-    catalog.add_course(course4)
-    """
-
-    course1 = Course('1', 'BINTEST', 1)
-    course1.add_attribute('bin.1')
-    course1.add_attribute('bin.4')
-    catalog.add_course(course1)
-
-    course2 = Course('2', 'BINTEST', 2)
-    course2.add_attribute('bin.1')
-    course2.add_attribute('bin.2')
-    catalog.add_course(course2)
-
-    course3 = Course('3', 'BINTEST', 3)
-    course3.add_attribute('bin.2')
-    course3.add_attribute('bin.3')
-    catalog.add_course(course3)
-
-    course4 = Course('4', 'BINTEST', 4)
-    course4.add_attribute('bin.2')
-    course4.add_attribute('bin.3')
-    catalog.add_course(course4)
-
 
 """ Rarses json data degree objects stored in Catalog
 
@@ -146,9 +105,8 @@ Args:
     catalog (Catalog): catalog object to store parsed information into
     output (Output): debug output, default is print to console
 """
-async def parse_degrees(file_name, catalog, output:Output=None):
-    if output is None: output = Output(OUT.CONSOLE)
-    await output.print("Beginning parsing degree data into catalog")
+def parse_degrees(file_name, catalog, io:DPIO=None):
+    io.log("Beginning parsing degree data into catalog")
     
     ''' NOT IMPLEMENTED FOR JSON INPUT YET
     # There are 1 location(s) for degree_results and class_results, checked in this order:
@@ -167,8 +125,8 @@ async def parse_degrees(file_name, catalog, output:Output=None):
     # TESTING DEGREES FOR NOW:
     degree = Degree("computer science")
     catalog.add_degree(degree)
-    rule1 = Rule("concentration")
 
+    '''
     template1 = Template("concentration requirement", Course('ANY', 'ANY', 'ANY'))
     template1.template_course.add_attribute('concentration.*')
     # template1.template_course.replace_attribute('level', 'level.4')
@@ -185,46 +143,13 @@ async def parse_degrees(file_name, catalog, output:Output=None):
     template7 = Template("Test: any two same concentration", Course("ANY", "ANY", "ANY"))
     template7.template_course.add_attribute('concentration.*')
 
-
-    testtemplate1 = Template('bin1', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate1.template_course.add_attribute('bin.1')
-    testtemplate1.courses_required = 1
-    testtemplate2 = Template('bin2', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate2.template_course.add_attribute('bin.2')
-    testtemplate3 = Template('bin3', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate3.template_course.add_attribute('bin.3')
-    testtemplate4 = Template('bin4', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate4.template_course.add_attribute('bin.4')
-    testtemplate1.no_replacement = True
-    testtemplate2.no_replacement = True
-    testtemplate3.no_replacement = True
-    testtemplate3.no_replacement = True
-
-
-    
-
-    degree.templates.append(testtemplate1)
-    degree.templates.append(testtemplate2)
-    degree.templates.append(testtemplate3)
-    degree.templates.append(testtemplate4)
-
-    return
     degree.templates.append(template3)
     degree.templates.append(template4)
     degree.templates.append(template5)
     degree.templates.append(template6)
     degree.templates.append(template7)
-    #degree.add_rule(rule0)
-    #degree.add_rule(rule1)
-    #degree.add_rule(rule2)
-    #degree.add_rule(rule3)
-    #degree.add_rule(rule4)
-    #degree.add_rule(rule5)
-    #degree.add_rule(rule6)
-
-    catalog.add_degree(degree)
-
-    await output.print(f"added degree {repr(degree)} to catalog")
+    '''
+    io.log(f"added degree {str(degree)} to catalog")
 
     '''
     #----------------------------------------------------------------------
