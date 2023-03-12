@@ -10,6 +10,7 @@ from ..io.output import *
 from .course import Course
 from .catalog import Catalog
 from .degree import Degree
+from .course_template import Template
 
 """ Rarses json data of format [{course attribute : value}] 
     into a set of Course objects stored in Catalog
@@ -107,18 +108,23 @@ def parse_degrees(file_name, catalog, io:Output=None):
     io.print("Beginning parsing degree data into catalog")
     
     ''' NOT IMPLEMENTED FOR JSON INPUT YET
-    # There are 1 location(s) for degree_results and class_results, checked in this order:
-    # 1) data/
+    There are 1 location(s) for degrees, checked in this order:
+    1) data/
+    '''
     if os.path.isfile(os.getcwd() + "/data/" + file_name):
-        await output.print(f"file found: {os.getcwd()}/data/" + file_name)
-        file_degree_results = open(os.getcwd() + "/data/" + file_name)
+        io.print(f"file found: {os.getcwd()}/data/" + file_name)
+        file_degree = open(os.getcwd() + "/data/" + file_name)
     else:
-        await output.print("degree file not found")
+        io.print("degree file not found")
         return
     
-    json_data = json.load(file_degree_results)
-    file_degree_results.close()
-    '''
+    degrees = json.load(file_degree)
+    file_degree.close()
+
+    for degree_name, degree_templates in degrees.items():
+        degree = Degree(degree_name)
+        for template_name, template_attributes in degree_templates:
+            template = 
 
     # TESTING DEGREES FOR NOW:
     degree = Degree("computer science")
@@ -149,24 +155,3 @@ def parse_degrees(file_name, catalog, io:Output=None):
     '''
     io.print(f"added degree {str(degree)} to catalog")
 
-    '''
-    #----------------------------------------------------------------------
-    # Iterating through 'class_results.json', storing data on the core and
-    # elective information of each major
-    #
-    # note that further information describing all aspects of degrees are
-    # still needed, potentially in the form of manually created course
-    # templates.
-    #
-    # json data format: { degree name : [ { course attribute : value } ] }
-    #----------------------------------------------------------------------
-    for degree_name, degree_data in json_data.items():
-        degree = Degree(degree_name)
-        required_courses = set()
-
-        for requirement in degree_data:
-            if requirement['type'] == 'course':
-                required_courses.add(self.catalog.get_course(requirement['name']))
-            elif requirement['type'] == 'elective':
-                pass
-            '''
