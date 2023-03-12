@@ -5,7 +5,7 @@ contains degree class and a set of helper functions
 import json
 import timeit
 from enum import Enum
-from .course_template import *
+from .degree_template import *
 from .graph import Graph
 from .graph import Backwards_Overlap
 from .graph import Forwards_Overlap

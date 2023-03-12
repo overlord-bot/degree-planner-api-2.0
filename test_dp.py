@@ -5,7 +5,7 @@ from src.dp.graph import Graph
 from src.dp.degree_planner import Planner
 from src.dp.course import Course
 from src.dp.user import User
-from src.dp.course_template import Template
+from src.dp.degree_template import Template
 from src.dp.degree import *
 
 def test_graph():

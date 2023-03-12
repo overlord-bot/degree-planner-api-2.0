@@ -6,7 +6,7 @@ import json
 
 from .course import Course
 from .degree import Degree
-from .course_template import *
+from .degree_template import *
 from .search import Search
 
 class Catalog():

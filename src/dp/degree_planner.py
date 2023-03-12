@@ -557,8 +557,8 @@ class Planner():
         if io is None:
             io = self.default_io
 
-        catalog_file = "catalog_results.json"
-        degree_file = "class_results.json"
+        catalog_file = "catalog.json"
+        degree_file = "degrees.json"
 
         parse_courses(catalog_file, self.catalog, io)
         io.print(f"Sucessfully parsed catalog data")

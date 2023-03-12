@@ -4,7 +4,7 @@ Testing units for degree planner
 
 from .course import Course
 from .catalog import *
-from .course_template import Template
+from .degree_template import Template
 from .search import Search
 from ..io.output import *
 from .user import *

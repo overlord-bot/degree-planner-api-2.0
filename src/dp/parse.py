@@ -10,7 +10,7 @@ from ..io.output import *
 from .course import Course
 from .catalog import Catalog
 from .degree import Degree
-from .course_template import Template
+from .degree_template import Template
 
 """ Rarses json data of format [{course attribute : value}] 
     into a set of Course objects stored in Catalog
@@ -124,7 +124,7 @@ def parse_degrees(file_name, catalog, io:Output=None):
     for degree_name, degree_templates in degrees.items():
         degree = Degree(degree_name)
         for template_name, template_attributes in degree_templates:
-            template = 
+            template = Template(template_name)
 
     # TESTING DEGREES FOR NOW:
     degree = Degree("computer science")

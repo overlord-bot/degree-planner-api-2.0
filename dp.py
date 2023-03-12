@@ -4,6 +4,7 @@ Command line shell for degree planner
 
 import sys
 import logging
+from datetime import datetime
 
 from src.dp.degree_planner import Planner
 from src.dp.user import User
@@ -21,6 +22,7 @@ def terminal():
     print("  open source under MIT License")
     print("  Project Overlord 2022")
     print("  YACS.n 2023")
+    print(f"  {datetime.now()}")
     if len(sys.argv) > 1:
         if '-a' in sys.argv:
             print("  logging all debug info")
