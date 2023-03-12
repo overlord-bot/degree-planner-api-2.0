@@ -68,12 +68,12 @@ class Planner():
         self.course_search = Search()
         self.flags = set()
 
-        self.default_io = DPIO(user=None, logger=Output(OUT.CONSOLE, signature='INPUT HANDLER'), store=Output(OUT.STORE, signature='INPUT HANDLER'))
+        self.default_io = Output(OUT.CONSOLE, signature='INPUT HANDLER', auto_clear=True)
 
         self.SEMESTERS_MAX = SEMESTERS_MAX
 
 
-    def input_handler(self, user:User, user_input:str, io:DPIO=None) -> bool:
+    def input_handler(self, user:User, user_input:str, io:Output=None) -> bool:
         ''' MAIN FUNCTION FOR ACCEPTING COMMAND ENTRIES
 
         Args:
@@ -96,7 +96,7 @@ class Planner():
         else:
             # if queue is locked, do not proceed
             if user.command_queue_locked:
-                io.log(f'queue busy, please try again later')
+                io.print(f'queue busy, please try again later')
                 return False
             
             user.command_queue_locked = True
@@ -113,7 +113,7 @@ class Planner():
         return True
 
 
-    def command_handler(self, user:User, io:DPIO=None) -> None:
+    def command_handler(self, user:User, io:Output=None) -> None:
         ''' EXECUTES COMMANDS TAKEN FROM USER'S COMMAND QUEUE
 
         Args:
@@ -145,29 +145,29 @@ class Planner():
                 io.debug(f'user {user.username} fetched command {command}')
 
             if command.command == CMD.NONE:
-                io.log(f"there was an error understanding your command")
+                io.print(f"there was an error understanding your command")
                 user.command_queue.task_done()
                 continue
 
             if command.command == CMD.TEST:
-                io.log(f"Testing Degree Planner {VERSION}")
+                io.print(f"Testing Degree Planner {VERSION}")
                 self.test(io)
-                io.log(f"Test completed successfully, all assertions met")
+                io.print(f"Test completed successfully, all assertions met")
                 user.command_queue.task_done()
                 continue
 
             if command.command == CMD.IMPORT:
                 io.info("BEGINNING DATA IMPORTING")
-                io.log("begin parsing data")
+                io.print("begin parsing data")
                 self.parse_data(io)
                 io.info("FINISHED DATA IMPORTING")
-                io.log("parsing completed")
+                io.print("parsing completed")
                 user.command_queue.task_done()
                 continue
 
             if command.command == CMD.FIND:
                 if len(command.arguments) == 0:
-                    io.log(f"no arguments found. Use find, [courses] to find courses")
+                    io.print(f"no arguments found. Use find, [courses] to find courses")
                 else:
                     for entry in command.arguments:
                         self.print_matches(entry, io)
@@ -176,7 +176,7 @@ class Planner():
 
             if command.command == CMD.SCHEDULE:
                 if not command.arguments:
-                    io.log(f"not enough arguments, please specify a schedule name")
+                    io.print(f"not enough arguments, please specify a schedule name")
                 else:
                     self.set_active_schedule(user, command.arguments[0], io)
                 user.command_queue.task_done()
@@ -185,7 +185,7 @@ class Planner():
             # all commands after this requires an active schedule inside User
             schedule = user.get_current_schedule()
             if schedule == None:
-                io.log(f"no schedule selected, creating one named {user.username}")
+                io.print(f"no schedule selected, creating one named {user.username}")
                 self.set_active_schedule(user, user.username, io)
                 schedule = user.get_current_schedule()
 
@@ -194,7 +194,7 @@ class Planner():
                     decision = user.command_decision
                     courses = command.data_store
                     if not decision.isdigit() or int(decision) not in range(1, len(courses) + 1):
-                        io.log(f"Please enter a valid selection number")
+                        io.print(f"Please enter a valid selection number")
                         break
                     course:Course = courses[int(decision) - 1]
                     command.arguments[1] = course.get_unique_name()
@@ -209,7 +209,7 @@ class Planner():
                     possible_courses = self.remove_course(user, course, semester, io)
 
                 if possible_courses is not None:
-                    io.log(f"entry {course} has multiple choices, please choose from list:")
+                    io.print(f"entry {course} has multiple choices, please choose from list:")
                     i = 1
                     for c in possible_courses:
                         io.store(f"  {i}: {c.subject} {c.course_id} {c.name}")
@@ -225,7 +225,6 @@ class Planner():
                 continue
 
             if command.command == CMD.PRINT:
-                io.store(f"{schedule.name}")
                 io.store(f"{str(schedule)}")
                 io.view_cache()
                 user.command_queue.task_done()
@@ -233,7 +232,7 @@ class Planner():
 
             if command.command == CMD.DEGREE:
                 if not command.arguments:
-                    io.log(f"no arguments found. " + \
+                    io.print(f"no arguments found. " + \
                         "Use degree, <degree name> to set your schedule's degree")
                 else:
                     self.set_degree(schedule, command.arguments[0], io)
@@ -242,7 +241,7 @@ class Planner():
 
             if command.command == CMD.FULFILLMENT:
                 if schedule.degree == None:
-                    io.log(f"no degree specified")
+                    io.print(f"no degree specified")
                 else:
                     io.store(f"{schedule.name} Fulfillment")
                     fulfillment = schedule.degree.fulfillment(schedule.get_all_courses())
@@ -253,7 +252,7 @@ class Planner():
 
             if command.command == CMD.AUTOCOMPLETE:
                 if schedule.degree == None:
-                    io.log(f"no degree specified")
+                    io.print(f"no degree specified")
                 else:
                     io.store(f"{schedule.name} Recommended path of completion:")
                     io.view_cache()
@@ -270,7 +269,7 @@ class Planner():
                 continue
 
             else:
-                io.log(f"Unimplemented command {command.command} entered")
+                io.print(f"Unimplemented command {command.command} entered")
                 user.command_queue.task_done()
                 continue
 
@@ -279,7 +278,7 @@ class Planner():
     # HELPER FUNCTIONS
     #--------------------------------------------------------------------------
 
-    def parse_command(self, cmd:str, io:DPIO=None) -> list:
+    def parse_command(self, cmd:str, io:Output=None) -> list:
         ''' Parse string into a list of Command objects
 
         Args:
@@ -308,7 +307,7 @@ class Planner():
                 if last_command is not None:
                     last_command.arguments.append(e)
                 else:
-                    io.log(f"ERROR: invalid command '{e}'")
+                    io.print(f"ERROR: invalid command '{e}'")
         # after exiting the loop, push the last command if it exists into the queue
         if last_command is not None:
             cmd_queue.append(last_command)
@@ -316,7 +315,7 @@ class Planner():
         # verify all commands have the required number of arguments
         for e in cmd_queue:
             if not e.valid():
-                io.log(f"ERROR: invalid arguments for command {str(e)}")
+                io.print(f"ERROR: invalid arguments for command {str(e)}")
         cmd_queue = [e for e in cmd_queue if e.valid()]
         return cmd_queue
 
@@ -326,7 +325,7 @@ class Planner():
         return msg
 
 
-    def test(self, io:DPIO=None):
+    def test(self, io:Output=None):
         ''' Runs test suite
 
         Args:
@@ -336,7 +335,7 @@ class Planner():
         test_suite.test(io)
 
 
-    def set_active_schedule(self, user:User, schedule_name:str, io:DPIO=None) -> None:
+    def set_active_schedule(self, user:User, schedule_name:str, io:Output=None) -> None:
         ''' Changes user's active schedule selection and creates new schedule if
             specified schedule is not found
 
@@ -350,12 +349,12 @@ class Planner():
 
         schedule = user.get_schedule(schedule_name)
         if schedule == None:
-            io.log(f"Schedule {schedule_name} not found, generating new one!")
+            io.print(f"Schedule {schedule_name} not found, generating new one!")
             user.new_schedule(schedule_name, self.SEMESTERS_MAX)
             user.curr_schedule = schedule_name
             return
         else:
-            io.log(f"Successfully switched to schedule {schedule_name}!")
+            io.print(f"Successfully switched to schedule {schedule_name}!")
             user.curr_schedule = schedule_name
             return
 
@@ -386,7 +385,7 @@ class Planner():
         return user.get_all_schedules()
 
 
-    def set_degree(self, schedule:Schedule, degree_name:str, io:DPIO=None) -> bool:
+    def set_degree(self, schedule:Schedule, degree_name:str, io:Output=None) -> bool:
         ''' Changes user's active schedule's degree
 
         Args:
@@ -404,11 +403,11 @@ class Planner():
 
         degree = self.catalog.get_degree(degree_name)
         if degree == None:
-            io.log(f"invalid degree entered: {degree_name}")
+            io.print(f"invalid degree entered: {degree_name}")
             return False
         else:
             schedule.degree = degree
-            io.log(f"set your degree to {degree.name}")
+            io.print(f"set your degree to {degree.name}")
             return True
 
     
@@ -447,7 +446,7 @@ class Planner():
         return None
 
 
-    def print_matches(self, course_name:str, io:DPIO=None) -> None:
+    def print_matches(self, course_name:str, io:Output=None) -> None:
         ''' Print list of courses to output that match input entry, searches from entire catalog
 
         Args:
@@ -459,7 +458,7 @@ class Planner():
 
         possible_courses = self.course_search.search(course_name)
         possible_courses.sort()
-        io.log(f"courses matching {course_name}: ")
+        io.print(f"courses matching {course_name}: ")
         i = 1
         for c in possible_courses:
             course = self.catalog.get_course(c)
@@ -468,7 +467,7 @@ class Planner():
         io.view_cache()
 
 
-    def add_course(self, user:User, course_name:str, semester, io:DPIO=None):
+    def add_course(self, user:User, course_name:str, semester, io:Output=None):
         ''' Add course to user's schedule
 
         Args:
@@ -486,7 +485,7 @@ class Planner():
 
         # sanity checks
         if not semester.isdigit() or int(semester) not in range(0, self.SEMESTERS_MAX):
-            io.log(f"Invalid semester {semester}, enter number between 0 and 11")
+            io.print(f"Invalid semester {semester}, enter number between 0 and 11")
             return None
         
         # list of courses matching course_name
@@ -494,7 +493,7 @@ class Planner():
         returned_courses = [self.catalog.get_course(c) for c in self.course_search.search(course_name)]
 
         if len(returned_courses) == 0:
-            io.log(f"Course {course_name} not found")
+            io.print(f"Course {course_name} not found")
             return None
         if len(returned_courses) > 1:
             return returned_courses
@@ -502,11 +501,11 @@ class Planner():
         # at this point, returned_courses have exactly one course, so we can perform the addition immediately
         course = returned_courses[0]
         user.get_current_schedule().add_course(course, semester)
-        io.log(f"Added course {course.name} to semester {semester}")
+        io.print(f"Added course {course.name} to semester {semester}")
         return None
 
 
-    def remove_course(self, user:User, course_name:str, semester, io:DPIO=None):
+    def remove_course(self, user:User, course_name:str, semester, io:Output=None):
         ''' Remove course from user's schedule
 
         Args:
@@ -524,7 +523,7 @@ class Planner():
 
         # sanity checks
         if not semester.isdigit() or int(semester) not in range(0, self.SEMESTERS_MAX):
-            io.log(f"Invalid semester {semester}, enter number between 0 and 11")
+            io.print(f"Invalid semester {semester}, enter number between 0 and 11")
             return None
         
         semester = int(semester)
@@ -534,7 +533,7 @@ class Planner():
         returned_courses = [self.catalog.get_course(c) for c in self.search(course_name, this_semester_courses)]
 
         if len(returned_courses) == 0:
-            io.log(f"Course {course_name} not found")
+            io.print(f"Course {course_name} not found")
             return None
         if len(returned_courses) > 1:
             return returned_courses
@@ -542,11 +541,11 @@ class Planner():
         # at this point, returned_courses have exactly one course, so we can perform the removal immediately
         course = returned_courses[0]
         user.get_current_schedule().remove_course(course, semester)
-        io.log(f"Removed course {course.name} from semester {semester}")
+        io.print(f"Removed course {course.name} from semester {semester}")
         return None
 
     
-    def parse_data(self, io:DPIO=None) -> Exception:
+    def parse_data(self, io:Output=None) -> Exception:
         ''' Parse json data into a list of courses and degrees inside a catalog
 
         Args:
@@ -562,13 +561,13 @@ class Planner():
         degree_file = "class_results.json"
 
         parse_courses(catalog_file, self.catalog, io)
-        io.log(f"Sucessfully parsed catalog data")
+        io.print(f"Sucessfully parsed catalog data")
         
         # set up searcher for finding courses based on incomplete user input
         self.course_search.update_items(self.catalog.get_all_course_names())
         self.course_search.generate_index()
 
         parse_degrees(degree_file, self.catalog, io)
-        io.log(f"Sucessfully parsed degree data")
+        io.print(f"Sucessfully parsed degree data")
         io.debug(f"Printing catalog:")
         io.debug(str(self.catalog))

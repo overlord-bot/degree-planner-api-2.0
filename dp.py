@@ -30,12 +30,11 @@ def terminal():
 
     print("")
     output = Output(OUT.CONSOLE, output_type=OUTTYPE.STRING, signature='Alan', auto_clear=True)
-    io = DPIO(user, output, output)
     while 1:
         user_input = input("(degree planner) >>> ")
         if user_input.casefold() == "quit":
             return
-        planner.input_handler(user, user_input, io)
+        planner.input_handler(user, user_input, output)
 
 if __name__ == "__main__":
     terminal()

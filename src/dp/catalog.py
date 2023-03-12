@@ -8,7 +8,6 @@ from .course import Course
 from .degree import Degree
 from .course_template import *
 from .search import Search
-from ..io.output import *
 
 class Catalog():
     '''
@@ -21,7 +20,6 @@ class Catalog():
     def __init__(self, name="main"):
         # TODO also store graphs for further analysis and course prediction of free electives
         self.name = name
-        self.output = Output(OUT.CONSOLE)
         self.__course_list = dict() # course name as key
         self.__degree_list = dict() # degree name as key
 

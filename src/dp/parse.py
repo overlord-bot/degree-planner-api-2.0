@@ -8,10 +8,8 @@ import json
 import os
 from ..io.output import *
 from .course import Course
-from .course_template import Template
 from .catalog import Catalog
 from .degree import Degree
-from .rules import Rule
 
 """ Rarses json data of format [{course attribute : value}] 
     into a set of Course objects stored in Catalog
@@ -21,17 +19,17 @@ Args:
     catalog (Catalog): catalog object to store parsed information into
     output (Output): debug output, default is print to console
 """
-def parse_courses(file_name, catalog:Catalog, io:DPIO=None):
+def parse_courses(file_name, catalog:Catalog, io:Output=None):
 
-    io.log("Beginning parsing course data into catalog")
+    io.print("Beginning parsing course data into catalog")
 
     # There are 1 location(s) for catalog_results and class_results, checked in this order:
     # 1) data/
     if os.path.isfile(os.getcwd() + "/data/" + file_name):
-        io.log(f"file found: {os.getcwd()}/data/" + file_name)
+        io.print(f"file found: {os.getcwd()}/data/" + file_name)
         file_catalog_results = open(os.getcwd() + "/data/" + file_name)
     else:
-        io.log("catalog file not found")
+        io.print("catalog file not found")
         return
 
     json_data = json.load(file_catalog_results)
@@ -44,7 +42,7 @@ def parse_courses(file_name, catalog:Catalog, io:DPIO=None):
         if 'course_name' in element and 'course_subject' in element and 'course_number' in element:
             course = Course(element['course_name'], element['course_subject'], element['course_number'])
         else:
-            io.log("PARSING ERROR: course name, subject or number not found " + str(element), OUT.WARN)
+            io.print("PARSING ERROR: course name, subject or number not found " + str(element), OUT.WARN)
             continue
 
         if 'course_credit_hours' in element:
@@ -105,8 +103,8 @@ Args:
     catalog (Catalog): catalog object to store parsed information into
     output (Output): debug output, default is print to console
 """
-def parse_degrees(file_name, catalog, io:DPIO=None):
-    io.log("Beginning parsing degree data into catalog")
+def parse_degrees(file_name, catalog, io:Output=None):
+    io.print("Beginning parsing degree data into catalog")
     
     ''' NOT IMPLEMENTED FOR JSON INPUT YET
     # There are 1 location(s) for degree_results and class_results, checked in this order:
@@ -149,7 +147,7 @@ def parse_degrees(file_name, catalog, io:DPIO=None):
     degree.templates.append(template6)
     degree.templates.append(template7)
     '''
-    io.log(f"added degree {str(degree)} to catalog")
+    io.print(f"added degree {str(degree)} to catalog")
 
     '''
     #----------------------------------------------------------------------
