@@ -9,6 +9,7 @@ from .degree_template import *
 from .graph import Graph
 from .graph import Backwards_Overlap
 from .graph import Forwards_Overlap
+from .graph import BFS_data
 from ..io.output import *
 
 class Bind_Type(Enum):
@@ -153,7 +154,7 @@ class Degree():
                 all_fulfillment.update({template:this_fulfillment})
                 continue
 
-            if has_only_weak_bindings(all_fulfillment, course):
+            if not this_fulfillment.fulfilled() and has_only_weak_bindings(all_fulfillment, course):
                 # we are free to remove the course from its original places and add it here
                 bindings_clear(all_fulfillment, course)
                 this_fulfillment.add_fulfillment_course(course)
@@ -163,13 +164,13 @@ class Degree():
         return this_fulfillment
 
 
-    def template_steal(self, template:Template, all_fulfillment:dict, max_fulfillments:dict) -> None:
+    def template_steal(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, restrict_to_course:Course=None) -> None:
         '''
         try to steal any courses it can from other templates
         '''
         this_fulfillment = all_fulfillment.get(template)
 
-        while this_fulfillment.unfulfilled_count() > 0:
+        while not this_fulfillment.fulfilled():
             # initial layer is all fulfillment statuses with excess
             bfs_roots = set()
             overlap_calculator = Backwards_Overlap(max_fulfillments)
@@ -190,6 +191,13 @@ class Degree():
             path = bfs.get_path(this_fulfillment)
             self.DEBUG.print('path: ' + ' -> '.join([str(e) for e in path]))
 
+            final_donor_fulfillment = path[-2]
+            
+            if restrict_to_course is not None:
+                if restrict_to_course not in final_donor_fulfillment.get_fulfillment_set():
+                    print(f'template {template} requested course {restrict_to_course} not found')
+                    break
+
             # shifts courses along the path such that we obtain a new course
             for i in range(0, len(path) - 1):
                 giver = path[i]
@@ -198,8 +206,10 @@ class Degree():
                 # for other R templates
                 if i == len(path) - 2:
                     transferred_courses = graph.edge_data(giver, receiver, False)
+                    if final_donor_fulfillment is not None:
+                        transferred_course = restrict_to_course
                     # if replacement, get courses that fill the maximum amount of bindings
-                    if template.replacement:
+                    elif template.replacement:
                         transferred_course = sort_by_num_bindings(max_fulfillments, transferred_courses, Bind_Type.R)
                         transferred_course.reverse()
                         transferred_course = transferred_course[0]
@@ -230,7 +240,7 @@ class Degree():
             return
 
         this_fulfillment = all_fulfillment.get(template)
-        while this_fulfillment.unfulfilled_count() > 0:
+        while not this_fulfillment.fulfilled():
             requested_courses = max_fulfillments.get(template).get_fulfillment_set().difference(all_fulfillment.get(template).get_fulfillment_set())
 
             for course in requested_courses:

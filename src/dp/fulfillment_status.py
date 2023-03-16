@@ -17,6 +17,9 @@ class Fulfillment_Status():
         self.required = required_count
         self.fulfillment_set = fulfillment_set
 
+    def fulfilled(self):
+        return self.get_actual_count() - self.get_required_count() >= 0
+
     def get_required_count(self) -> int:
         return self.required
     

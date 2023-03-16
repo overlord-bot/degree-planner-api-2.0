@@ -217,9 +217,8 @@ def test_fulfillment3():
     planner.course_search.update_items(catalog.get_all_course_names())
     planner.course_search.generate_index()
 
-    testtemplate1 = Template('bin1', Course("ANY", "BINTEST", 'ANY'))
+    testtemplate1 = Template('bin1', Course("ANY", "BINTEST", 'ANY'), courses_required=1)
     testtemplate1.template_course.add_attribute('bin.1')
-    testtemplate1.courses_required = 1
     testtemplate2 = Template('bin2', Course("ANY", "BINTEST", 'ANY'))
     testtemplate2.template_course.add_attribute('bin.2')
     testtemplate3 = Template('bin3', Course("ANY", "BINTEST", 'ANY'))
@@ -241,6 +240,7 @@ def test_fulfillment3():
     degree.add_template(testtemplate5)
 
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6')
+    run_cmd(planner, user, 'print, fulfillment')
 
 def run_cmd(planner, user, string):
     planner.input_handler(user, string)
@@ -254,8 +254,8 @@ input('press enter to continue')
 test_fulfillment()
 input('press enter to continue')
 test_fulfillment2()
-#input('press enter to continue')
-#test_fulfillment3()
+input('press enter to continue')
+test_fulfillment3()
 
 stop = timeit.default_timer()
 print('\ntime: ', stop - start)
