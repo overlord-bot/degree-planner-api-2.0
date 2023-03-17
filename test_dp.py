@@ -17,14 +17,14 @@ def test_graph():
     graph = Graph([n1, n2, n3, n4, n5])
     print(f'initial graph: {graph}')
 
-    graph.add_connection(n1, n2)
-    graph.add_connection(n3, n1)
-    graph.add_connection(n3, n4)
-    graph.add_connection(n3, n5)
-    graph.add_connection(n4, n5)
-    graph.add_connection(n4, n1)
-    graph.add_connection(n4, n3)
-    graph.add_connection(n5, n4)
+    graph.update_connection(n1, n2)
+    graph.update_connection(n3, n1)
+    graph.update_connection(n3, n4)
+    graph.update_connection(n3, n5)
+    graph.update_connection(n4, n5)
+    graph.update_connection(n4, n1)
+    graph.update_connection(n4, n3)
+    graph.update_connection(n5, n4)
 
     print(f'added connections: {graph}')
 
@@ -249,6 +249,7 @@ def run_cmd(planner, user, string):
 start = timeit.default_timer()
 
 print(f'beginning test {datetime.now()}')
+logging.getLogger().setLevel(logging.DEBUG)
 test_graph()
 input('press enter to continue')
 test_fulfillment()

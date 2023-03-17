@@ -84,6 +84,7 @@ class Graph():
         self.nodes_id = dict()
         self.nodes_name = dict()
         self.edge_data_gen = edge_data_gen
+        self.roots = set()
         for i in range(0, len(nodes)):
             self.nodes_id.update({nodes[i]:i})
             self.nodes_name.update({i:nodes[i]})
@@ -95,7 +96,7 @@ class Graph():
         return self.edge_data_gen.edge_data(node1, node2)
 
 
-    def add_connection(self, node_origin, node_to, data_set:set=None):
+    def update_connection(self, node_origin, node_to, data_set:set=None):
         '''
         add a connection from node_origin to node_to
         '''
@@ -171,10 +172,13 @@ class Graph():
         return self.nodes_name.get(id)
 
 
-    def bfs(self, start_nodes:set) -> BFS_data:
+    def bfs(self, start_nodes:set=None) -> BFS_data:
         '''
         find BFS paths from links
         '''
+        if start_nodes is None:
+            start_nodes = self.roots
+            
         bfs = BFS_data(start_nodes)
         while bfs.has_next():
             node_current = bfs.next()
