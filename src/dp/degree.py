@@ -112,7 +112,6 @@ class Degree():
                 self.template_steal(template, all_fulfillment, max_fulfillments)
 
             for template in template_set:
-                continue
                 self.template_trade(template, all_fulfillment, max_fulfillments)
 
             potential_fulfillments.append(all_fulfillment)
@@ -186,9 +185,13 @@ class Degree():
         manages the graph such that it remains consistent with course moves. This method must be used
         if you want to be able to modify fulfillment sets without rebuilding the entire graph
         '''
-
-        giver_fulfillment.remove_fulfillment_course(course)
-        receiver_fulfillment.add_fulfillment_course(course)
+        print('giver: ' + str([str(e) for e in giver_fulfillment.get_fulfillment_set()]))
+        print('receiver: ' + str([str(e) for e in receiver_fulfillment.get_fulfillment_set()]))
+        s1 = giver_fulfillment.remove_fulfillment_course(course)
+        s2 = receiver_fulfillment.add_fulfillment_course(course)
+        print(f'removal: {s1} addition: {s2}')
+        print('giver: ' + str([str(e) for e in giver_fulfillment.get_fulfillment_set()]))
+        print('receiver: ' + str([str(e) for e in receiver_fulfillment.get_fulfillment_set()]))
 
         for out_connection in graph.outbound_connections(giver_fulfillment):
             graph.update_connection(giver_fulfillment, out_connection)
@@ -208,7 +211,6 @@ class Degree():
         returns whether steal is successful
         '''
         this_fulfillment = all_fulfillment.get(template)
-
         bfs = graph.bfs()
 
         # Optimization: we can leave immediately if BFS doesn't even contain the target at all
@@ -216,7 +218,7 @@ class Degree():
             return False
 
         # the templates containing the requested course, we will be attempting a BFS search
-        # on these templates
+        # on this template
         target_template = template_containing_course(all_fulfillment, course)
 
         # target course not found
@@ -225,15 +227,9 @@ class Degree():
         
         target_fulfillment = all_fulfillment.get(target_template)
         
-        # calculates path to move courses
+        # calculates path to move courses, recorded as a list of fulfillment sets
         path = bfs.get_path(target_fulfillment)
-        self.DEBUG.print('path: ' + ' -> '.join([str(e) for e in path]))
-
-        final_donor_fulfillment = path[-2]
-
-        if course not in final_donor_fulfillment.get_fulfillment_set():
-            print(f'template {template} requested course {course} not found')
-            return False
+        self.DEBUG.print('path: ' + ' -> '.join([str(e) for e in path]) + ' --> ' + str(template))
 
         # shifts courses along the path such that we obtain a new course
         for i in range(0, len(path) - 1):
@@ -241,31 +237,23 @@ class Degree():
             receiver = path[i + 1]
             # for the ultimate transfer into this template, pick the course the maximizes the number of fulfillments
             # for other R templates
-            if i == len(path) - 2:
-                transferred_courses = graph.edge_data(giver, receiver, False)
-                if final_donor_fulfillment is not None:
-                    transferred_course = course
-                # if replacement, get courses that fill the maximum amount of bindings
-                elif template.replacement:
-                    transferred_course = sort_by_num_bindings(max_fulfillments, transferred_courses, Bind_Type.R)
-                    transferred_course.reverse()
-                    transferred_course = transferred_course[0]
+            transferred_courses = graph.edge_data(giver, receiver, False)
+            # if replacement, get courses that fill the maximum amount of bindings
+            if template.replacement:
+                transferred_course = sort_by_num_bindings(max_fulfillments, transferred_courses, Bind_Type.R)
+                transferred_course = transferred_course[-1]
 
-                # otherwise, avoid being greedy and taking courses that fulfill replaceable templates for yourself!
-                else:
-                    transferred_course = sort_by_num_bindings(max_fulfillments, transferred_courses, Bind_Type.R)
-                    transferred_course = transferred_course[0]
-
+            # otherwise, avoid being greedy and taking courses that fulfill replaceable templates for yourself!
             else:
-                transferred_course = graph.edge_data(giver, receiver, True)
-            self.DEBUG.print('transferring course: ' + str(transferred_course))
-            giver.remove_fulfillment_course(transferred_course)
-            receiver.add_fulfillment_course(transferred_course)
+                transferred_course = sort_by_num_bindings(max_fulfillments, transferred_courses, Bind_Type.R)
+                transferred_course = transferred_course[0]
+            self.DEBUG.print('transferring course: ' + str(transferred_course) + ' from ' + str(giver) + ' to ' + str(receiver))
+            self.course_move(giver, receiver, transferred_course, graph)
             all_fulfillment.update({giver.get_template():giver})
-        
+
+        self.DEBUG.print('transferring course: ' + str(course) + ' from ' + str(path[-1]) + ' to ' + str(all_fulfillment.get(template)))
+        self.course_move(path[-1], all_fulfillment.get(template), course, graph)
         all_fulfillment.update({path[-1].get_template():path[-1]})
-
-
 
 
     def template_steal(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, graph:Graph=None) -> None:
@@ -284,6 +272,10 @@ class Degree():
             # target_templates = templates_containing_course(all_fulfillment, restrict_to_course)
             if not bfs.contains_child(this_fulfillment):
                 break
+
+            for course in max_fulfillments.get(template).get_fulfillment_set():
+                self.course_steal(template, course, all_fulfillment, max_fulfillments, graph)
+            break
             
             # calculates path to move courses
             path = bfs.get_path(this_fulfillment)
@@ -300,8 +292,7 @@ class Degree():
                     # if replacement, get courses that fill the maximum amount of bindings
                     if template.replacement:
                         transferred_course = sort_by_num_bindings(max_fulfillments, transferred_courses, Bind_Type.R)
-                        transferred_course.reverse()
-                        transferred_course = transferred_course[0]
+                        transferred_course = transferred_course[-1]
 
                     # otherwise, avoid being greedy and taking courses that fulfill replaceable templates for yourself!
                     else:
