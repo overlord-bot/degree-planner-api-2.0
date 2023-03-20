@@ -10,19 +10,21 @@ from .fulfillment_status import Fulfillment_Status
 
 class Backwards_Overlap():
 
-    def __init__(self, max_fulfillment:dict):
+    def __init__(self, all_fulfillment:dict, max_fulfillment:dict):
         self.max_fulfillment = max_fulfillment
+        self.all_fulfillment = all_fulfillment
 
     def edge_data(self, node1:Fulfillment_Status, node2:Fulfillment_Status):
-        return node1.get_fulfillment_set().intersection(self.max_fulfillment.get(node2.get_template()).get_fulfillment_set())
+        return self.all_fulfillment.get(node1).get_fulfillment_set().intersection(self.max_fulfillment.get(self.all_fulfillment.get(node2).get_template()).get_fulfillment_set())
     
 class Forwards_Overlap():
 
-    def __init__(self, max_fulfillment:dict):
+    def __init__(self, all_fulfillment:dict, max_fulfillment:dict):
         self.max_fulfillment = max_fulfillment
+        self.all_fulfillment = all_fulfillment
 
     def edge_data(self, node1:Fulfillment_Status, node2:Fulfillment_Status):
-        return node1.get_fulfillment_set().intersection(self.max_fulfillment.get(node2.get_template()).get_fulfillment_set())
+        return self.all_fulfillment.get(node1).get_fulfillment_set().intersection(self.max_fulfillment.get(self.all_fulfillment.get(node2).get_template()).get_fulfillment_set())
 
 
 class BFS_data():

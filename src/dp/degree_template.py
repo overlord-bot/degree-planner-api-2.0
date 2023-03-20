@@ -28,6 +28,7 @@ class Template():
 
     def __repr__(self):
         s = f"Template {self.name}:\n"
+        s += f"  replacement: {self.replacement}\n"
         s += f"  {repr(self.template_course)}\n"
         s += f"course_set: "
         s += ",".join(self.course_set)
