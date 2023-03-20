@@ -384,22 +384,38 @@ def test_fulfillment6():
 
 
     course6 = Course('6', 'BINTEST', 6)
+    course6.add_attribute('bin.1')
+    course6.add_attribute('bin.2')
+    course6.add_attribute('bin.3')
+
     course6.add_attribute('bin.6')
     course6.add_attribute('concentration.AI')
     catalog.add_course(course6)
 
     course7 = Course('7', 'BINTEST', 7)
+    course7.add_attribute('bin.1')
+    course7.add_attribute('bin.2')
+    course7.add_attribute('bin.3')
+
     course7.add_attribute('bin.6')
     course7.add_attribute('bin.7')
     catalog.add_course(course7)
 
     course8 = Course('8', 'BINTEST', 8)
+    course8.add_attribute('bin.1')
+    course8.add_attribute('bin.2')
+    course8.add_attribute('bin.3')
+
     course8.add_attribute('bin.7')
     course8.add_attribute('bin.8')
     course8.add_attribute('bin.9')
     catalog.add_course(course8)
 
     course9 = Course('9', 'BINTEST', 9)
+    course9.add_attribute('bin.1')
+    course9.add_attribute('bin.2')
+    course9.add_attribute('bin.3')
+
     course9.add_attribute('bin.7')
     course9.add_attribute('bin.8')
     course9.add_attribute('bin.9')
@@ -407,12 +423,20 @@ def test_fulfillment6():
     catalog.add_course(course9)
 
     course10 = Course('one', 'BINTEST', 'one')
+    course10.add_attribute('bin.3')
+    course10.add_attribute('bin.4')
+    course10.add_attribute('bin.5')
+
     course10.add_attribute('bin.8')
     course10.add_attribute('bin.9')
     course10.add_attribute('concentration.theory')
     catalog.add_course(course10)
 
     course11 = Course('two', 'BINTEST', 'two')
+    course11.add_attribute('bin.3')
+    course11.add_attribute('bin.4')
+    course11.add_attribute('bin.5')
+
     course11.add_attribute('bin.8')
     course11.add_attribute('concentration.AI')
     catalog.add_course(course11)
@@ -454,17 +478,23 @@ def test_fulfillment6():
     testtemplate9.replacement = False
     testtemplate10.replacement = False
 
-    degree.add_template(testtemplate1)
-    degree.add_template(testtemplate2)
-    degree.add_template(testtemplate3)
-    degree.add_template(testtemplate4)
-    degree.add_template(testtemplate5)
+    templates = list()
+    templates.append(testtemplate1)
+    templates.append(testtemplate2)
+    templates.append(testtemplate3)
+    templates.append(testtemplate4)
+    templates.append(testtemplate5)
 
-    degree.add_template(testtemplate6)
-    degree.add_template(testtemplate7)
-    degree.add_template(testtemplate8)
-    degree.add_template(testtemplate9)
-    degree.add_template(testtemplate10)
+    templates.append(testtemplate6)
+    templates.append(testtemplate7)
+    templates.append(testtemplate8)
+    templates.append(testtemplate9)
+    templates.append(testtemplate10)
+
+    # templates.reverse()
+
+    for t in templates:
+        degree.add_template(t)
 
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6')
     run_cmd(planner, user, 'add, 7, bin 7, add, 7, bin 8, add, 7, bin 9, add, 7, bin one, add, 7, bin two, add, 8, bin two')
