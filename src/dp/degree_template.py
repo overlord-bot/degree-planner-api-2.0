@@ -28,6 +28,7 @@ class Template():
 
     def __repr__(self):
         s = f"Template {self.name}:\n"
+        s += f"  replacement: {self.replacement}\n"
         s += f"  {repr(self.template_course)}\n"
         s += f"course_set: "
         s += ",".join(self.course_set)
@@ -115,6 +116,7 @@ def get_course_match(template:Template, course_pool=None, head=True) -> list:
                 print('get next: ' + str(course.get_next(course.get_all_before_wildcard(target_attribute))))
                 break
             '''
+            possible_values = set()
             for course in course_pool:
                 possible_values = possible_values.union(course.get_next(course.get_all_before_wildcard(target_attribute)))
             for val in possible_values:

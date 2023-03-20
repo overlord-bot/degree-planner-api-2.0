@@ -10,19 +10,21 @@ from .fulfillment_status import Fulfillment_Status
 
 class Backwards_Overlap():
 
-    def __init__(self, max_fulfillment:dict):
+    def __init__(self, all_fulfillment:dict, max_fulfillment:dict):
         self.max_fulfillment = max_fulfillment
+        self.all_fulfillment = all_fulfillment
 
     def edge_data(self, node1:Fulfillment_Status, node2:Fulfillment_Status):
-        return node1.get_fulfillment_set().intersection(self.max_fulfillment.get(node2.get_template()).get_fulfillment_set())
+        return self.all_fulfillment.get(node1).get_fulfillment_set().intersection(self.max_fulfillment.get(self.all_fulfillment.get(node2).get_template()).get_fulfillment_set())
     
 class Forwards_Overlap():
 
-    def __init__(self, max_fulfillment:dict):
+    def __init__(self, all_fulfillment:dict, max_fulfillment:dict):
         self.max_fulfillment = max_fulfillment
+        self.all_fulfillment = all_fulfillment
 
     def edge_data(self, node1:Fulfillment_Status, node2:Fulfillment_Status):
-        return node1.get_fulfillment_set().intersection(self.max_fulfillment.get(node2.get_template()).get_fulfillment_set())
+        return self.all_fulfillment.get(node1).get_fulfillment_set().intersection(self.max_fulfillment.get(self.all_fulfillment.get(node2).get_template()).get_fulfillment_set())
 
 
 class BFS_data():
@@ -84,6 +86,7 @@ class Graph():
         self.nodes_id = dict()
         self.nodes_name = dict()
         self.edge_data_gen = edge_data_gen
+        self.roots = set()
         for i in range(0, len(nodes)):
             self.nodes_id.update({nodes[i]:i})
             self.nodes_name.update({i:nodes[i]})
@@ -95,7 +98,7 @@ class Graph():
         return self.edge_data_gen.edge_data(node1, node2)
 
 
-    def add_connection(self, node_origin, node_to, data_set:set=None):
+    def update_connection(self, node_origin, node_to, data_set:set=None):
         '''
         add a connection from node_origin to node_to
         '''
@@ -171,10 +174,15 @@ class Graph():
         return self.nodes_name.get(id)
 
 
-    def bfs(self, start_nodes:set) -> BFS_data:
+    def bfs(self, start_nodes:set=None) -> BFS_data:
         '''
         find BFS paths from links
         '''
+        if start_nodes is None:
+            start_nodes = set()
+
+        start_nodes.update(self.roots)
+            
         bfs = BFS_data(start_nodes)
         while bfs.has_next():
             node_current = bfs.next()

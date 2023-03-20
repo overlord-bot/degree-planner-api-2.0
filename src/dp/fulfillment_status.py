@@ -82,6 +82,18 @@ class Fulfillment_Status():
     def __eq__(self, other):
         return self.template == other.template and self.required == other.required
     
+    def __gt__(self, other):
+        return self.template.importance < other.template.importance
+    
+    def __lt__(self, other):
+        return self.template.importance > other.template.importance
+    
+    def __ge__(self, other):
+        return self.template.importance <= other.template.importance
+    
+    def __le__(self, other):
+        return self.template.importance >= other.template.importance
+    
     def __len__(self):
         return self.get_actual_count()
     
