@@ -8,8 +8,6 @@ from enum import Enum
 from .degree_template import *
 from .graph import Graph
 from .graph import Backwards_Overlap
-from .graph import Forwards_Overlap
-from .graph import BFS_data
 from ..io.output import *
 
 class Bind_Type(Enum):
@@ -38,7 +36,7 @@ class Degree():
         templates should be inserted in order of importance
         '''
         if not len(self.templates):
-            template.importance = 0
+            template.importance = 1000
         else:
             template.importance = self.templates[-1].importance - 1
         self.templates.append(template)
@@ -105,6 +103,13 @@ class Degree():
             # runs fulfillment checking using this specific combination of templates
             all_fulfillment = dict()
             for template in template_set:
+                if template.replacement:
+                    continue
+                all_fulfillment.update({template:self.template_fill(template, all_fulfillment, max_fulfillments)})
+
+            for template in template_set:
+                if not template.replacement:
+                    continue
                 all_fulfillment.update({template:self.template_fill(template, all_fulfillment, max_fulfillments)})
 
             graph = self.generate_graph(all_fulfillment, max_fulfillments)
@@ -115,6 +120,9 @@ class Degree():
             for template in template_set:
                 #continue
                 self.template_trade(template, all_fulfillment, max_fulfillments)
+
+            for template in template_set:
+                self.template_trade(template, all_fulfillment, max_fulfillments, template.importance)
 
             potential_fulfillments.append(all_fulfillment)
 
@@ -145,7 +153,7 @@ class Degree():
                     continue
                 graph.update_connection(fulfillment_status1.get_template(), fulfillment_status2.get_template())
         graph.roots = bfs_roots
-        print(str(graph))
+        self.DEBUG.print(str(graph))
         return graph
 
 
@@ -167,14 +175,15 @@ class Degree():
         graph.update_connection(receiver_fulfillment.get_template(), giver_fulfillment.get_template())
 
 
-    def template_fill(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, force:bool=False) -> Fulfillment_Status:
+    def template_fill(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, importance_level:int=-1) -> Fulfillment_Status:
         '''
         Computes fulfillment status of a single template
 
         Parameters:
             template (Template): template being fulfilled, must not contain wildcards
             all_fulfillment ({Template:Fulfillment_Status}): all previously fulfilled statuses
-            taken_courses (set): courses taken by user
+            max_fulfillments ({Template:Fulfillment_Status}): all taken courses that can possibilty fulfill this template
+            importance level (int): a course will treat all courses under this specified importance level as stealable
 
         Returns:
             fulfillment (Fulfillment_Status): fulfillment status of the current template
@@ -182,7 +191,7 @@ class Degree():
 
         requested_courses = max_fulfillments.get(template).get_fulfillment_set()
 
-        self.DEBUG.print(str(template) + ' requests: ' + str([str(e) for e in requested_courses]))
+        # self.DEBUG.print(str(template) + ' requests: ' + str([str(e) for e in requested_courses]))
 
         if template.replacement:
             requested_courses = sort_by_num_wanted_bindings(all_fulfillment, max_fulfillments, requested_courses, Bind_Type.R)
@@ -203,7 +212,7 @@ class Degree():
                 continue
 
             # we are free to remove the course from its original places and add it here
-            if not this_fulfillment.fulfilled() and course_has_only_weak_bindings(all_fulfillment, course):
+            if not this_fulfillment.fulfilled() and course_has_only_weak_bindings(all_fulfillment, course, importance_level):
                 course_bindings_clear(all_fulfillment, course)
                 this_fulfillment.add_fulfillment_course(course)
                 all_fulfillment.update({template:this_fulfillment})
@@ -212,14 +221,16 @@ class Degree():
         return this_fulfillment
 
 
-    def course_steal(self, template:Template, course:Course, all_fulfillment:dict, max_fulfillments:dict, graph:Graph) -> bool:
+    def course_steal(self, template:Template, course:Course, all_fulfillment:dict, max_fulfillments:dict, graph:Graph, importance_level:int=-1, less_important_templates:set=None) -> bool:
         '''
         try to have template steal the course from aother templates in all_fulfillment, using the graph given and update
         graph appropriately after a successful transfer of courses
 
         returns whether steal is successful
         '''
-        bfs = graph.bfs()
+        if less_important_templates is None:
+            less_important_templates = get_less_important_templates(all_fulfillment, importance_level)
+        bfs = graph.bfs(less_important_templates)
 
         # Optimization: we can leave immediately if BFS doesn't even contain the target at all
         if not bfs.contains_child(template):
@@ -251,10 +262,13 @@ class Degree():
         self.course_move(all_fulfillment.get(path[-1]), all_fulfillment.get(template), course, graph)
 
 
-    def template_steal(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, graph:Graph) -> None:
+    def template_steal(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, graph:Graph, importance_level:int=-1) -> None:
         '''
         try to steal any courses it can from other templates
         '''
+        if template.replacement:
+            return
+
         this_fulfillment = all_fulfillment.get(template)
         bfs = graph.bfs()
         if not bfs.contains_child(template):
@@ -265,15 +279,15 @@ class Degree():
                 return
             if course in all_fulfillment.get(template).get_fulfillment_set():
                 continue
-            self.course_steal(template, course, all_fulfillment, max_fulfillments, graph)
+            self.course_steal(template, course, all_fulfillment, max_fulfillments, graph, importance_level)
 
 
-    def template_trade(self, template:Template, all_fulfillment:dict, max_fulfillments:dict) -> None:
+    def template_trade(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, importance_level=-1) -> None:
         '''
+        TEMPLATE MUST BE REPLACEMENT
+
         try to exchange courses from other replacement templates by receiving
         a course that fulfills both self and the other replacement template
-
-        note that input template must be a replacement enabled tempalte
         '''
         this_fulfillment = all_fulfillment.get(template)
 
@@ -297,20 +311,22 @@ class Degree():
             #
             # it's important to make sure dummy is in the name so course steal knows to remove the course
             # it stole from the actual replacement templates in addition to the dummy templates
-            dummy_donor_template = Template('dummy donor template', template_course=Course('dummy donor', 'dummy', 'dummy'), courses_required = 0)
+            less_important_templates = get_less_important_templates(all_fulfillment, importance_level, Bind_Type.NR)
+            
+            dummy_donor_template = Template('dummy donor', template_course=Course('dummy donor', 'dummy', 'dummy'), courses_required = 0)
             dummy_donor_fulfillment = Fulfillment_Status(dummy_donor_template, fulfillment_set=donateable_courses)
             all_fulfillment.update({dummy_donor_template:dummy_donor_fulfillment})
             max_fulfillments.update({dummy_donor_template:copy.deepcopy(dummy_donor_fulfillment)})
 
-            dummy_receiver_template = Template('dummy receiver template', template_course=Course('dummy receiver', 'dummy', 'dummy'), courses_required = 1)
+            dummy_receiver_template = Template('dummy receiver', template_course=Course('dummy receiver', 'dummy', 'dummy'), courses_required = 1)
             dummy_receiver_fulfillment = Fulfillment_Status(dummy_receiver_template, fulfillment_set=set())
             dummy_receiver_max_fulfillment = Fulfillment_Status(dummy_receiver_template, fulfillment_set={course})
             all_fulfillment.update({dummy_receiver_template:dummy_receiver_fulfillment})
             max_fulfillments.update({dummy_receiver_template:dummy_receiver_max_fulfillment})
 
             graph = self.generate_graph(all_fulfillment, max_fulfillments)
-            bfs = graph.bfs()
 
+            bfs = graph.bfs(less_important_templates)
             template_with_course = template_containing_course(all_fulfillment, course)
 
             if not bfs.contains_child(template_with_course):
@@ -321,7 +337,7 @@ class Degree():
                 max_fulfillments.pop(dummy_receiver_template)
                 continue
 
-            self.course_steal(dummy_receiver_template, course, all_fulfillment, max_fulfillments, graph)
+            self.course_steal(dummy_receiver_template, course, all_fulfillment, max_fulfillments, graph, less_important_templates=less_important_templates)
 
             traded_course = max_fulfillments.get(dummy_donor_template).get_fulfillment_set() - dummy_donor_fulfillment.get_fulfillment_set()
             if len(traded_course) == 1:
@@ -373,9 +389,11 @@ def print_fulfillment(all_fulfillment:dict) -> str:
     Print status_return dictionary in a neat string format
     '''
     printout = ''
-    for status in all_fulfillment.values():
+    fulfillments = list(all_fulfillment.values())
+    fulfillments.sort()
+    for status in fulfillments:
         printout += (f"  Template '{status.template.name}':" + \
-            f"\n    replacement: {status.template.replacement}" + \
+            f"\n    replacement: {status.template.replacement}, importance: {status.template.importance}" + \
             f"\n    required count: {status.get_required_count()}" + \
             f"\n    actual count: {status.get_actual_count()}\n")
         simplified_fulfillment_set = set()
@@ -484,13 +502,25 @@ def sort_by_num_wanted_bindings(all_fulfillment:dict, max_fulfillments:dict, req
     return requested_courses_ordered
 
 
-def course_has_only_weak_bindings(all_fulfillment:dict, course) -> bool:
+def get_less_important_templates(all_fulfillment:dict, importance_level, bind_type:Bind_Type=Bind_Type.ALL) -> set:
+    templates = set()
+    if importance_level == -1:
+        return templates
+    for template in all_fulfillment.keys():
+        if bind_type != Bind_Type.ALL and template.replacement != bind_type.value:
+            continue
+        if template.importance < importance_level:
+            templates.add(template)
+    return templates
+
+
+def course_has_only_weak_bindings(all_fulfillment:dict, course, importance_level:int=-1) -> bool:
     '''
     true if removing this course from all existing fulfillment sets will not cause a fulfilled
     template to become unfulfilled
     '''
     for fulfillment_status in all_fulfillment.values():
-        if course in fulfillment_status.get_fulfillment_set() and fulfillment_status.excess_count() == 0:
+        if course in fulfillment_status.get_fulfillment_set() and fulfillment_status.excess_count() == 0 and fulfillment_status.get_template().importance >= importance_level:
             return False
     return True
 

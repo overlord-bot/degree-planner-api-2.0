@@ -179,7 +179,9 @@ class Graph():
         find BFS paths from links
         '''
         if start_nodes is None:
-            start_nodes = self.roots
+            start_nodes = set()
+
+        start_nodes.update(self.roots)
             
         bfs = BFS_data(start_nodes)
         while bfs.has_next():

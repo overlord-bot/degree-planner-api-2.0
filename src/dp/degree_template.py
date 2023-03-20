@@ -116,6 +116,7 @@ def get_course_match(template:Template, course_pool=None, head=True) -> list:
                 print('get next: ' + str(course.get_next(course.get_all_before_wildcard(target_attribute))))
                 break
             '''
+            possible_values = set()
             for course in course_pool:
                 possible_values = possible_values.union(course.get_next(course.get_all_before_wildcard(target_attribute)))
             for val in possible_values:
