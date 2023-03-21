@@ -7554,6 +7554,7 @@
     "prerequisites": "Prerequisite: CSCI 2300\u00a0.",
     "offered": "Spring term annually.",
     "cross_listed": "Not Crosslisted",
+    "concentration": ["theory and algorithms"],
     "credits": "4"
   },
   {
@@ -7565,6 +7566,7 @@
     "prerequisites": "Prerequisite: CSCI 4020\u00a0\u00a0or equivalent.",
     "offered": "Fall term annually.",
     "cross_listed": "CSCI 6220\u00a0. Students cannot receive credit for both CSCI 4030 and CSCI 6220\u00a0.",
+    "concentration": ["theory and algorithms"],
     "credits": "4"
   },
   {
@@ -7576,6 +7578,7 @@
     "prerequisites": "Prerequisite:\u00a0CSCI 4020\u00a0\u00a0or permission of instructor.",
     "offered": "Fall term odd-numbered years.",
     "cross_listed": "CSCI 6040\u00a0. Students cannot receive credit for both CSCI 4040 and CSCI 6040\u00a0.",
+    "concentration": ["theory and algorithms"],
     "credits": "4"
   },
   {
@@ -7587,6 +7590,7 @@
     "prerequisites": "Prerequisites: CSCI 2300\u00a0; an advanced 4000-level algorithms-based CSCI or MATH course; familiarity with probability, linear algebra, and calculus.",
     "offered": "Fall term annually.",
     "cross_listed": "CSCI 6100\u00a0. Students cannot receive credit for both CSCI 4100 and CSCI 6100\u00a0.",
+    "concentration": ["ai", "theory and algorithms"],
     "credits": "4"
   },
   {
@@ -7598,6 +7602,7 @@
     "prerequisites": "Prerequisites: CSCI 2300\u00a0\u00a0and an advanced 4000-level algorithms-based CSCI or MATH course.",
     "offered": "Fall term even-numbered years, upon availability of instructor.",
     "cross_listed": "CSCI 6110\u00a0. Students cannot receive credit for both CSCI 4110 and CSCI 6110\u00a0.",
+    "concentration": ["ai", "theory and algorithms"],
     "credits": "4"
   },
   {
@@ -7609,6 +7614,7 @@
     "prerequisites": "Prerequisites: CSCI 2300\u00a0; an advanced 4000-level algorithms-based CSCI or MATH course; familiarity with probability, linear algebra, and calculus.",
     "offered": "Fall term even-numbered years, upon availability of instructor.",
     "cross_listed": "CSCI 6120\u00a0. Students cannot receive credit for both CSCI 4120 and CSCI 6120\u00a0.",
+    "concentration": ["theory and algorithms"],
     "credits": "4"
   },
   {
@@ -7620,6 +7626,7 @@
     "prerequisites": "Prerequisite: CSCI 2300\u00a0.",
     "offered": "Spring term annually.",
     "cross_listed": "Not Crosslisted",
+    "concentration": ["ai", "theory and algorithms"],
     "credits": "4"
   },
   {
@@ -7642,6 +7649,7 @@
     "prerequisites": "Prerequisites: CSCI 4210\u00a0.",
     "offered": "Fall term annually.",
     "cross_listed": "Not Crosslisted",
+    "concentration": ["systems and software"],
     "credits": "4"
   },
   {
@@ -7653,6 +7661,7 @@
     "prerequisites": "Prerequisites: CSCI 2300\u00a0; also desirable is CSCI 4210\u00a0\u00a0and CSCI 4220\u00a0.",
     "offered": "Fall term annually.",
     "cross_listed": "CSCI 6230\u00a0. Students cannot receive credit for both CSCI 4230 and CSCI 6230\u00a0.",
+    "concentration": ["theory and algorithms"],
     "credits": "4"
   },
   {
@@ -7664,6 +7673,7 @@
     "prerequisites": "Prerequisites: CSCI 2300\u00a0; a 4000-level algorithms-based CSCI course (e.g., CSCI 4020\u00a0, CSCI 4260\u00a0, CSCI 4800\u00a0)\u00a0or MATH course (e.g., MATH 4100\u00a0, MATH 4150\u00a0, MATH 4210\u00a0, MATH 4800\u00a0); familiarity with probability, linear algebra, and calculus; or permission of the instructor.",
     "offered": "Fall term odd-numbered years.",
     "cross_listed": "CSCI 6250\u00a0. Students cannot receive credit for both CSCI 4250 and CSCI 6250\u00a0.",
+    "concentration": ["theory and algorithms"],
     "credits": "4"
   },
   {
@@ -7675,6 +7685,7 @@
     "prerequisites": "Prerequisites: CSCI 1100\u00a0\u00a0and CSCI 2200\u00a0.",
     "offered": "Spring term annually.",
     "cross_listed": "MATH 4150\u00a0. Students cannot receive credit for both CSCI 4260 and MATH 4150\u00a0.",
+    "concentration": ["theory and algorithms"],
     "credits": "4"
   },
   {

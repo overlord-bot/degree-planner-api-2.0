@@ -550,7 +550,6 @@ def course_bind_to_R_templates(all_fulfillment:dict, max_fulfillments:dict, cour
         if (fulfillment_status.get_template().replacement 
                 and course in max_fulfillments.get(fulfillment_status.get_template()).get_fulfillment_set()):
             fulfillment_status.add_fulfillment_course(course)
-            print('added course ' + repr(course) + ' to R template')
 
 
 def course_bindings_with_R_templates(all_fulfillment:dict, course:Course) -> list:

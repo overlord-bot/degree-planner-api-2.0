@@ -97,13 +97,22 @@ def get_course_match(template:Template, course_pool=None, head=True) -> list:
 
     leaf = True
 
-    for target_attribute in template.template_course.attributes.values():
+    for target_attribute in template.template_course.attributes.keys():
         if 'NA' in target_attribute or 'ANY' in target_attribute or '-1' in target_attribute:
             continue
 
         # any course without a wildcard is considered a leaf
         if '*' not in target_attribute:
-            course_pool = {e for e in course_pool if e.has_attribute(target_attribute)}
+            if '/' in target_attribute:
+                # if we find the or symbol, compute match with each attr in the disjunction
+                # then take the union
+                or_union = set()
+                for or_attr in target_attribute.split('/'):
+                    or_union.update({e for e in course_pool if e.has_attribute(or_attr)})
+                course_pool = or_union
+            else:
+                course_pool = {e for e in course_pool if e.has_attribute(target_attribute)}
+            # print('course pool match: ' + str({str(e) for e in course_pool}))
         else:
             leaf = False
 

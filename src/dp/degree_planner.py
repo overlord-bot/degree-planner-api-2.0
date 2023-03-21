@@ -486,7 +486,7 @@ class Planner():
 
         # sanity checks
         if not semester.isdigit() or int(semester) not in range(0, self.SEMESTERS_MAX):
-            io.print(f"Invalid semester {semester}, enter number between 0 and 11")
+            io.print(f"Invalid semester {semester}, enter number between 0 and {self.SEMESTERS_MAX}")
             return None
         
         # list of courses matching course_name
@@ -524,7 +524,7 @@ class Planner():
 
         # sanity checks
         if not semester.isdigit() or int(semester) not in range(0, self.SEMESTERS_MAX):
-            io.print(f"Invalid semester {semester}, enter number between 0 and 11")
+            io.print(f"Invalid semester {semester}, enter number between 0 and {self.SEMESTERS_MAX}")
             return None
         
         semester = int(semester)
