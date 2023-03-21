@@ -50,7 +50,12 @@ def test_fulfillment():
     course1 = Course('1', 'BINTEST', 1)
     course1.add_attribute('bin.1')
     course1.add_attribute('bin.5')
+    course1.set_credits(4)
+    course1.add_attribute('cross_listed.course X')
+    course1.add_attribute('cross_listed.course Y')
     catalog.add_course(course1)
+
+    print(repr(course1))
 
     course2 = Course('2', 'BINTEST', 2)
     course2.add_attribute('bin.1')

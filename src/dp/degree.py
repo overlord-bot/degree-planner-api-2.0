@@ -84,7 +84,7 @@ class Degree():
         return all_template_combinations
 
 
-    def fulfillment(self, taken_courses:set) -> None:
+    def fulfillment(self, taken_courses:set) -> dict:
         '''
         Run fulfillment checking by generating all actual templates from wildcard templates
         and trying every combination to see which one is the best

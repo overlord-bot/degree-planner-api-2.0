@@ -109,16 +109,6 @@ class Graph():
         self.grid[self.node_id(node_origin)][self.node_id(node_to)] = data_set
 
 
-    def try_add_connection(self, node_origin, node_to):
-        if node_origin == node_to:
-            return
-        data_set = self.compute_overlap(node_origin, node_to)
-        if len(data_set):
-            self.grid[self.node_id(node_origin)][self.node_id(node_to)] = data_set
-            return True
-        return False
-
-
     def remove_connection(self, node_origin, node_to):
         '''
         remove a connection from node_origin to node_to

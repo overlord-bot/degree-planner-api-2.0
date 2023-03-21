@@ -244,6 +244,7 @@ class Planner():
                     io.print(f"no degree specified")
                 else:
                     io.store(f"{schedule.name} Fulfillment")
+                    io.store(f"  taken courses: {[str(e) for e in schedule.get_all_courses()]}")
                     fulfillment = schedule.degree.fulfillment(schedule.get_all_courses())
                     io.store(print_fulfillment(fulfillment))
                     io.view_cache()

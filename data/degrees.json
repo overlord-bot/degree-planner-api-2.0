@@ -1,0 +1,35 @@
+{
+    "computer science": {
+        "core - Data Structures": {
+            "requires": 1,
+            "replacement": false,
+            "attributes":["unique_name.csci 1200 data structures"]
+        },
+        "core - FOCS": {
+            "requires": 1,
+            "replacement": false,
+            "attributes":["subject.csci", "course_id.2200"]
+        },
+        "core - Algorithms": {
+            "requires": 1,
+            "replacement": false,
+            "attributes":["subject.csci", "course_id.2300"]
+        },
+        "intensity": {
+            "requires": 4,
+            "replacement": true,
+            "attributes":["level.4", "subject.csci"]
+        },
+        "concentration": {
+            "requires": 3,
+            "replacement": true,
+            "attributes":["level.4", "concentration.*"]
+        },
+        "hass elective": {
+            "requires": 1,
+            "replacement": true,
+            "attributes":["level.4", "subject.arts"]
+        }
+    }
+
+}
