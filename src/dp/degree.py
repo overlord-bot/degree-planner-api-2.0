@@ -107,27 +107,25 @@ class Degree():
                     continue
                 all_fulfillment.update({template:self.template_fill(template, all_fulfillment, max_fulfillments)})
 
-            print('after NR fulfillment: ' + print_fulfillment(all_fulfillment))
+            # print('after NR fulfillment: ' + print_fulfillment(all_fulfillment))
 
             graph = self.generate_graph(all_fulfillment, max_fulfillments)
             for template in template_set:
-                #continue
                 self.template_steal(template, all_fulfillment, max_fulfillments, graph)
             
-            print('after steal: ' + print_fulfillment(all_fulfillment))
+            # print('after steal: ' + print_fulfillment(all_fulfillment))
 
             for template in template_set:
                 if not template.replacement:
                     continue
                 all_fulfillment.update({template:self.template_fill(template, all_fulfillment, max_fulfillments)})
 
-            print('after R fulfillment: ' + print_fulfillment(all_fulfillment))
+            # print('after R fulfillment: ' + print_fulfillment(all_fulfillment))
 
             for template in template_set:
-                #continue
                 self.template_trade(template, all_fulfillment, max_fulfillments)
 
-            print('after trade: ' + print_fulfillment(all_fulfillment))
+            # print('after trade: ' + print_fulfillment(all_fulfillment))
 
             for template in template_set:
                 self.template_trade(template, all_fulfillment, max_fulfillments, template.importance)
