@@ -71,9 +71,79 @@ class Template():
 
     def __hash__(self):
         i = hash(self.template_course)**2
-        for course in self.course_set:
-            i += hash(course)
         return i
+
+
+
+def course_fulfills_template(template:Template, course:Course) -> bool:
+    for attr in template.template_course.attributes.keys():
+        if 'NA' in attr or 'ANY' in attr or '-1' in attr:
+            continue
+        if not parse_attribute(attr, course):
+            return False
+    return True
+
+def single_attribute_evaluation(attr:str, course:Course) -> str:
+    attr = attr.strip()
+    if attr == '':
+        return True
+    if attr == 'True':
+        return True
+    if attr == 'False':
+        return False
+    if attr in ('True', 'False', True, False):
+        return attr
+    print(f'has attr {attr}: ' + str(course.has_attribute(attr)))
+    return course.has_attribute(attr)
+
+
+def parse_attribute(input:str, course:Course, tokens:list=None) -> str:
+    '''
+    Input -> Attribute
+    Input -> True|False
+    Input -> (Input)
+    Input -> Input & Input
+    Input -> Input | Input
+
+    single_attribute_evaluation(Attribute, course) -> True|False
+
+    NOTE: because spaces are allowed within attributes, there does not exist any delimiter for tokens.
+    Therefore, it is assumed that any value between symbols is a single attribute/True/False token.
+    '''
+    # print('accepted input ' + str(input))
+
+    if '(' in input:
+        open_bracket_loc = input.find('(')
+        close_bracket_loc = len(input) # we allow close brackets to be omitted if it's at the end of the input
+        passed_bracket_count = 0
+
+        # calculate the location of the closing bracket for the current bracket
+        for i in range(open_bracket_loc + 1, len(input)):
+            if input[i] == '(':
+                passed_bracket_count += 1
+            if input[i] == ')':
+                if passed_bracket_count == 0:
+                    close_bracket_loc = i
+                    break
+                passed_bracket_count -= 1
+
+        new_string = input[: open_bracket_loc] + str(parse_attribute(input[open_bracket_loc + 1 : close_bracket_loc], course, tokens)) + input[close_bracket_loc + 1:]
+        return parse_attribute(new_string, course, tokens)
+    
+    elif '&' in input:
+        and_loc = input.find('&')
+        return parse_attribute(input[: and_loc], course, tokens) and parse_attribute(input[and_loc + 1:], course, tokens)
+    
+    elif '|' in input:
+        and_loc = input.find('|')
+        return parse_attribute(input[: and_loc], course, tokens) or parse_attribute(input[and_loc + 1:], course, tokens)
+    
+    else:
+        if tokens is not None:
+            tokens.append(str(input))
+        return single_attribute_evaluation(input, course)
+
+
 
 def get_course_match(template:Template, course_pool=None, head=True) -> list:
     ''' Intakes a criteria of courses that we want returned
@@ -92,9 +162,8 @@ def get_course_match(template:Template, course_pool=None, head=True) -> list:
             template = Template(template.get_unique_name() + ' template', template)
         if course_pool is None:
             course_pool = template.course_set
-        elif template.course_set:
+        elif len(template.course_set):
             course_pool = {e for e in course_pool if e in template.course_set}
-
     leaf = True
 
     for target_attribute in template.template_course.attributes.keys():
