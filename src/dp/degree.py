@@ -137,6 +137,8 @@ class Degree():
         for fulfillment in potential_fulfillments:
             if best_fulfillment is None or total_unfulfilled_slots(fulfillment) < total_unfulfilled_slots(best_fulfillment):
                 best_fulfillment = fulfillment
+            elif total_unfulfilled_slots(fulfillment) == total_unfulfilled_slots(best_fulfillment) and total_filled_slots(fulfillment) > total_filled_slots(best_fulfillment):
+                best_fulfillment = fulfillment
 
         end = timeit.default_timer()
         print('\nfulfillment runtime: ', end - start, '\n')
@@ -592,6 +594,13 @@ def total_unfulfilled_slots(all_fulfillment:dict) -> int:
     count = 0
     for fulfillment_status in all_fulfillment.values():
         count += max(0, fulfillment_status.get_required_count() - fulfillment_status.get_actual_count())
+    return count
+
+
+def total_filled_slots(all_fulfillment:dict) -> int:
+    count = 0
+    for fulfillment_status in all_fulfillment.values():
+        count += fulfillment_status.get_actual_count()
     return count
 
 

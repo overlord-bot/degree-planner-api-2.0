@@ -74,30 +74,41 @@ class Template():
         return i
 
 
+###################################################################################################
+#
+# CONTEXT FREE GRAMMAR PARSING (thanks programming languages I do not miss you)
+#
+###################################################################################################
 
-def course_fulfills_template(template:Template, course:Course) -> bool:
+
+def course_fulfills_template(template:Template, course:Course) -> tuple[bool, dict]:
+    conditions = dict()
     for attr in template.template_course.attributes.keys():
         if 'NA' in attr or 'ANY' in attr or '-1' in attr:
             continue
-        if not parse_attribute(attr, course):
-            return False
-    return True
+        if not parse_attribute(attr, course, conditions):
+            return False, {}
+    # print(f'conditions for {course} in {template} : {conditions}')
+    return True, conditions
 
-def single_attribute_evaluation(attr:str, course:Course) -> str:
+def single_attribute_evaluation(attr:str, course:Course) -> tuple[str, dict]:
     attr = attr.strip()
     if attr == '':
-        return True
+        return True, {}
     if attr == 'True':
-        return True
+        return True, {}
     if attr == 'False':
-        return False
+        return False, {}
     if attr in ('True', 'False', True, False):
         return attr
-    print(f'has attr {attr}: ' + str(course.has_attribute(attr)))
-    return course.has_attribute(attr)
+    if '*' in attr:
+        matches = course.get_attributes_by_head(attr[:attr.find('*') - 1])
+        return len(matches) > 0, {attr:matches}
+    if '#' in attr:
+        return len(course.get_attributes_by_head(attr[:attr.find('#') - 1])) > 0, {}
+    return course.has_attribute(attr), {}
 
-
-def parse_attribute(input:str, course:Course, tokens:list=None) -> str:
+def parse_attribute(input:str, course:Course, true_given_for_wildcards:dict=None) -> str:
     '''
     Input -> Attribute
     Input -> True|False
@@ -107,8 +118,7 @@ def parse_attribute(input:str, course:Course, tokens:list=None) -> str:
 
     single_attribute_evaluation(Attribute, course) -> True|False
 
-    NOTE: because spaces are allowed within attributes, there does not exist any delimiter for tokens.
-    Therefore, it is assumed that any value between symbols is a single attribute/True/False token.
+    returns a True or False value based on whether the course fulfills the template
     '''
     # print('accepted input ' + str(input))
 
@@ -127,25 +137,87 @@ def parse_attribute(input:str, course:Course, tokens:list=None) -> str:
                     break
                 passed_bracket_count -= 1
 
-        new_string = input[: open_bracket_loc] + str(parse_attribute(input[open_bracket_loc + 1 : close_bracket_loc], course, tokens)) + input[close_bracket_loc + 1:]
-        return parse_attribute(new_string, course, tokens)
+        new_string = input[: open_bracket_loc] + str(parse_attribute(input[open_bracket_loc + 1 : close_bracket_loc], course, true_given_for_wildcards)) + input[close_bracket_loc + 1:]
+        return parse_attribute(new_string, course, true_given_for_wildcards)
     
     elif '&' in input:
         and_loc = input.find('&')
-        return parse_attribute(input[: and_loc], course, tokens) and parse_attribute(input[and_loc + 1:], course, tokens)
+        return parse_attribute(input[: and_loc], course, true_given_for_wildcards) and parse_attribute(input[and_loc + 1:], course, true_given_for_wildcards)
     
     elif '|' in input:
         and_loc = input.find('|')
-        return parse_attribute(input[: and_loc], course, tokens) or parse_attribute(input[and_loc + 1:], course, tokens)
+        return parse_attribute(input[: and_loc], course, true_given_for_wildcards) or parse_attribute(input[and_loc + 1:], course, true_given_for_wildcards)
     
     else:
-        if tokens is not None:
-            tokens.append(str(input))
-        return single_attribute_evaluation(input, course)
+        truth, true_given_entries = single_attribute_evaluation(input, course)
+        if len(true_given_entries):
+            true_given_for_wildcards.update(true_given_entries)
+        return truth
 
 
+def get_course_match(template:Template, courses) -> list:
+    fulfillment_sets = list() # all possible fulfillments based on different combinations resulting from wildcard sauge
+    all_conditions = dict() # all possible wildcard replacement conditions that can influence the result (wildcard branching)
 
-def get_course_match(template:Template, course_pool=None, head=True) -> list:
+    # current fulfillment set, will be added only if current template does not contain wildcards
+    # (recursive calls remove one wildcard at a time), so essentially "leaf" branches
+    # get to add their fulfillment to fulfillment_sets
+    curr_fulfillment = Fulfillment_Status(template, template.courses_required, set())
+
+    for course in courses:
+        good_match, conditions = course_fulfills_template(template, course)
+
+        # updates all_conditions with possible values for wildcard replacement
+        for condition, condition_sat_set in conditions.items():
+            current_condition_set = all_conditions.get(condition, set())
+            current_condition_set.update(condition_sat_set)
+            all_conditions.update({condition:current_condition_set})
+
+        # if this is a leaf call (no wildcard branching), add to current fulfillment set
+        if good_match and not len(conditions):
+            curr_fulfillment.add_fulfillment_course(course)
+
+    # if this is a leaf call (no wildcard branching), add to main fulfillment set
+    if not len(all_conditions):
+        fulfillment_sets.append(curr_fulfillment)
+
+    # if there are wildcard branching needed (we only need to pop the first one, the rest is handled by the following recursive calls
+    # as each recursive call only needs to handle one)
+    if not len(all_conditions):
+        return fulfillment_sets
+    wildcard_attr, wildcard_choices = all_conditions.popitem()
+
+    for choice in wildcard_choices:
+        # for each branching choice, make a copy of the template with the wildcard replaced with a possible value
+        template_cpy = copy.deepcopy(template)
+
+        # a temporary dictionary holding the old/new values, since we cannot update dictionary keys
+        # while iterating through it
+        replace_attributes = dict()
+
+        for attribute_str in template_cpy.template_course.attributes.keys():
+            if wildcard_attr not in attribute_str:
+                continue
+
+            # we make a note of the replacements needed by storing it in replace_attributes
+            attribute_str_update = attribute_str.replace(wildcard_attr, choice)
+            replace_attributes.update({attribute_str:attribute_str_update})
+
+        # we commit the changes to the dictionary while iterating through the replace_attributes we made previously
+        for old, new in replace_attributes.items():
+            template_cpy.template_course.remove_attribute(old)
+            template_cpy.template_course.add_attribute(new)
+
+        # recursively call this function, we're guaranteed that the final return values all are wildcard-free
+        fulfillment_sets.extend(get_course_match(template_cpy, courses))
+
+    # print(f'all conditions: ' + str(all_conditions))
+    # print(f'fulfillments: ' + str([repr(e) for e in fulfillment_sets]))
+
+    return fulfillment_sets
+
+
+def get_course_match_old(template:Template, course_pool=None, head=True) -> list:
     ''' Intakes a criteria of courses that we want returned
         For example, if the template specifies 2000 as course ID, then all 2000 level courses inside
         the template's course list is returned
@@ -187,13 +259,6 @@ def get_course_match(template:Template, course_pool=None, head=True) -> list:
 
     for target_attribute in template.template_course.attributes.values():
         if '*' in target_attribute:
-
-            ''' DEBUG
-            for course in course_pool:
-                print('all before wildcard: ' + str(course.get_all_before_wildcard(target_attribute)))
-                print('get next: ' + str(course.get_next(course.get_all_before_wildcard(target_attribute))))
-                break
-            '''
             possible_values = set()
             for course in course_pool:
                 possible_values = possible_values.union(course.get_next(course.get_all_before_wildcard(target_attribute)))

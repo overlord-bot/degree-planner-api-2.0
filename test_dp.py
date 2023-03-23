@@ -48,39 +48,41 @@ def test_other():
     degree = Degree("computer science")
     catalog.add_degree(degree)
 
+    course0 = Course('0', 'BINTEST', 0)
+    course0.add_attribute('bin.1')
+    course0.add_attribute('bin.5')
+    catalog.add_course(course0)
+
     course1 = Course('1', 'BINTEST', 1)
     course1.add_attribute('bin.1')
-    course1.add_attribute('bin.5')
-    course1.set_credits(4)
-    course1.add_attribute('cross_listed.course X')
-    course1.add_attribute('cross_listed.course Y')
+    course1.add_attribute('bin.2')
     catalog.add_course(course1)
 
     course2 = Course('2', 'BINTEST', 2)
-    course2.add_attribute('bin.1')
     course2.add_attribute('bin.2')
+    course2.add_attribute('bin.3')
     catalog.add_course(course2)
 
     course3 = Course('3', 'BINTEST', 3)
-    course3.add_attribute('bin.2')
     course3.add_attribute('bin.3')
+    course3.add_attribute('bin.4')
     catalog.add_course(course3)
 
     course4 = Course('4', 'BINTEST', 4)
-    course4.add_attribute('bin.3')
     course4.add_attribute('bin.4')
+    course4.add_attribute('bin.5')
     catalog.add_course(course4)
 
     course5 = Course('5', 'BINTEST', 5)
-    course5.add_attribute('bin.3')
     course5.add_attribute('bin.4')
+    course5.add_attribute('bin.5')
     catalog.add_course(course5)
 
     planner.course_search.update_items(catalog.get_all_course_names())
     planner.course_search.generate_index()
 
     testtemplate1 = Template('bin1', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate1.template_course.add_attribute('bin.1')
+    #testtemplate1.template_course.add_attribute('bin.1')
     testtemplate1.courses_required = 1
     testtemplate2 = Template('bin2', Course("ANY", "BINTEST", 'ANY'))
     testtemplate2.template_course.add_attribute('bin.2')
@@ -102,7 +104,7 @@ def test_other():
     degree.add_template(testtemplate4)
     degree.add_template(testtemplate5)
 
-    run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, print, fulfillment')
+    # run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, print, fulfillment')
 
     example_attributes = {
         '':True,
@@ -121,13 +123,18 @@ def test_other():
         'bin.1&bin.5&bin.2':False,
         'bin.1&(bin.5|bin.4)':True,
         'bin.2&(bin.1|bin.5)':False,
+        'bin.*':True,
+        'bin.#':True,
     }
     for example, answer in example_attributes.items():
-        tokens = list()
-        response = parse_attribute(example, course1, tokens)
+        true_given = dict()
+        response = parse_attribute(example, course0, true_given)
         print(f"parse attribute {example} \n  response: {response}\n  correct response: {answer}")
-        print(f"  answer is {'correct' if str(response).casefold() == str(answer).casefold() else 'incorrect'}")
-        print(f"  tokens: {tokens}")
+        print(f"  answer is {'correct :)' if str(response).casefold() == str(answer).casefold() else 'INCORRECT INCORRECT INCORRECT!'}")
+        print(f"  true given: {true_given}")
+
+    testtemplate1.template_course.add_attribute('bin.*')
+    get_course_match(testtemplate1, {course1, course2, course3, course4, course5})
 
 
 
@@ -604,7 +611,7 @@ def run_cmd(planner, user, string):
 start = timeit.default_timer()
 
 print(f'beginning test {datetime.now()}')
-logging.getLogger().setLevel(logging.DEBUG)
+# logging.getLogger().setLevel(logging.DEBUG)
 test_graph()
 test_other()
 input('press enter to continue')

@@ -31,7 +31,7 @@ def terminal():
             logging.getLogger().setLevel(logging.WARNING)
 
     print("")
-    output = Output(OUT.CONSOLE, output_type=OUTTYPE.STRING, signature='Alan', auto_clear=True)
+    output = Output(OUT.CONSOLE, output_type=OUTTYPE.STRING, signature='DP', auto_clear=True)
     while 1:
         user_input = input("(degree planner) >>> ")
         if user_input.casefold() == "quit":
