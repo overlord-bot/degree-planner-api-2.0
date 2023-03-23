@@ -1,5 +1,6 @@
 import timeit
 import asyncio
+import sys
 from datetime import datetime
 from src.dp.graph import Graph
 from src.dp.degree_planner import Planner
@@ -574,7 +575,12 @@ def run_cmd(planner, user, string):
 start = timeit.default_timer()
 
 print(f'beginning test {datetime.now()}')
-# logging.getLogger().setLevel(logging.DEBUG)
+
+if len(sys.argv) > 1 and '-d' in sys.argv:
+    logging.getLogger().setLevel(logging.DEBUG)
+    print('DEBUG MODE ON, PRINTING ALL DEBUGGING INFORMATION!')
+else:
+    logging.getLogger().setLevel(logging.INFO)
 test_graph()
 test_other()
 input('press enter to continue')

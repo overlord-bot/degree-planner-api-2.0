@@ -13,7 +13,7 @@ from ..io.output import *
 class Bind_Type(Enum):
     NR = False
     R = True
-    ALL = 2
+    ALL = 2 # must be distinct in value since False gets converted to 1 in some instances
 
 class Degree():
     '''
@@ -31,12 +31,14 @@ class Degree():
         self.templates = list()
         self.DEBUG = Output(OUT.DEBUG, signature='DEGREE')
 
+        self.MAX_IMPORTANCE = 1000 # essentially the maximum number of templates possible
+
     def add_template(self, template:Template):
         '''
         templates should be inserted in order of importance
         '''
         if not len(self.templates):
-            template.importance = 1000
+            template.importance = self.MAX_IMPORTANCE
         else:
             template.importance = self.templates[-1].importance - 1
         self.templates.append(template)
@@ -369,9 +371,9 @@ class Degree():
         return self.name
 
     def __repr__(self):
-        rep = f"{self.name}: \n"
+        rep = f"degree: {self.name} \n"
         for template in self.templates:
-            rep += str(template)
+            rep += repr(template) + '\n'
         return rep
 
     def __eq__(self, other):
