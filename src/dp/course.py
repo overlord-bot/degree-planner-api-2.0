@@ -17,20 +17,17 @@ class Course():
     dictionary
     '''
 
-    def __init__(self, name, subject, id, course_credits=0):
+    def __init__(self, name, subject, id):
         # main attributes
-        self.name = name
         self.unique_name = name
+
+        self.name = name
         self.subject = subject
         self.course_id = id
-        self.course_id2 = 0
         self.level = str(id)[0]
-        self.course_credits = course_credits
 
         # dict of lists of items, e.g. {'concentration.ai':[concentration, ai], 'ci.true':[ci, true]}
         self.attributes = dict()
-        
-        self.validate_course_id()
 
         if name not in ('', 'NA', 'ANY'):
             self.set_name(name)
@@ -38,47 +35,13 @@ class Course():
             self.set_subject(subject)
         if id not in (0, -1, '', 'NA', 'ANY'):
             self.set_id(id)
-        if course_credits != -1:
-            self.set_credits(course_credits)
 
-        self.cross_listed = set() # set of cross listed courses that should be treated as same course
         self.description = "" # text to be displayed describing the class
         
-    def validate_course_id(self, output:Output=None) -> None:
-        ''' Some input data for courses may not be in the desired format.
-
-            For example, most courses have an ID in the form of ####, but some
-            have ####.##. We separate the latter form into
-            courseid = #### (numbers prior to dot) and courseid2 = ## (after dot)
-
-            All data is modified in place, no arguments and return necessary
-        '''
-        if output is None: output = Output(OUT.CONSOLE)
-        self.course_id = str(self.course_id)
-        if isinstance(self.course_id, str):
-            if '.' in self.course_id:
-                split_num = self.course_id.split('.')
-                if len(split_num) == 2 and split_num[0].isdigit() and split_num[1].isdigit():
-                    self.course_id = int(split_num[0])
-                    self.course_id2 = int(split_num[1])
-                else:
-                    logging.error(f"COURSE PARSING: 2 part ID not <int>.<int> for course " + self.name)
-                    
-            elif not self.course_id.isdigit() and self.course_id != 'ANY':
-                logging.error(f"COURSE PARSING: course id ({self.course_id}) is not a number for course " + self.name)
-            elif self.course_id != 'ANY':
-                self.course_id = int(self.course_id)
-        if not isinstance(self.course_id, int) and self.course_id != 'ANY':
-            logging.error(f"COURSE PARSING: course id ({self.course_id}) is not a number for course " + self.name)
-
 
     """ 
     Getters
     """
-
-    # determines the level of the course, 1000=1, 2000=2, 4000=4, etc
-    def get_level(self):
-        return self.level
     
     def get_name(self):
         return self.name
@@ -90,18 +53,17 @@ class Course():
         return self.subject
     
     def get_id(self):
-        if isinstance(self.course_id, int) or self.course_id.isdigit():
-            return int(self.course_id)
         return self.course_id
     
-    def get_id2(self):
-        return self.course_id2
+    # determines the level of the course, 1000=1, 2000=2, 4000=4, etc
+    def get_level(self):
+        return self.level
     
     def get_credits(self):
-        return self.course_credits
+        return self.attr('credits')
     
     def get_crosslisted(self):
-        return self.cross_listed
+        return [self.val(e) for e in self.get_attributes_by_head('cross_listed')]
     
 
     """
@@ -118,7 +80,7 @@ class Course():
         if self.name == "":
             self.unique_name = ""
         else:
-            self.unique_name = f"{self.subject.casefold()} {str(self.course_id)} {self.name.strip().casefold()}"
+            self.unique_name = f"{self.get_subject().casefold()} {str(self.get_id())} {self.get_name().strip().casefold()}"
             self.unique_name = self.unique_name.replace(',', '')
         self.remove_attribute_by_head('unique_name')
         self.add_attribute(f'unique_name.{self.unique_name}')
@@ -135,15 +97,9 @@ class Course():
         self.remove_attribute_by_head('level')
         self.add_attribute(f'level.{str(course_id)[0]}')
 
-    def set_id2(self, course_id):
-        self.course_id = course_id
-        self.remove_attribute_by_head('course_id')
-        self.add_attribute(f'course_id2.{course_id}')
-
     def set_credits(self, course_credits):
-        self.course_credits = course_credits
-        self.remove_attribute_by_head('course_credits')
-        self.add_attribute(f'course_credits.{course_credits}')
+        self.remove_attribute_by_head('credits')
+        self.add_attribute(f'credits.{course_credits}')
     
 
     """
@@ -154,30 +110,58 @@ class Course():
     def add_attribute(self, attr) -> None:
         if isinstance(attr, list):
             attr = '.'.join(attr)
-        self.attributes.update({attr:attr.split('.')})
+        self.attributes.update({attr.casefold():attr.casefold().split('.')})
 
     def replace_attribute(self, old_head, attr) -> None:
+        '''
+        removes all attributes with the given head, and replaces it with the provided attribute
+        '''
         if isinstance(attr, list):
             attr = '.'.join(attr)
         self.remove_attribute_by_head(old_head)
         self.add_attribute(attr)
 
     def remove_attribute(self, attr) -> None:
+        '''
+        removes attribute with exact match
+        '''
         if isinstance(attr, list):
             attr = '.'.join(attr)
         self.attributes.pop(attr)
 
     def has_attribute(self, attr) -> bool:
+        '''
+        finds if the attribute exactly matches one stored here
+        '''
         if isinstance(attr, list):
             attr = '.'.join(attr)
         return attr in self.attributes.keys()
+    
+    def val(self, attr) -> str:
+        '''
+        helper function to return everything in the provided attribute string after the first period
+        '''
+        attr = attr.split('.')
+        if len(attr) < 2:
+            return None
+        attr.pop(0)
+        return '.'.join(attr)
+    
+    def attr(self, attr:str) -> str:
+        '''
+        finds unique attribute match within self and returns the value
+        '''
+        attrs = self.get_attributes_by_head(attr)
+        if len(attrs) != 1:
+            return None
+        return self.val(attrs[0])
     
     def get_attributes_by_head(self, queried_attr) -> list:
         if isinstance(queried_attr, list):
             queried_attr = '.'.join(queried_attr)
         queried_attr = queried_attr.split('.')
         matched_attrs = list()
-        for attribute in self.attributes.values():
+        for attr_string, attribute in self.attributes.items():
             if len(attribute) < len(queried_attr):
                 continue
             i = 0
@@ -188,16 +172,19 @@ class Course():
                     break
                 i += 1
             if good_match:
-                matched_attrs.append('.'.join(attribute))
+                matched_attrs.append(attr_string)
         return matched_attrs
     
     def remove_attribute_by_head(self, queried_attr) -> int:
+        '''
+        removes all attributes matching the provided head
+        '''
         if isinstance(queried_attr, list):
             queried_attr = '.'.join(queried_attr)
         queried_attr = queried_attr.split('.')
         remove_list = list()
         count = 0
-        for attribute in self.attributes.values():
+        for attr_string, attribute in self.attributes.items():
             if len(attribute) < len(queried_attr):
                 continue
             i = 0
@@ -207,19 +194,11 @@ class Course():
                     good_match = False
                     break
             if good_match:
-                remove_list.append('.'.join(attribute))
+                remove_list.append(attr_string)
                 count += 1
         for e in remove_list:
             self.attributes.pop(e)
         return count
-    
-    def replace_wildcard(self, attr, val):
-        if isinstance(attr, list):
-            attr = '.'.join(attr)
-        prior_elements = self.get_all_before_wildcard(attr)
-        prior_elements += '.' + val
-        self.remove_attribute(attr)
-        self.add_attribute(prior_elements)
     
     def has_attribute_head(self, attr) -> bool:
         if isinstance(attr, list):
@@ -237,17 +216,6 @@ class Course():
             if len(matched_attr) > len(attr):
                 next_elements.add(matched_attr[len(attr)])
         return next_elements
-            
-    def get_all_before_wildcard(self, attr) -> list:
-        if isinstance(attr, list):
-            attr = '.'.join(attr)
-        attr = attr.split('.')
-        r_attr = list()
-        for e in attr:
-            if e == '*':
-                break
-            r_attr.append(e)
-        return '.'.join(r_attr)
                 
     def json(self) -> OrderedDict:
         '''
@@ -271,9 +239,8 @@ class Course():
         return json.dumps(course)
 
     def __repr__(self):
-        st = (f"{self.unique_name if self.unique_name else 'None'}: {self.subject if self.subject else 'None'} " + \
-            f"{str(self.course_id)}{f'.{self.course_id2}' if self.course_id2 != 0 else ''}, " + \
-            f"{self.course_credits} credits, " + \
+        st = (f"{self.unique_name if self.unique_name else 'None'}:\n{self.get_credits()} credits\n" + \
+            f"crosslisted with: {str([str(e) for e in self.get_crosslisted()])}\n" + \
             f"attributes: {list(self.attributes.keys())}" if len(self.attributes) > 0 else '' + '\n')
         return st.replace("set()", "none")
 
@@ -283,9 +250,8 @@ class Course():
     def __eq__(self, other):
         if not isinstance(other, Course):
             return False
-        if (self.name == other.name and self.course_id == other.course_id and self.course_id2 == other.course_id2 
-            and self.subject == other.subject and self.course_credits == other.course_credits and self.cross_listed == other.cross_listed
-            and self.attributes == other.attributes):
+        if (self.name == other.name and self.course_id == other.course_id
+            and self.subject == other.subject and self.attributes == other.attributes):
             return True
         return False
     
@@ -296,9 +262,8 @@ class Course():
         for attr in other.attributes:
             course.add_attribute(attr)
         course.description = self.description + '\n\n' + other.description
-        course.cross_listed = self.cross_listed.union(other.cross_listed)
         return course
 
     def __hash__(self):
-        return hash(self.course_id) + len(self.attributes)*10 + len(self.name)*100 + len(self.description)*1000
+        return hash(self.course_id) + len(self.attributes)*10 + hash(self.unique_name)*100
     

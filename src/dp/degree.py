@@ -13,7 +13,7 @@ from ..io.output import *
 class Bind_Type(Enum):
     NR = False
     R = True
-    ALL = 2
+    ALL = 2 # must be distinct in value since False gets converted to 1 in some instances
 
 class Degree():
     '''
@@ -31,12 +31,14 @@ class Degree():
         self.templates = list()
         self.DEBUG = Output(OUT.DEBUG, signature='DEGREE')
 
+        self.MAX_IMPORTANCE = 1000 # essentially the maximum number of templates possible
+
     def add_template(self, template:Template):
         '''
         templates should be inserted in order of importance
         '''
         if not len(self.templates):
-            template.importance = 1000
+            template.importance = self.MAX_IMPORTANCE
         else:
             template.importance = self.templates[-1].importance - 1
         self.templates.append(template)
@@ -84,7 +86,7 @@ class Degree():
         return all_template_combinations
 
 
-    def fulfillment(self, taken_courses:set) -> None:
+    def fulfillment(self, taken_courses:set) -> dict:
         '''
         Run fulfillment checking by generating all actual templates from wildcard templates
         and trying every combination to see which one is the best
@@ -107,27 +109,25 @@ class Degree():
                     continue
                 all_fulfillment.update({template:self.template_fill(template, all_fulfillment, max_fulfillments)})
 
-            print('after NR fulfillment: ' + print_fulfillment(all_fulfillment))
+            # print('after NR fulfillment: ' + print_fulfillment(all_fulfillment))
 
             graph = self.generate_graph(all_fulfillment, max_fulfillments)
             for template in template_set:
-                #continue
                 self.template_steal(template, all_fulfillment, max_fulfillments, graph)
             
-            print('after steal: ' + print_fulfillment(all_fulfillment))
+            # print('after steal: ' + print_fulfillment(all_fulfillment))
 
             for template in template_set:
                 if not template.replacement:
                     continue
                 all_fulfillment.update({template:self.template_fill(template, all_fulfillment, max_fulfillments)})
 
-            print('after R fulfillment: ' + print_fulfillment(all_fulfillment))
+            # print('after R fulfillment: ' + print_fulfillment(all_fulfillment))
 
             for template in template_set:
-                #continue
                 self.template_trade(template, all_fulfillment, max_fulfillments)
 
-            print('after trade: ' + print_fulfillment(all_fulfillment))
+            # print('after trade: ' + print_fulfillment(all_fulfillment))
 
             for template in template_set:
                 self.template_trade(template, all_fulfillment, max_fulfillments, template.importance)
@@ -138,6 +138,8 @@ class Degree():
         best_fulfillment = None
         for fulfillment in potential_fulfillments:
             if best_fulfillment is None or total_unfulfilled_slots(fulfillment) < total_unfulfilled_slots(best_fulfillment):
+                best_fulfillment = fulfillment
+            elif total_unfulfilled_slots(fulfillment) == total_unfulfilled_slots(best_fulfillment) and total_filled_slots(fulfillment) > total_filled_slots(best_fulfillment):
                 best_fulfillment = fulfillment
 
         end = timeit.default_timer()
@@ -321,12 +323,12 @@ class Degree():
             # it stole from the actual replacement templates in addition to the dummy templates
             less_important_templates = get_less_important_templates(all_fulfillment, importance_level, Bind_Type.NR)
             
-            dummy_donor_template = Template('dummy donor', template_course=Course('dummy donor', 'dummy', 'dummy'), courses_required = 0)
+            dummy_donor_template = Template('dummy donor', courses_required = 0)
             dummy_donor_fulfillment = Fulfillment_Status(dummy_donor_template, fulfillment_set=donateable_courses)
             all_fulfillment.update({dummy_donor_template:dummy_donor_fulfillment})
             max_fulfillments.update({dummy_donor_template:copy.deepcopy(dummy_donor_fulfillment)})
 
-            dummy_receiver_template = Template('dummy receiver', template_course=Course('dummy receiver', 'dummy', 'dummy'), courses_required = 1)
+            dummy_receiver_template = Template('dummy receiver', courses_required = 1)
             dummy_receiver_fulfillment = Fulfillment_Status(dummy_receiver_template, fulfillment_set=set())
             dummy_receiver_max_fulfillment = Fulfillment_Status(dummy_receiver_template, fulfillment_set={course})
             all_fulfillment.update({dummy_receiver_template:dummy_receiver_fulfillment})
@@ -369,9 +371,9 @@ class Degree():
         return self.name
 
     def __repr__(self):
-        rep = f"{self.name}: \n"
+        rep = f"degree: {self.name} \n"
         for template in self.templates:
-            rep += str(template)
+            rep += repr(template) + '\n'
         return rep
 
     def __eq__(self, other):
@@ -552,7 +554,6 @@ def course_bind_to_R_templates(all_fulfillment:dict, max_fulfillments:dict, cour
         if (fulfillment_status.get_template().replacement 
                 and course in max_fulfillments.get(fulfillment_status.get_template()).get_fulfillment_set()):
             fulfillment_status.add_fulfillment_course(course)
-            print('added course ' + repr(course) + ' to R template')
 
 
 def course_bindings_with_R_templates(all_fulfillment:dict, course:Course) -> list:
@@ -595,6 +596,13 @@ def total_unfulfilled_slots(all_fulfillment:dict) -> int:
     count = 0
     for fulfillment_status in all_fulfillment.values():
         count += max(0, fulfillment_status.get_required_count() - fulfillment_status.get_actual_count())
+    return count
+
+
+def total_filled_slots(all_fulfillment:dict) -> int:
+    count = 0
+    for fulfillment_status in all_fulfillment.values():
+        count += fulfillment_status.get_actual_count()
     return count
 
 

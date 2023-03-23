@@ -20,7 +20,7 @@ class CMD(Enum):
     FIND = '1.find'
     DETAILS = '1.details'
 
-    TEST = '0.test'
+    INFO = '0.info'
     IMPORT = '0.import'
     TAG = '1.tag'
     NONE = '0.none'

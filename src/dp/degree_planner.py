@@ -7,7 +7,6 @@ from ..io.output import *
 from .course import Course
 from .catalog import Catalog
 from .schedule import Schedule
-from .old_test_suite import Test1
 from .user import User
 from .user import Flag
 from .search import Search
@@ -29,8 +28,6 @@ class Planner():
 
     Valid commands are:
         (developer only)
-            test
-                - run test_suite.py
             import
                 - parse course and degree information from json
 
@@ -90,7 +87,7 @@ class Planner():
 
         if Flag.CMD_PAUSED in user.flag:
             user.command_queue_locked = True
-            io.debug(f'user {user.username} locked command queue')
+            io.debug(f'user {user.username} locked their command queue')
             user.command_decision = user_input.strip().casefold()
         
         else:
@@ -100,7 +97,7 @@ class Planner():
                 return False
             
             user.command_queue_locked = True
-            io.debug(f'user {user.username} locked command queue')
+            io.debug(f'user {user.username} locked their command queue')
             user.command_queue.join()
             commands = self.parse_command(user_input, io)
 
@@ -109,7 +106,7 @@ class Planner():
 
         self.command_handler(user, io)
         user.command_queue_locked = False
-        io.debug(f'user {user.username} unlocked command queue')
+        io.debug(f'user {user.username} unlocked their command queue')
         return True
 
 
@@ -149,10 +146,8 @@ class Planner():
                 user.command_queue.task_done()
                 continue
 
-            if command.command == CMD.TEST:
-                io.print(f"Testing Degree Planner {VERSION}")
-                self.test(io)
-                io.print(f"Test completed successfully, all assertions met")
+            if command.command == CMD.INFO:
+                io.print(f"Degree Planner {VERSION}")
                 user.command_queue.task_done()
                 continue
 
@@ -244,6 +239,7 @@ class Planner():
                     io.print(f"no degree specified")
                 else:
                     io.store(f"{schedule.name} Fulfillment")
+                    io.store(f"  taken courses: {[str(e) for e in schedule.get_all_courses()]}")
                     fulfillment = schedule.degree.fulfillment(schedule.get_all_courses())
                     io.store(print_fulfillment(fulfillment))
                     io.view_cache()
@@ -323,16 +319,6 @@ class Planner():
     def cleanse(self, msg:str) -> str:
         re.sub(r'\W+', '', msg)
         return msg
-
-
-    def test(self, io:Output=None):
-        ''' Runs test suite
-
-        Args:
-            output (Output): user interface output
-        '''
-        test_suite = Test1()
-        test_suite.test(io)
 
 
     def set_active_schedule(self, user:User, schedule_name:str, io:Output=None) -> None:
@@ -485,7 +471,7 @@ class Planner():
 
         # sanity checks
         if not semester.isdigit() or int(semester) not in range(0, self.SEMESTERS_MAX):
-            io.print(f"Invalid semester {semester}, enter number between 0 and 11")
+            io.print(f"Invalid semester {semester}, enter number between 0 and {self.SEMESTERS_MAX}")
             return None
         
         # list of courses matching course_name
@@ -523,7 +509,7 @@ class Planner():
 
         # sanity checks
         if not semester.isdigit() or int(semester) not in range(0, self.SEMESTERS_MAX):
-            io.print(f"Invalid semester {semester}, enter number between 0 and 11")
+            io.print(f"Invalid semester {semester}, enter number between 0 and {self.SEMESTERS_MAX}")
             return None
         
         semester = int(semester)

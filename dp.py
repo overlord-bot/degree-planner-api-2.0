@@ -23,15 +23,14 @@ def terminal():
     print("  Project Overlord 2022")
     print("  YACS.n 2023")
     print(f"  {datetime.now()}")
-    if len(sys.argv) > 1:
-        if '-a' in sys.argv:
-            print("  logging all debug info")
-            logging.getLogger().setLevel(logging.DEBUG)
-        else:
-            logging.getLogger().setLevel(logging.WARNING)
+    if len(sys.argv) > 1 and '-d' in sys.argv:
+        print("  logging all debugging info")
+        logging.getLogger().setLevel(logging.DEBUG)
+    else:
+        logging.getLogger().setLevel(logging.WARNING)
 
     print("")
-    output = Output(OUT.CONSOLE, output_type=OUTTYPE.STRING, signature='Alan', auto_clear=True)
+    output = Output(OUT.CONSOLE, output_type=OUTTYPE.STRING, signature='DP', auto_clear=True)
     while 1:
         user_input = input("(degree planner) >>> ")
         if user_input.casefold() == "quit":

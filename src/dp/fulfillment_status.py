@@ -74,10 +74,10 @@ class Fulfillment_Status():
         return json.dumps(stat)
     
     def __repr__(self) -> str:
-        return f"template: {self.template}\nrequired count: {self.required}\nfulfillment set: {self.fulfillment_set}"
+        return f"template: {self.template} {self.template.specifications}  required count: {self.required}  fulfillment set: {[str(e) for e in self.fulfillment_set]}"
     
     def __str__(self):
-        return str(self.template.name)
+        return f"{self.template.name} fulfillment set: {[str(e) for e in self.fulfillment_set]}"
     
     def __eq__(self, other):
         return self.template == other.template and self.required == other.required
