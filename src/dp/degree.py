@@ -109,25 +109,25 @@ class Degree():
                     continue
                 all_fulfillment.update({template:self.template_fill(template, all_fulfillment, max_fulfillments)})
 
-            # print('after NR fulfillment: ' + print_fulfillment(all_fulfillment))
+            self.DEBUG.print(f'after NR fulfillment: {print_fulfillment(all_fulfillment)}')
 
             graph = self.generate_graph(all_fulfillment, max_fulfillments)
             for template in template_set:
                 self.template_steal(template, all_fulfillment, max_fulfillments, graph)
             
-            # print('after steal: ' + print_fulfillment(all_fulfillment))
+            self.DEBUG.print(f'after steal: {print_fulfillment(all_fulfillment)}')
 
             for template in template_set:
                 if not template.replacement:
                     continue
                 all_fulfillment.update({template:self.template_fill(template, all_fulfillment, max_fulfillments)})
 
-            # print('after R fulfillment: ' + print_fulfillment(all_fulfillment))
+            self.DEBUG.print(f'after R fulfillment: {print_fulfillment(all_fulfillment)}')
 
             for template in template_set:
                 self.template_trade(template, all_fulfillment, max_fulfillments)
 
-            # print('after trade: ' + print_fulfillment(all_fulfillment))
+            self.DEBUG.print(f'after trade: {print_fulfillment(all_fulfillment)}')
 
             for template in template_set:
                 self.template_trade(template, all_fulfillment, max_fulfillments, template.importance)
@@ -143,7 +143,7 @@ class Degree():
                 best_fulfillment = fulfillment
 
         end = timeit.default_timer()
-        print('\nfulfillment runtime: ', end - start, '\n')
+        self.DEBUG.print(f'\nfulfillment runtime: {end - start}\n', OUT.INFO)
         return best_fulfillment
 
 
@@ -201,7 +201,7 @@ class Degree():
 
         requested_courses = max_fulfillments.get(template).get_fulfillment_set()
 
-        # self.DEBUG.print(str(template) + ' requests: ' + str([str(e) for e in requested_courses]))
+        self.DEBUG.print(f"template {template} requests: {[str(e) for e in requested_courses]}")
 
         if template.replacement:
             requested_courses = sort_by_num_wanted_bindings(all_fulfillment, max_fulfillments, requested_courses, Bind_Type.R)
