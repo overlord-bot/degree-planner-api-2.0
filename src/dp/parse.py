@@ -85,10 +85,7 @@ def parse_degrees(file_name, catalog, io:Output=None):
 
                 # attributes for template course
                 elif property_name == 'attributes':
-                    template_course = Course('ANY', 'ANY', 'ANY')
-                    for attr in property_value:
-                        template_course.add_attribute(attr)
-                    template.template_course = template_course
+                    template.specifications.extend(property_value)
 
             degree.add_template(template)
         catalog.add_degree(degree)

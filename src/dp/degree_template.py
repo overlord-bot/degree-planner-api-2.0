@@ -13,51 +13,44 @@ class Template():
     courses we filter from.
     '''
 
-    def __init__(self, name, template_course=None, course_set=None, replacement=False, courses_required=1):
-        if template_course == None: template_course = Course('ANY', 'ANY', 'ANY')
-        if course_set == None: course_set = set()
+    def __init__(self, name, specifications=None, replacement=False, courses_required=1):
+        if specifications == None:
+            specifications = list()
+        elif isinstance(specifications, str):
+            specifications = [specifications]
+        elif isinstance(specifications, set):
+            specifications = list(specifications)
 
-        self.name = name
-        self.template_course = template_course
-        self.course_set = course_set
+        self.name = name # must be unique within a degree
+        self.specifications = specifications # details the attributes courses must have to fulfill this template
         self.courses_required = courses_required
 
         self.replacement = replacement
         self.importance = 0 # used internally by degree, higher the number the more important it is
 
+    def add_specification(self, attr):
+        self.specifications.append(attr)
+
+    def remove_specification(self, attr):
+        self.specifications.remove(attr, None)
 
     def __repr__(self):
         s = f"Template {self.name}:\n"
         s += f"  replacement: {self.replacement}\n"
-        s += f"  {repr(self.template_course)}\n"
-        s += f"course_set: "
-        s += ",".join(self.course_set)
+        s += f"  specifications: {str(self.specifications)}"
         return s
     
     def __str__(self):
         return self.name
 
     def __len__(self):
-        return len(self.course_set)
+        return len(self.courses_required)
 
     def __eq__(self, other):
         if not isinstance(other, Template):
             return False
         
-        if other.template_course != self.template_course:
-            return False
-        
-        mylist = self.course_set
-        otherlist = other.course_set
-
-        for course in mylist:
-            if course not in otherlist:
-                return False
-            otherlist.remove(course)
-        if otherlist:
-            if other.template_course != self.template_course:
-                return False
-        return True
+        return self.name == other.name and self.specifications == other.specifications
     
     def __lt__(self, other):
         return self.importance < other.importance
@@ -66,12 +59,13 @@ class Template():
         return self.importance > other.importance
 
     def __add__(self, other):
-        return Template(f'{self.name} + {other.name}', self.template_course + other.template_course, 
-            self.course_set.union(other.course_set), self.replacement & other.replacement, self.courses_required + other.courses_required)
+        new_specifications = copy.deepcopy(self.specifications)
+        new_specifications.extend(other.specifications)
+        return Template(f'{self.name} + {other.name}', specifications=new_specifications, 
+            replacement=self.replacement & other.replacement, courses_required=self.courses_required + other.courses_required)
 
     def __hash__(self):
-        i = hash(self.template_course)**2
-        return i
+        return hash(self.name) + len(self.specifications)
 
 
 ###################################################################################################
@@ -81,9 +75,9 @@ class Template():
 ###################################################################################################
 
 
-def course_fulfills_template(template:Template, course:Course) -> tuple[bool, dict]:
+def course_fulfills_template(template:Template, course:Course):
     conditions = dict()
-    for attr in template.template_course.attributes.keys():
+    for attr in template.specifications:
         if 'NA' in attr or 'ANY' in attr or '-1' in attr:
             continue
         if not parse_attribute(attr, course, conditions):
@@ -91,7 +85,7 @@ def course_fulfills_template(template:Template, course:Course) -> tuple[bool, di
     # print(f'conditions for {course} in {template} : {conditions}')
     return True, conditions
 
-def single_attribute_evaluation(attr:str, course:Course) -> tuple[str, dict]:
+def single_attribute_evaluation(attr:str, course:Course):
     attr = attr.strip()
     if attr == '':
         return True, {}
@@ -181,6 +175,11 @@ def get_course_match(template:Template, courses) -> list:
     if not len(all_conditions):
         fulfillment_sets.append(curr_fulfillment)
 
+
+    # print(f'all conditions: ' + str(all_conditions))
+    # print(f'fulfillments: ' + str([repr(e) for e in fulfillment_sets]))
+
+
     # if there are wildcard branching needed (we only need to pop the first one, the rest is handled by the following recursive calls
     # as each recursive call only needs to handle one)
     if not len(all_conditions):
@@ -191,11 +190,11 @@ def get_course_match(template:Template, courses) -> list:
         # for each branching choice, make a copy of the template with the wildcard replaced with a possible value
         template_cpy = copy.deepcopy(template)
 
-        # a temporary dictionary holding the old/new values, since we cannot update dictionary keys
+        # a temporary dictionary holding the old/new values, since we cannot update an object
         # while iterating through it
         replace_attributes = dict()
 
-        for attribute_str in template_cpy.template_course.attributes.keys():
+        for attribute_str in template_cpy.specifications:
             if wildcard_attr not in attribute_str:
                 continue
 
@@ -203,74 +202,12 @@ def get_course_match(template:Template, courses) -> list:
             attribute_str_update = attribute_str.replace(wildcard_attr, choice)
             replace_attributes.update({attribute_str:attribute_str_update})
 
-        # we commit the changes to the dictionary while iterating through the replace_attributes we made previously
+        # we commit the changes to the specifications while iterating through the replace_attributes we made previously
         for old, new in replace_attributes.items():
-            template_cpy.template_course.remove_attribute(old)
-            template_cpy.template_course.add_attribute(new)
+            template_cpy.specifications.remove(old)
+            template_cpy.specifications.append(new)
 
         # recursively call this function, we're guaranteed that the final return values all are wildcard-free
         fulfillment_sets.extend(get_course_match(template_cpy, courses))
 
-    # print(f'all conditions: ' + str(all_conditions))
-    # print(f'fulfillments: ' + str([repr(e) for e in fulfillment_sets]))
-
-    return fulfillment_sets
-
-
-def get_course_match_old(template:Template, course_pool=None, head=True) -> list:
-    ''' Intakes a criteria of courses that we want returned
-        For example, if the template specifies 2000 as course ID, then all 2000 level courses inside
-        the template's course list is returned
-    
-        Parameters: a template with ONLY the attributes we want to require changed to their required states
-
-        Returns: [ Fulfillment_Status ] : a list of fulfillment_status objects each containing template course
-            used, required course count and fulfillment set
-    '''
-    fulfillment_sets = list()
-
-    if head:
-        if isinstance(template, Course):
-            template = Template(template.get_unique_name() + ' template', template)
-        if course_pool is None:
-            course_pool = template.course_set
-        elif len(template.course_set):
-            course_pool = {e for e in course_pool if e in template.course_set}
-    leaf = True
-
-    for target_attribute in template.template_course.attributes.keys():
-        if 'NA' in target_attribute or 'ANY' in target_attribute or '-1' in target_attribute:
-            continue
-
-        # any course without a wildcard is considered a leaf
-        if '*' not in target_attribute:
-            if '/' in target_attribute:
-                # if we find the or symbol, compute match with each attr in the disjunction
-                # then take the union
-                or_union = set()
-                for or_attr in target_attribute.split('/'):
-                    or_union.update({e for e in course_pool if e.has_attribute(or_attr)})
-                course_pool = or_union
-            else:
-                course_pool = {e for e in course_pool if e.has_attribute(target_attribute)}
-            # print('course pool match: ' + str({str(e) for e in course_pool}))
-        else:
-            leaf = False
-
-    for target_attribute in template.template_course.attributes.values():
-        if '*' in target_attribute:
-            possible_values = set()
-            for course in course_pool:
-                possible_values = possible_values.union(course.get_next(course.get_all_before_wildcard(target_attribute)))
-            for val in possible_values:
-                template_copy = copy.deepcopy(template)
-                template_copy.template_course.replace_wildcard(target_attribute, val)
-                fulfillment_sets.extend(get_course_match(template_copy, course_pool, False))
-    if leaf:
-        fulfillment_sets.append(Fulfillment_Status(template, template.courses_required, course_pool))
-        
-    # return an empty fulfillment set if there are no matches
-    if head and not len(fulfillment_sets):
-        fulfillment_sets.append(Fulfillment_Status(template, template.courses_required, course_pool))
-        
     return fulfillment_sets

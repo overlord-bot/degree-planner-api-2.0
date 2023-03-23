@@ -74,7 +74,7 @@ class Fulfillment_Status():
         return json.dumps(stat)
     
     def __repr__(self) -> str:
-        return f"template: {self.template} {list(self.template.template_course.attributes.keys())}  required count: {self.required}  fulfillment set: {[str(e) for e in self.fulfillment_set]}"
+        return f"template: {self.template} {self.template.specifications}  required count: {self.required}  fulfillment set: {[str(e) for e in self.fulfillment_set]}"
     
     def __str__(self):
         return f"{self.template.name} fulfillment set: {[str(e) for e in self.fulfillment_set]}"

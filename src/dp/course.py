@@ -113,22 +113,34 @@ class Course():
         self.attributes.update({attr.casefold():attr.casefold().split('.')})
 
     def replace_attribute(self, old_head, attr) -> None:
+        '''
+        removes all attributes with the given head, and replaces it with the provided attribute
+        '''
         if isinstance(attr, list):
             attr = '.'.join(attr)
         self.remove_attribute_by_head(old_head)
         self.add_attribute(attr)
 
     def remove_attribute(self, attr) -> None:
+        '''
+        removes attribute with exact match
+        '''
         if isinstance(attr, list):
             attr = '.'.join(attr)
         self.attributes.pop(attr)
 
     def has_attribute(self, attr) -> bool:
+        '''
+        finds if the attribute exactly matches one stored here
+        '''
         if isinstance(attr, list):
             attr = '.'.join(attr)
         return attr in self.attributes.keys()
     
     def val(self, attr) -> str:
+        '''
+        helper function to return everything in the provided attribute string after the first period
+        '''
         attr = attr.split('.')
         if len(attr) < 2:
             return None
@@ -136,6 +148,9 @@ class Course():
         return '.'.join(attr)
     
     def attr(self, attr:str) -> str:
+        '''
+        finds unique attribute match within self and returns the value
+        '''
         attrs = self.get_attributes_by_head(attr)
         if len(attrs) != 1:
             return None
@@ -161,6 +176,9 @@ class Course():
         return matched_attrs
     
     def remove_attribute_by_head(self, queried_attr) -> int:
+        '''
+        removes all attributes matching the provided head
+        '''
         if isinstance(queried_attr, list):
             queried_attr = '.'.join(queried_attr)
         queried_attr = queried_attr.split('.')
@@ -182,14 +200,6 @@ class Course():
             self.attributes.pop(e)
         return count
     
-    def replace_wildcard(self, attr, val):
-        if isinstance(attr, list):
-            attr = '.'.join(attr)
-        prior_elements = self.get_all_before_wildcard(attr)
-        prior_elements += '.' + val
-        self.remove_attribute(attr)
-        self.add_attribute(prior_elements)
-    
     def has_attribute_head(self, attr) -> bool:
         if isinstance(attr, list):
             attr = '.'.join(attr)
@@ -206,17 +216,6 @@ class Course():
             if len(matched_attr) > len(attr):
                 next_elements.add(matched_attr[len(attr)])
         return next_elements
-            
-    def get_all_before_wildcard(self, attr) -> list:
-        if isinstance(attr, list):
-            attr = '.'.join(attr)
-        attr = attr.split('.')
-        r_attr = list()
-        for e in attr:
-            if e == '*':
-                break
-            r_attr.append(e)
-        return '.'.join(r_attr)
                 
     def json(self) -> OrderedDict:
         '''

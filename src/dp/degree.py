@@ -321,12 +321,12 @@ class Degree():
             # it stole from the actual replacement templates in addition to the dummy templates
             less_important_templates = get_less_important_templates(all_fulfillment, importance_level, Bind_Type.NR)
             
-            dummy_donor_template = Template('dummy donor', template_course=Course('dummy donor', 'dummy', 'dummy'), courses_required = 0)
+            dummy_donor_template = Template('dummy donor', courses_required = 0)
             dummy_donor_fulfillment = Fulfillment_Status(dummy_donor_template, fulfillment_set=donateable_courses)
             all_fulfillment.update({dummy_donor_template:dummy_donor_fulfillment})
             max_fulfillments.update({dummy_donor_template:copy.deepcopy(dummy_donor_fulfillment)})
 
-            dummy_receiver_template = Template('dummy receiver', template_course=Course('dummy receiver', 'dummy', 'dummy'), courses_required = 1)
+            dummy_receiver_template = Template('dummy receiver', courses_required = 1)
             dummy_receiver_fulfillment = Fulfillment_Status(dummy_receiver_template, fulfillment_set=set())
             dummy_receiver_max_fulfillment = Fulfillment_Status(dummy_receiver_template, fulfillment_set={course})
             all_fulfillment.update({dummy_receiver_template:dummy_receiver_fulfillment})

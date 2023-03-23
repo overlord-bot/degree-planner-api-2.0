@@ -51,6 +51,7 @@ def test_other():
     course0 = Course('0', 'BINTEST', 0)
     course0.add_attribute('bin.1')
     course0.add_attribute('bin.5')
+    course0.add_attribute('credits.3')
     catalog.add_course(course0)
 
     course1 = Course('1', 'BINTEST', 1)
@@ -81,17 +82,11 @@ def test_other():
     planner.course_search.update_items(catalog.get_all_course_names())
     planner.course_search.generate_index()
 
-    testtemplate1 = Template('bin1', Course("ANY", "BINTEST", 'ANY'))
-    #testtemplate1.template_course.add_attribute('bin.1')
-    testtemplate1.courses_required = 1
-    testtemplate2 = Template('bin2', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate2.template_course.add_attribute('bin.2')
-    testtemplate3 = Template('bin3', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate3.template_course.add_attribute('bin.3')
-    testtemplate4 = Template('bin4', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate4.template_course.add_attribute('bin.4')
-    testtemplate5 = Template('bin5', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate5.template_course.add_attribute('bin.5')
+    testtemplate1 = Template('bin1', 'bin.1')
+    testtemplate2 = Template('bin2', 'bin.2')
+    testtemplate3 = Template('bin3', 'bin.3')
+    testtemplate4 = Template('bin4', 'bin.4')
+    testtemplate5 = Template('bin5', 'bin.5')
     testtemplate1.replacement = False
     testtemplate2.replacement = False
     testtemplate3.replacement = False
@@ -103,6 +98,8 @@ def test_other():
     degree.add_template(testtemplate3)
     degree.add_template(testtemplate4)
     degree.add_template(testtemplate5)
+
+    print(f'course0 credits: {course0.get_credits()}')
 
     # run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, print, fulfillment')
 
@@ -133,7 +130,7 @@ def test_other():
         print(f"  answer is {'correct :)' if str(response).casefold() == str(answer).casefold() else 'INCORRECT INCORRECT INCORRECT!'}")
         print(f"  true given: {true_given}")
 
-    testtemplate1.template_course.add_attribute('bin.*')
+    testtemplate1.add_specification('bin.*')
     get_course_match(testtemplate1, {course1, course2, course3, course4, course5})
 
 
@@ -179,17 +176,11 @@ def test_fulfillment():
     planner.course_search.update_items(catalog.get_all_course_names())
     planner.course_search.generate_index()
 
-    testtemplate1 = Template('bin1', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate1.template_course.add_attribute('bin.1')
-    testtemplate1.courses_required = 1
-    testtemplate2 = Template('bin2', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate2.template_course.add_attribute('bin.2')
-    testtemplate3 = Template('bin3', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate3.template_course.add_attribute('bin.3')
-    testtemplate4 = Template('bin4', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate4.template_course.add_attribute('bin.4')
-    testtemplate5 = Template('bin5', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate5.template_course.add_attribute('bin.5')
+    testtemplate1 = Template('bin1', 'bin.1')
+    testtemplate2 = Template('bin2', 'bin.2')
+    testtemplate3 = Template('bin3', 'bin.3')
+    testtemplate4 = Template('bin4', 'bin.4')
+    testtemplate5 = Template('bin5', 'bin.5')
     testtemplate1.replacement = False
     testtemplate2.replacement = False
     testtemplate3.replacement = False
@@ -250,16 +241,11 @@ def test_fulfillment2():
     planner.course_search.update_items(catalog.get_all_course_names())
     planner.course_search.generate_index()
 
-    testtemplate1 = Template('bin1', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate1.template_course.add_attribute('bin.1')
-    testtemplate2 = Template('bin2', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate2.template_course.add_attribute('bin.2')
-    testtemplate3 = Template('bin3', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate3.template_course.add_attribute('bin.3')
-    testtemplate4 = Template('bin4', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate4.template_course.add_attribute('bin.4')
-    testtemplate5 = Template('bin5', Course("ANY", "BINTEST", 'ANY'), courses_required=1)
-    testtemplate5.template_course.add_attribute('bin.5')
+    testtemplate1 = Template('bin1', 'bin.1')
+    testtemplate2 = Template('bin2', 'bin.2')
+    testtemplate3 = Template('bin3', 'bin.3')
+    testtemplate4 = Template('bin4', 'bin.4')
+    testtemplate5 = Template('bin5', 'bin.5')
     replacement = True
     testtemplate1.replacement = replacement
     testtemplate2.replacement = replacement
@@ -318,16 +304,11 @@ def test_fulfillment3():
     planner.course_search.update_items(catalog.get_all_course_names())
     planner.course_search.generate_index()
 
-    testtemplate1 = Template('bin1', Course("ANY", "BINTEST", 'ANY'), courses_required=1)
-    testtemplate1.template_course.add_attribute('bin.1')
-    testtemplate2 = Template('bin2', Course("ANY", "BINTEST", 'ANY'), courses_required=3)
-    testtemplate2.template_course.add_attribute('bin.2')
-    testtemplate3 = Template('bin3', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate3.template_course.add_attribute('bin.3')
-    testtemplate4 = Template('bin4', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate4.template_course.add_attribute('bin.4')
-    testtemplate5 = Template('bin5', Course("ANY", "BINTEST", 'ANY'), courses_required=2)
-    testtemplate5.template_course.add_attribute('bin.5')
+    testtemplate1 = Template('bin1', 'bin.1')
+    testtemplate2 = Template('bin2', 'bin.2', courses_required=3)
+    testtemplate3 = Template('bin3', 'bin.3')
+    testtemplate4 = Template('bin4', 'bin.4')
+    testtemplate5 = Template('bin5', 'bin.5', courses_required=2)
     testtemplate1.replacement = False
     testtemplate2.replacement = True
     testtemplate3.replacement = True
@@ -366,12 +347,9 @@ def test_fulfillment4():
     planner.course_search.update_items(catalog.get_all_course_names())
     planner.course_search.generate_index()
 
-    testtemplate1 = Template('bin1', Course("ANY", "BINTEST", 'ANY'), courses_required=1)
-    testtemplate1.template_course.add_attribute('bin.1')
-    testtemplate2 = Template('bin2', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate2.template_course.add_attribute('bin.2')
-    testtemplate3 = Template('bin3', Course("ANY", "BINTEST", 'ANY'))
-    testtemplate3.template_course.add_attribute('bin.3')
+    testtemplate1 = Template('bin1', 'bin.1', courses_required=1)
+    testtemplate2 = Template('bin2', 'bin.2')
+    testtemplate3 = Template('bin3', 'bin.3')
     testtemplate1.replacement = False
     testtemplate2.replacement = True
     testtemplate3.replacement = True
@@ -424,16 +402,11 @@ def test_fulfillment5():
     planner.course_search.update_items(catalog.get_all_course_names())
     planner.course_search.generate_index()
 
-    testtemplate1 = Template('bin1', Course("ANY", "BINTEST", 'ANY'), courses_required=1)
-    testtemplate1.template_course.add_attribute('bin.1')
-    testtemplate2 = Template('bin2', Course("ANY", "BINTEST", 'ANY'), courses_required=2)
-    testtemplate2.template_course.add_attribute('bin.2')
-    testtemplate3 = Template('bin3', Course("ANY", "BINTEST", 'ANY'), courses_required=2)
-    testtemplate3.template_course.add_attribute('bin.3')
-    testtemplate4 = Template('bin4', Course("ANY", "BINTEST", 'ANY'), courses_required=2)
-    testtemplate4.template_course.add_attribute('bin.4')
-    testtemplate5 = Template('bin5', Course("ANY", "BINTEST", 'ANY'), courses_required=3)
-    testtemplate5.template_course.add_attribute('bin.5')
+    testtemplate1 = Template('bin1', 'bin.1')
+    testtemplate2 = Template('bin2', 'bin.2', courses_required=2)
+    testtemplate3 = Template('bin3', 'bin.3', courses_required=2)
+    testtemplate4 = Template('bin4', 'bin.4', courses_required=2)
+    testtemplate5 = Template('bin5', 'bin.5', courses_required=3)
     testtemplate1.replacement = False
     testtemplate2.replacement = True
     testtemplate3.replacement = True
@@ -548,27 +521,17 @@ def test_fulfillment6():
     planner.course_search.update_items(catalog.get_all_course_names())
     planner.course_search.generate_index()
 
-    testtemplate1 = Template('bin1', Course("ANY", "BINTEST", 'ANY'), courses_required=1)
-    testtemplate1.template_course.add_attribute('bin.1')
-    testtemplate2 = Template('bin2', Course("ANY", "BINTEST", 'ANY'), courses_required=2)
-    testtemplate2.template_course.add_attribute('bin.2')
-    testtemplate3 = Template('bin3', Course("ANY", "BINTEST", 'ANY'), courses_required=2)
-    testtemplate3.template_course.add_attribute('bin.3')
-    testtemplate4 = Template('bin4', Course("ANY", "BINTEST", 'ANY'), courses_required=2)
-    testtemplate4.template_course.add_attribute('bin.4')
-    testtemplate5 = Template('bin5', Course("ANY", "BINTEST", 'ANY'), courses_required=3)
-    testtemplate5.template_course.add_attribute('bin.5')
+    testtemplate1 = Template('bin1', 'bin.1')
+    testtemplate2 = Template('bin2', 'bin.2', courses_required=2)
+    testtemplate3 = Template('bin3', 'bin.3', courses_required=2)
+    testtemplate4 = Template('bin4', 'bin.4', courses_required=2)
+    testtemplate5 = Template('bin5', 'bin.5', courses_required=3)
 
-    testtemplate6 = Template('bin6', Course("ANY", "BINTEST", 'ANY'), courses_required=1)
-    testtemplate6.template_course.add_attribute('bin.6')
-    testtemplate7 = Template('bin7', Course("ANY", "BINTEST", 'ANY'), courses_required=1)
-    testtemplate7.template_course.add_attribute('bin.7')
-    testtemplate8 = Template('bin8', Course("ANY", "BINTEST", 'ANY'), courses_required=1)
-    testtemplate8.template_course.add_attribute('bin.8')
-    testtemplate9 = Template('bin9', Course("ANY", "BINTEST", 'ANY'), courses_required=1)
-    testtemplate9.template_course.add_attribute('bin.9')
-    testtemplate10 = Template('bin10', Course("ANY", "BINTEST", 'ANY'), courses_required=2)
-    testtemplate10.template_course.add_attribute('concentration.*')
+    testtemplate6 = Template('bin6', 'bin.6')
+    testtemplate7 = Template('bin7', 'bin.7', courses_required=1)
+    testtemplate8 = Template('bin8', 'bin.8', courses_required=1)
+    testtemplate9 = Template('bin9', 'bin.9', courses_required=1)
+    testtemplate10 = Template('bin10', 'concentration.*', courses_required=2)
     
     testtemplate1.replacement = False
     testtemplate2.replacement = True
