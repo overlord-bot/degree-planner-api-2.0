@@ -26,9 +26,10 @@ class Degree():
     rules can additionally be marked as high priority to compute its fulfillment first
     '''
 
-    def __init__(self, name):
+    def __init__(self, name, catalog=None):
         self.name = name
         self.templates = list()
+        self.catalog = catalog
         self.DEBUG = Output(OUT.DEBUG, signature='DEGREE')
 
         self.MAX_IMPORTANCE = 1000 # essentially the maximum number of templates possible
@@ -458,8 +459,55 @@ class Degree():
     # fulfillment recommendation
     ##############################################################################################
 
-    def recommend():
+    def recommend(self, taken_courses) -> dict:
+        '''
+        gives possible courses to take
+        '''
+        best_fulfillments = self.fulfillment(taken_courses)
+
+        recommender = dict() # {best template : {alternative template : fulfillment list}}
+        # note that best template == alternative template if best template does not contain wildcards
+
+        for best_template, best_fulfillment in best_fulfillments.items():
+
+            original_spec = best_template.original_specifications
+            # remaking the original template
+            best_template_original = Template(best_template.name + ' original', specifications=original_spec, replacement=best_template.replacement, courses_required=1)
+
+            # here we receive the list of fulfillment sets from get course match
+            matches = get_course_match(best_template_original, self.catalog.get_all_courses())
+            matches_dict = {}
+
+            for matched_fulfillment in matches:
+                self.DEBUG.print(f'max match for template {best_template_original}: {matches}')
+                # remove the courses already taken
+                recommended_courses = matched_fulfillment.get_fulfillment_set()
+                for course in best_fulfillment.get_fulfillment_set():
+                    recommended_courses.discard(course)
+
+                recommended_courses = sort_by_num_bindings(best_fulfillments, recommended_courses, Bind_Type.R)
+                recommended_courses = self.sort_by_preference()
+                if best_template.replacement:
+                    recommended_courses.reverse()
+
+                matches_dict.update({matched_fulfillment.get_template():recommended_courses})
+                self.DEBUG.print(f'max sorted match for template {str(matched_fulfillment.get_template())}: {[str(e) for e in recommended_courses]}')
+
+            recommender.update({best_template:matches_dict})
+       
+        return recommender
+    
+
+    def sort_by_preference(self, all_fulfillment, user, taken_courses):
+        return 
+    # TODO ACTUALLY, WE CAN MAKE A GENERIC SORTER WITH CUSTOM COMPARIOSN FUNCTION
+
+    
+
+    def display_agent(self, best_fulfillment, recommender):
         pass
+
+
     
 
     def json(self) -> json:
@@ -505,7 +553,9 @@ def print_fulfillment(all_fulfillment:dict) -> str:
         printout += (f"  Template '{status.template.name}':" + \
             f"\n    replacement: {status.template.replacement}, importance: {status.template.importance}" + \
             f"\n    required count: {status.get_required_count()}" + \
-            f"\n    actual count: {status.get_actual_count()}\n")
+            f"\n    actual count: {status.get_actual_count()}" + \
+            f"\n    specifications: {status.template.specifications}" + \
+            f"\n    original specifications: {status.template.original_specifications}\n")
         simplified_fulfillment_set = set()
         for course in status.get_fulfillment_set():
             simplified_fulfillment_set.add(course.get_unique_name())

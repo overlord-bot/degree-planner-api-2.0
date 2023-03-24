@@ -66,7 +66,7 @@ def parse_degrees(file_name, catalog, io:Output=None):
 
     for degree_name, degree_templates in degrees.items():
         # degrees
-        degree = Degree(degree_name)
+        degree = Degree(degree_name, catalog)
 
         for template_name, template_properties in degree_templates.items():
             # templates within degree

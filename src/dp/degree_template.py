@@ -23,6 +23,7 @@ class Template():
 
         self.name = name # must be unique within a degree
         self.specifications = specifications # details the attributes courses must have to fulfill this template
+        self.original_specifications = None # wildcard deconstruction modifies the specifications, so we store a copy of the original for later use
         self.courses_required = courses_required
 
         self.replacement = replacement
@@ -202,6 +203,9 @@ def get_course_match(template:Template, courses) -> list:
 
     # print(f'all conditions: ' + str(all_conditions))
     # print(f'fulfillments: ' + str([repr(e) for e in fulfillment_sets]))
+
+    if template.original_specifications is None:
+        template.original_specifications = copy.deepcopy(template.specifications)
 
 
     # if there are wildcard branching needed (we only need to pop the first one, the rest is handled by the following recursive calls

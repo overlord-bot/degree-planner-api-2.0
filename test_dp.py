@@ -46,7 +46,7 @@ def test_other():
     user = User(1)
     
     catalog = planner.catalog
-    degree = Degree("computer science")
+    degree = Degree("computer science", catalog)
     catalog.add_degree(degree)
 
     course0 = Course('0', 'BINTEST', 0)
@@ -132,7 +132,10 @@ def test_other():
         print(f"  true given: {true_given}")
 
     testtemplate1.add_specification('bin.*')
-    get_course_match(testtemplate1, {course1, course2, course3, course4, course5})
+    # get_course_match(testtemplate1, {course1, course2, course3, course4, course5})
+
+    print('\ntesting fulfillment recommendations: \n')
+    degree.recommend({course0, course1, course2, course3, course4, course5})
 
 
 
@@ -305,11 +308,11 @@ def test_fulfillment3():
     planner.course_search.update_items(catalog.get_all_course_names())
     planner.course_search.generate_index()
 
-    testtemplate1 = Template('bin1', 'bin.1')
-    testtemplate2 = Template('bin2', 'bin.2', courses_required=3)
-    testtemplate3 = Template('bin3', 'bin.3')
-    testtemplate4 = Template('bin4', 'bin.4')
-    testtemplate5 = Template('bin5', 'bin.5', courses_required=2)
+    testtemplate1 = Template('bin1', 'bin.1') # 6
+    testtemplate2 = Template('bin2', 'bin.2', courses_required=3) # 2, 3, 4
+    testtemplate3 = Template('bin3', 'bin.3') # 3, 4
+    testtemplate4 = Template('bin4', 'bin.4') # 5
+    testtemplate5 = Template('bin5', 'bin.5', courses_required=2) # 1
     testtemplate1.replacement = False
     testtemplate2.replacement = True
     testtemplate3.replacement = True
