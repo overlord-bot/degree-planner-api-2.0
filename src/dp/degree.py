@@ -86,10 +86,29 @@ class Degree():
         return all_template_combinations
 
 
+    ##############################################################################################
+    # MAIN FULFILLMENT FUNCTION
+    ##############################################################################################
+
     def fulfillment(self, taken_courses:set) -> dict:
         '''
-        Run fulfillment checking by generating all actual templates from wildcard templates
-        and trying every combination to see which one is the best
+        Generates the best fulfillment set by assigning courses to the templates stored along with
+        each degree.
+
+        If a wildcard is encountered, all possible values of that wildcard will be attempted and the
+        best one in the end applied and stored in the return dictionary. (For example, suppose
+        Template1 has attribute [concentration.*]. This means all courses must be within the same
+        concentration, not mattering which one in particular. The return we receive would describe
+        the concentration that provided the best fulfillment, and would have an attribute such as
+        [concentration.ai].)
+
+        parameters:
+            taken_courses (set): all courses that is to be used to generate the fulfillment sets
+
+        returns:
+            all_fulfillment (dict): {template : Fulfillment_set}
+                template is the template evaluated, with all wildcard tokens replaced by the best token
+                fulfillment_set objects contain the courses that fulfill that template
         '''
         start = timeit.default_timer()
         # all fulfillment sets based on each possible combination of templates resulted from wildcard templates
@@ -187,7 +206,11 @@ class Degree():
 
     def template_fill(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, importance_level:int=-1) -> Fulfillment_Status:
         '''
-        Computes fulfillment status of a single template
+        fills in each template with available courses in order in which the templates appear.
+        
+        Note that the goal is not to produce an optimal solution just yet, but rather to guarantee that ALL courses that
+        can be assigned to a template is assigned to some template. (any template for now, doesn't matter which one in particular.)
+        Optimizing the assignments occurs in the next steps.
 
         Parameters:
             template (Template): template being fulfilled, must not contain wildcards
@@ -233,6 +256,18 @@ class Degree():
 
     def course_steal(self, template:Template, course:Course, all_fulfillment:dict, max_fulfillments:dict, graph:Graph, importance_level:int=-1, less_important_templates:set=None) -> bool:
         '''
+        The optimization step for course assignment to templates.
+
+        There can be scenarios where a course may take a course from another template's fulfillment set without negatively
+        impacting them. This occurs when the template being stolen from has excess (fulfillment courses > required courses).
+
+        This method uses a BFS search tree to locate all the different paths we can shuffle courses around (say template1
+        needs a course template2 has. Template2 may not have excess, but Template3 does and can offer Template2 a course, so
+        we transfer a course from Template3 to Template2, then the wanted course from Template2 to Template1.)
+
+        The BFS tree has the excessly filled templates as roots and the template we want to receive a course as the target
+        for search.
+
         try to have template steal the course from aother templates in all_fulfillment, using the graph given and update
         graph appropriately after a successful transfer of courses
 
@@ -294,10 +329,45 @@ class Degree():
 
     def template_trade(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, importance_level=-1) -> None:
         '''
-        TEMPLATE MUST BE REPLACEMENT
+        We now introduce templates with replacement. (note this computation should occur after non-replacement
+        templates are fully optimized.) This is essentially a version of the course stealing method but used for
+        replacement templates, since replacement templates have the unique property of allowing multiple templates
+        to simulatenously posess the same course.
 
-        try to exchange courses from other replacement templates by receiving
-        a course that fulfills both self and the other replacement template
+        Note that this method employs the stealing method as a sub-routine, so it is not a replacement for the course
+        steal method but rather an extension of it.
+
+        
+        There are senarios where if the replacement templates give up a course, they will be able to in turn receive
+        an otherwise 'locked' course that can more optimally fulfill them.
+
+        For example, suppose the following scenario:
+            Template 1 (no-replacement): wants course1 or course2
+            Template 2 (replacement): wants course1
+            Template 3 (replacement): wants course1 or course2
+
+        If we gave course1 to template 1 and the course2 to template 2/3, only two of them (template 1 and template 3) are
+        fulfilled. To remedy this, this method functions as follows:
+
+            1) identify the courses we want that can fulfill a maximum number of replacement templates. In this case, there
+            exists one such course: course1.
+
+            2) identify the courses that, should we obtain the wanted course, we will be able to free up and give away.
+            In this case, if we obtain course1, we will be able to release course2. This method does this by temporarily
+            giving the templates the wanted course and generating the list of courses that can be subsequently removed
+            without affecting any fulfillment sets that doesn't have excess. (NOTE a proof is still needed to demonstrate that,
+            because we originally filled the templates with there are no scenarios exist in which we can give up a course that
+            breaks a fulfillment set but results in more fulfillment sets being fulfilled)
+
+            3) see if giving those courses out to the replacement templates will allow the course we want to take to be taken.
+            We do this by creating two 'dummy templates', one receiver and one giver, with the receiver essentially telling
+            the course stealing algorithm that we want that course in particular, and the giver containing all the donor courses
+            we can offer.
+
+            4) we will know whether this worked or not by seeing if the donor fulfillment set has had courses taken from it. If it
+            did, then this trade was a success. If not, we revert everything back to how it was originally
+            
+            5) repeat until we go through all wanted courses or this template becomes fulfilled.
         '''
         this_fulfillment = all_fulfillment.get(template)
 
@@ -360,6 +430,13 @@ class Degree():
             max_fulfillments.pop(dummy_donor_template)
             all_fulfillment.pop(dummy_receiver_template)
             max_fulfillments.pop(dummy_receiver_template)
+
+
+    ##############################################################################################
+    # fulfillment recommendation
+    ##############################################################################################
+
+    def recommend()
     
 
     def json(self) -> json:

@@ -150,6 +150,30 @@ def parse_attribute(input:str, course:Course, true_given_for_wildcards:dict=None
 
 
 def get_course_match(template:Template, courses) -> list:
+    '''
+    Finds all courses that fulfills the given template
+
+    Wildcards (*) may be used to dictate the fact that all courses within this template's fulfillment
+    set must have the same values for that attribute. It doesn't matter which one, just so long as
+    it's consistent. This is useful if we want a rule that says all courses must be in the same subject
+    area or all courses must be in the same concentration/focus area, but doesn't matter which specific 
+    one in particular.
+
+    For example, concentration.* means all courses must be within the same concentration.
+    If course1 has attribute concentration.1 and course2 has attribute concentration.1 and concentration.2,
+    this function will return a list of fulfillment sets as follows:
+
+    Template1.1 [concentration.1] : fulfillment courses: [course1, course2]
+    Template1.2 [concentration.2] : fulfillment courses: [course2]
+
+    Note that just because two courses fulfills bin.1 and only one fulfills bin.2 in this scenario doesn't
+    necessarily bin.1 is a better choice. Suppose another template, Template2, which does not allow replacement
+    and is of higher importance requires course1. now, both Template1.1 and Template1.2 will only have one 
+    fulfillment course. This is why we must try every single combination.
+
+    If the template doesn't contain a wildcard operator, the list would simply be a single entry
+    '''
+
     fulfillment_sets = list() # all possible fulfillments based on different combinations resulting from wildcard sauge
     all_conditions = dict() # all possible wildcard replacement conditions that can influence the result (wildcard branching)
 
