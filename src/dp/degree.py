@@ -141,7 +141,7 @@ class Degree():
             for template in template_set:
                 self.template_steal(template, all_fulfillment, max_fulfillments, graph)
             
-            self.DEBUG.print(f'after steal: {print_fulfillment(all_fulfillment)}')
+            self.DEBUG.print(f'after NR steal: {print_fulfillment(all_fulfillment)}')
 
             '''
             R TEMPLATE FIRST COME FIRST SERVE FILL
@@ -158,15 +158,15 @@ class Degree():
             '''
             for template in template_set:
                 #continue
-                self.template_trade(template, all_fulfillment, max_fulfillments)
+                self.replacement_template_steal(template, all_fulfillment, max_fulfillments)
 
-            self.DEBUG.print(f'after trade: {print_fulfillment(all_fulfillment)}')
+            self.DEBUG.print(f'after R steal: {print_fulfillment(all_fulfillment)}')
 
             '''
             R TEMPLATE FORCE STEAL/TRADE
             '''
             for template in template_set:
-                self.template_trade(template, all_fulfillment, max_fulfillments, template.importance)
+                self.replacement_template_steal(template, all_fulfillment, max_fulfillments, template.importance)
 
             potential_fulfillments.append(all_fulfillment)
 
@@ -348,7 +348,7 @@ class Degree():
             self.course_steal(template, course, all_fulfillment, max_fulfillments, graph, importance_level)
 
 
-    def template_trade(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, importance_level=-1) -> None:
+    def replacement_template_steal(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, importance_level=-1) -> None:
         '''
         We now introduce templates with replacement. (note this computation should occur after non-replacement
         templates are fully optimized.) This is essentially a version of the course stealing method but used for
