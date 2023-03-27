@@ -35,6 +35,9 @@ class Template():
     def remove_specification(self, attr):
         self.specifications.remove(attr, None)
 
+    def get_required_count(self):
+        return self.courses_required
+
     def __repr__(self):
         s = f"Template {self.name}:\n"
         s += f"  replacement: {self.replacement}\n"

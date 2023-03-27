@@ -28,6 +28,7 @@ class Course():
 
         # dict of lists of items, e.g. {'concentration.ai':[concentration, ai], 'ci.true':[ci, true]}
         self.attributes = dict()
+        self.keywords = list()
 
         if name not in ('', 'NA', 'ANY'):
             self.set_name(name)

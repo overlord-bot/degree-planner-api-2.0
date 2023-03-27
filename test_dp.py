@@ -40,6 +40,10 @@ def test_graph():
     bfs = graph.bfs({n5})
     print(f'{bfs}')
 
+    print(f'sorting:')
+    print(str(dictionary_sort({'machine learning':1, 'robotics':2, 'animation':3, 'computer vision':4, 'banana':10, 'oranges':9, 'apple':8, 'tesla':7,'citrus':2.5}, True)))
+    print(str(bucket_sort({'machine learning':1, 'robotics':2, 'animation':3, 'computer vision':4, 'banana':10, 'oranges':9, 'apple':8, 'tesla':7,'citrus':2.5})))
+
 
 def test_other():
     planner = Planner('test_planner')
@@ -431,7 +435,7 @@ def test_fulfillment6():
     user = User(1)
     
     catalog = planner.catalog
-    degree = Degree("computer science")
+    degree = Degree("computer science", catalog)
     catalog.add_degree(degree)
 
     course1 = Course('1', 'BINTEST', 1)
@@ -570,6 +574,10 @@ def test_fulfillment6():
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6')
     run_cmd(planner, user, 'add, 7, bin 7, add, 7, bin 8, add, 7, bin 9, add, 7, bin one, add, 7, bin two, add, 8, bin two')
     run_cmd(planner, user, 'print, fulfillment')
+
+    
+    print('\ntesting fulfillment recommendations: \n')
+    degree.recommend(catalog.get_all_courses())
 
 def run_cmd(planner, user, string):
     planner.input_handler(user, string)

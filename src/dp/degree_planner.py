@@ -246,11 +246,13 @@ class Planner():
                 user.command_queue.task_done()
                 continue
 
-            if command.command == CMD.AUTOCOMPLETE:
+            if command.command == CMD.RECOMMEND:
                 if schedule.degree == None:
                     io.print(f"no degree specified")
                 else:
                     io.store(f"{schedule.name} Recommended path of completion:")
+                    recommendation = schedule.degree.recommend(schedule.get_all_courses())
+                    io.store(print_recommendation(recommendation))
                     io.view_cache()
 
                 user.command_queue.task_done()
