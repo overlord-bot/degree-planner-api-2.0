@@ -6,8 +6,8 @@ import json
 
 from .course import Course
 from .degree import Degree
-from .degree_template import *
-from .search import Search
+from .template import *
+from ..math.search import Search
 
 class Catalog():
     '''
@@ -30,7 +30,7 @@ class Catalog():
         self.reindex_flag = False
 
     def reindex(self):
-        self.search.update_items(self.__course_list.keys())
+        self.search.update_items(self.get_all_course_names())
         self.search.generate_index()
 
     def add_course(self, course:Course):
@@ -39,8 +39,8 @@ class Catalog():
 
     def add_courses(self, courses:set):
         self.reindex_flag = True
-        for c in courses:
-            self.__course_list.update({c.unique_name:c})
+        for course in courses:
+            self.add_course(course)
 
     def remove_course(self, course:Course):
         self.__course_list.pop(course, None)
@@ -68,6 +68,7 @@ class Catalog():
             self.reindex_flag = False
         name = self.search.search(course_name.casefold())
         if len(name) == 0:
+            print('CANNNT FIND COURSE ' + course_name)
             return None
         if len(name) == 1:
             return self.__course_list.get(name[0], None)

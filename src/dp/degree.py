@@ -5,9 +5,9 @@ contains degree class and a set of helper functions
 import json
 import timeit
 from enum import Enum
-from .degree_template import *
-from .graph import Graph
-from .graph import Backwards_Overlap
+from .template import *
+from ..math.graph import Graph
+from ..math.graph import Backwards_Overlap
 from ..io.output import *
 
 class Bind_Type(Enum):
@@ -565,7 +565,7 @@ class Degree():
 
 def print_fulfillment(all_fulfillment:dict) -> str:
     '''
-    Print status_return dictionary in a neat string format
+    Print fulfillment dictionary in a neat string format
     '''
     printout = ''
     fulfillments = list(all_fulfillment.values())
@@ -586,7 +586,7 @@ def print_fulfillment(all_fulfillment:dict) -> str:
 
 def print_recommendation(recommendation:dict) -> str:
     '''
-    Print status_return dictionary in a neat string format
+    Print recommendation dictionary in a neat string format
     '''
     printout = ''
     templates = list(recommendation.keys())
@@ -643,7 +643,16 @@ def generate_combinatorics(bound:list, start_index=1) -> list:
 
 
 def get_course_relevances(all_courses, taken_courses, wanted_courses) -> dict:
+    '''
+    Algorithm:
 
+    pre 1) generate a relations table of different words by reading academic articles
+    pre 2) generate a list of keywords that are most important ranging across all subject areas
+
+    1) for each course, compare it to each keyword and assign a degree of membership
+    2) for courses the user has taken, calculate an average of degree of membership
+    3) compare this average to all the courses being recommended using cross entropy and sort by highest similarity
+    '''
 
 
 

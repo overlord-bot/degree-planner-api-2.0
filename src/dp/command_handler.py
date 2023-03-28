@@ -6,12 +6,12 @@ import re
 from ..io.output import *
 from .course import Course
 from .catalog import Catalog
-from .schedule import Schedule
-from .user import User
-from .user import Flag
-from .search import Search
+from ..user.schedule import Schedule
+from ..user.user import User
+from ..user.user import Flag
+from ..math.search import Search
 from .command import *
-from .parse import *
+from src.io.parse import *
 from .degree import *
 
 VERSION = "API 2.0"
@@ -62,7 +62,7 @@ class Planner():
         self.name = name
         self.users = dict()
         self.catalog = Catalog()
-        self.course_search = Search()
+        self.course_search = self.catalog.search
         self.flags = set()
 
         self.default_io = Output(OUT.CONSOLE, signature='INPUT HANDLER', auto_clear=True)

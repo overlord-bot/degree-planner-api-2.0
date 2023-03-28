@@ -3,7 +3,7 @@ Schedule class
 '''
 
 import json
-from .course import Course
+from ..dp.course import Course
 
 class Schedule():
     '''

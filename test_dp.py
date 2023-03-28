@@ -2,11 +2,11 @@ import timeit
 import asyncio
 import sys
 from datetime import datetime
-from src.dp.graph import Graph
-from src.dp.degree_planner import Planner
+from src.math.graph import Graph
+from src.dp.command_handler import Planner
 from src.dp.course import Course
-from src.dp.user import User
-from src.dp.degree_template import Template
+from src.user.user import User
+from src.dp.template import Template
 from src.dp.degree import *
 
 def test_graph():

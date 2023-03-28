@@ -6,11 +6,11 @@ You will need to make your own parser for every data input file
 
 import json
 import os
-from ..io.output import *
-from .course import Course
-from .catalog import Catalog
-from .degree import Degree
-from .degree_template import Template
+from .output import *
+from ..dp.course import Course
+from ..dp.catalog import Catalog
+from ..dp.degree import Degree
+from ..dp.template import Template
 
 
 def parse_courses(file_name, catalog:Catalog, io:Output=None):

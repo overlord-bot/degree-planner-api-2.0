@@ -1,12 +1,11 @@
 '''
-BFS searching functions and classes
+graphs and bfs searching
 '''
 
 import copy
-import timeit
 import queue
 
-from .fulfillment_status import Fulfillment_Status
+from ..dp.fulfillment_status import Fulfillment_Status
 
 class Backwards_Overlap():
 
@@ -80,16 +79,17 @@ class Graph():
     adjacency graph that can store sets as edge data
     '''
 
-    def __init__(self, nodes_set:set, edge_data_gen=None):
-        nodes = list(nodes_set)
+    def __init__(self, nodes:set, edge_data_gen=None):
         self.grid = [[{} for j in range(len(nodes))] for i in range(len(nodes))]
-        self.nodes_id = dict()
-        self.nodes_name = dict()
+        self.nodes_obj_to_id = dict()
+        self.nodes_id_to_obj = dict()
         self.edge_data_gen = edge_data_gen
         self.roots = set()
-        for i in range(0, len(nodes)):
-            self.nodes_id.update({nodes[i]:i})
-            self.nodes_name.update({i:nodes[i]})
+        count = 0
+        for node in nodes:
+            self.nodes_obj_to_id.update({node:count})
+            self.nodes_id_to_obj.update({count:node})
+            count += 1
 
     
     def compute_overlap(self, node1, node2):
@@ -152,16 +152,16 @@ class Graph():
 
     def node_id(self, node) -> int:
         '''
-        node id of node object
+        return node id from node obj
         '''
-        return self.nodes_id.get(node)
+        return self.nodes_obj_to_id.get(node)
 
 
     def node_object(self, id):
         '''
-        node object from node id
+        return node obj from node id
         '''
-        return self.nodes_name.get(id)
+        return self.nodes_id_to_obj.get(id)
 
 
     def bfs(self, start_nodes:set=None) -> BFS_data:
@@ -202,7 +202,7 @@ class Graph():
     
 
     def __eq__(self, other):
-        return self.grid == other.grid and self.nodes_id == other.nodes_id
+        return self.grid == other.grid and self.nodes_obj_to_id == other.nodes_name_to_id
    
 
     def __len__(self):
