@@ -2,21 +2,22 @@ import timeit
 import asyncio
 import sys
 from datetime import datetime
-from src.math.graph import Graph
+from src.math.graph import *
 from src.dp.command_handler import Planner
 from src.dp.course import Course
 from src.user.user import User
 from src.dp.template import Template
 from src.dp.degree import *
+from src.io.relation_compute import *
 
-class Test_Graph_Edge_Data_Gen():
+class Test_Graph_Edge_Data_Gen(Edge_Generator):
 
     def __init__(self) -> None:
         pass
 
     def edge_data(self, node1, node2):
-        return {'CON'} if (int(node1) < int(node2) or (int(node1) + int(node2)) % 2 == 0) else {}
-
+        return 'CON' if (int(node1) < int(node2) or (int(node1) + int(node2)) % 2 == 0) else None
+    
 
 def test_graph():
     n1 = '1'
@@ -34,6 +35,10 @@ def test_graph():
     print('empty graph with one node added: ' + str(graph_empty))
     graph = Graph([n1, n2, n3, n4, n5], Test_Graph_Edge_Data_Gen())
     graph.update_all_connections()
+
+    graph.remove_connection(n1, n2)
+    print('removed connection n1 to n2: ' + str(graph_empty))
+    graph.update_connection(n1, n2)
 
     print(f'added connections (connection if n1 < n2, or if n1 + n2 is even): {graph}')
 
@@ -67,6 +72,12 @@ def test_graph():
     bfs = graph.bfs({n5})
     print(f'{bfs}')
 
+    print(f'testing graph iterator: getting all nodes: {[str(e) for e in graph]}')
+    print(f'testing graph iterator: getting all edge values: {[str(e) for e in graph.edge_values()]}')
+    print(f'testing graph iterator: getting all edge endpoints id: {[str(e) for e in graph._edge_endpoints_id()]}')
+    print(f'testing graph iterator: getting all edge endpoints: {[str(e) for e in graph.edge_endpoints()]}')
+    print(f'testing graph iterator: getting all items endpoints: {[str(e) for e in graph.edge_items()]}')
+
     print(f'sorting:')
     print(str(dictionary_sort({'machine learning':1, 'robotics':2, 'animation':3, 'computer vision':4, 'banana':10, 'oranges':9, 'apple':8, 'tesla':7,'citrus':2.5}, True)))
     print(str(bucket_sort({'machine learning':1, 'robotics':2, 'animation':3, 'computer vision':4, 'banana':10, 'oranges':9, 'apple':8, 'tesla':7,'citrus':2.5})))
@@ -74,7 +85,6 @@ def test_graph():
 
 def test_other():
     planner = Planner('test_planner')
-    user = User(1)
     
     catalog = planner.catalog
     degree = Degree("computer science", catalog)
@@ -606,6 +616,11 @@ def test_fulfillment6():
     print('\ntesting fulfillment recommendations: \n')
     degree.recommend(catalog.get_all_courses())
 
+def test_recommender():
+    initialize_relations('potato', 'tacos')
+
+
+
 def run_cmd(planner, user, string):
     planner.input_handler(user, string)
 
@@ -620,6 +635,7 @@ if len(sys.argv) > 1 and '-d' in sys.argv:
 else:
     logging.getLogger().setLevel(logging.INFO)
 test_graph()
+input('press enter to continue')
 test_other()
 input('press enter to continue')
 test_fulfillment()
@@ -633,6 +649,8 @@ input('press enter to continue')
 test_fulfillment5()
 input('press enter to continue')
 test_fulfillment6()
+input('press enter to continue')
+test_recommender()
 
 stop = timeit.default_timer()
 print('\ntime: ', stop - start)
