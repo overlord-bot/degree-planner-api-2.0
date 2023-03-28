@@ -79,7 +79,10 @@ class Graph():
     adjacency graph that can store sets as edge data
     '''
 
-    def __init__(self, nodes:set, edge_data_gen=None):
+    def __init__(self, nodes:set=None, edge_data_gen=None):
+        if nodes is None:
+            nodes = set()
+        
         self.grid = [[{} for j in range(len(nodes))] for i in range(len(nodes))]
         self.nodes_obj_to_id = dict()
         self.nodes_id_to_obj = dict()
@@ -96,6 +99,65 @@ class Graph():
         if self.edge_data_gen is None:
             return {'1'}
         return self.edge_data_gen.edge_data(node1, node2)
+    
+
+    def add_node(self, node, compute_overlap=True):
+        if node in self.nodes_obj_to_id:
+            return False
+        
+        for row in self.grid:
+            row.append({})
+        self.grid.append([{} for j in range(len(self.grid) + 1)])
+        self.nodes_obj_to_id.update({node:len(self.grid) - 1})
+        self.nodes_id_to_obj.update({len(self.grid) - 1:node})
+
+        if compute_overlap:
+            for target_node in self.nodes_obj_to_id.keys():
+                self.update_connection(node, target_node)
+                self.update_connection(target_node, node)
+
+        return True
+
+    
+    def remove_node(self, node):
+        if node not in self.nodes_obj_to_id:
+            return False
+        
+        id = self.nodes_obj_to_id.get(node)
+
+        # if it's the last one:
+        if id == len(self.grid) - 1:
+            self.grid.pop(-1)
+            for row in self.grid:
+                row.pop(-1)
+            self.nodes_obj_to_id.pop(node)
+            self.nodes_id_to_obj.pop(id)
+            return True
+        
+        last_pos = len(self.grid) - 1
+        moved_node = self.nodes_id_to_obj.get(last_pos)
+        
+        # bring the last element's info to the deleted element's place
+        self.grid[id] = self.grid[-1]
+        self.grid.pop(-1)
+
+        # bring every element's last element to the deleted element's place
+        for row in self.grid:
+            row[id] = row[-1]
+            row.pop(-1)
+
+        self.nodes_obj_to_id.pop(node)
+        self.nodes_obj_to_id.update({moved_node:id})
+        self.nodes_id_to_obj.pop(last_pos)
+        self.nodes_id_to_obj.update({id:moved_node})
+
+        return True
+
+
+    def update_all_connections(self, data_set:set=None):
+        for node_origin in self.nodes_obj_to_id.keys():
+            for node_to in self.nodes_obj_to_id.keys():
+                self.update_connection(node_origin, node_to, data_set)
 
 
     def update_connection(self, node_origin, node_to, data_set:set=None):

@@ -9,7 +9,6 @@ from .catalog import Catalog
 from ..user.schedule import Schedule
 from ..user.user import User
 from ..user.user import Flag
-from ..math.search import Search
 from .command import *
 from src.io.parse import *
 from .degree import *

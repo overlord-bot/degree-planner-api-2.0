@@ -9,34 +9,61 @@ from src.user.user import User
 from src.dp.template import Template
 from src.dp.degree import *
 
+class Test_Graph_Edge_Data_Gen():
+
+    def __init__(self) -> None:
+        pass
+
+    def edge_data(self, node1, node2):
+        return {'CON'} if (int(node1) < int(node2) or (int(node1) + int(node2)) % 2 == 0) else {}
+
+
 def test_graph():
     n1 = '1'
     n2 = '2'
     n3 = '3'
     n4 = '4'
     n5 = '5'
-    graph = Graph([n1, n2, n3, n4, n5])
-    print(f'initial graph: {graph}')
 
-    graph.update_connection(n1, n2)
-    graph.update_connection(n3, n1)
-    graph.update_connection(n3, n4)
-    graph.update_connection(n3, n5)
-    graph.update_connection(n4, n5)
-    graph.update_connection(n4, n1)
-    graph.update_connection(n4, n3)
-    graph.update_connection(n5, n4)
+    n6 = '6'
+    n7 = '7'
+    n8 = '8'
+    graph_empty = Graph()
+    print('empty graph: ' + str(graph_empty))
+    graph_empty.add_node('t1')
+    print('empty graph with one node added: ' + str(graph_empty))
+    graph = Graph([n1, n2, n3, n4, n5], Test_Graph_Edge_Data_Gen())
+    graph.update_all_connections()
 
-    print(f'added connections: {graph}')
-
-    graph.remove_connection(n3, n4)
-    graph.remove_connection(n2, n3)
-
-    print(f'removed connections: {graph}')
+    print(f'added connections (connection if n1 < n2, or if n1 + n2 is even): {graph}')
 
     print(f'outbound connections from n5: {graph.outbound_connections(n5)}')
     print(f'inbound connectinos for n5: {graph.inbound_connections(n5)}')
 
+    bfs = graph.bfs({n5})
+    print(f'{bfs}')
+
+    print(f'adding nodes via add')
+    graph.add_node(n6)
+    graph.add_node(n7)
+    graph.add_node(n8)
+    graph.add_node(n8)
+
+    print(f'added connections 6, 7, 8: {graph}')
+    print(f'removing nodes via remove')
+
+    graph.remove_node(n2)
+    print(f'removed connection 2: {graph}')
+    graph.remove_node(n4)
+    graph.remove_node(n8)
+    graph.remove_node(n8)
+    print(f'removed connection 4, 8, 8 (again): {graph}')
+
+    graph.add_node(n2)
+    graph.add_node(n4)
+    graph.remove_node(n6)
+    graph.remove_node(n7)
+    print(f'reverted everything back: {graph}')
     bfs = graph.bfs({n5})
     print(f'{bfs}')
 
