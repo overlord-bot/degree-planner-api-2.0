@@ -4,8 +4,6 @@ Course class
 
 import json
 from collections import OrderedDict
-import logging
-
 from ..io.output import *
 
 class Course():

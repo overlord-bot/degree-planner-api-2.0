@@ -356,14 +356,32 @@ class Graph():
 
 
     def __repr__(self):
-        WIDTH = 16
-        rstr = f"\n{'links'.ljust(WIDTH)}{''.join([str(self._node_object(i)).ljust(WIDTH) for i in range(0, len(self))])}\n"
+        WIDTH = 12
+        STAGGERED = False
+        if not STAGGERED:
+            rstr = f"\n{'links'.ljust(WIDTH)}{''.join([str(self._node_object(i)).ljust(WIDTH) for i in range(0, len(self))])}\n"
+            for i in range(0, len(self.grid)):
+                rstr += str(self._node_object(i)).ljust(WIDTH)
+                for j in range(0, len(self.grid)):
+                    data_set = self.grid[i][j]
+                    value = self.edge_data_gen.print_edge(data_set)
+                    if len(value) > 8:
+                        value = value[:8]
+                    rstr += value.ljust(WIDTH)
+                rstr += '\n'
+            return rstr
+        
+        WIDTH += 12
+        rstr = ''
         for i in range(0, len(self.grid)):
-            rstr += str(self._node_object(i)).ljust(WIDTH)
+            rstr += f"\n\n{'links of'.ljust(WIDTH)}{(self._node_object(i))}\n"
             for j in range(0, len(self.grid)):
                 data_set = self.grid[i][j]
-                rstr += self.edge_data_gen.print_edge(data_set).ljust(WIDTH)
-            rstr += '\n'
+                value = self.edge_data_gen.print_edge(data_set)
+                if len(value) > 8:
+                    value = value[:8]
+                rstr += f'{str(self._node_object(j)).ljust(WIDTH)} {value.ljust(WIDTH)}'
+                rstr += '\n'
         return rstr
     
 

@@ -127,6 +127,10 @@ class Catalog():
             count1+=1
         return printout
 
+    def __iter__(self):
+        for course in self.__course_list.values():
+            yield course
+
     def __eq__(self, other):
         if not isinstance(other, Catalog):
             return False

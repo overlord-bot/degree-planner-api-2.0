@@ -9,6 +9,8 @@ from .template import *
 from ..math.graph import Graph
 from ..math.graph import Backwards_Overlap
 from ..io.output import *
+from .recommender import *
+from ..math.sorting import *
 
 class Bind_Type(Enum):
     NR = False
@@ -469,6 +471,7 @@ class Degree():
         compute max_fulfillments for the sake of potential bindings calculation
         """
         max_fulfillments = dict()
+        recommender = Recommender(self.catalog)
 
         for best_template, best_fulfillment in best_fulfillments.items():
             original_specification = best_template.original_specifications
@@ -480,7 +483,7 @@ class Degree():
                 status.extend_fulfillment_set(matched_fulfillment.get_fulfillment_set())
                 max_fulfillments.update({best_template_original:status})
 
-        recommender = dict() # {best template : {alternative template : fulfillment list}}
+        recommendation = dict() # {best template : {alternative template : fulfillment list}}
         # note that best template == alternative template if best template does not contain wildcards
 
         for best_template, best_fulfillment in best_fulfillments.items():
@@ -505,29 +508,31 @@ class Degree():
                 for each match, rank the matched courses
                 """
 
-                self.DEBUG.print(f'max match for template {best_template_original}: {matches}')
+                self.DEBUG.print(f'max match for template {best_template_original}: \n{matches}\n')
                 # remove the courses already taken
                 recommended_courses = matched_fulfillment.get_fulfillment_set()
                 for course in best_fulfillment.get_fulfillment_set():
                     recommended_courses.discard(course)
 
+                highlighted_keywords = dict()
+
                 course_R_bindings = num_bindings(max_fulfillments, recommended_courses, Bind_Type.R)
-                course_relevances = get_course_relevances(self.catalog.get_all_courses(), taken_courses, recommended_courses)
+                course_relevances = recommender.relevance(taken_courses, recommended_courses, highlighted_keywords)
                 
                 final_score = dict()
                 for course in recommended_courses:
                     score = course_R_bindings.get(course) * (best_template.replacement * 2 - 1) + course_relevances.get(course) * 5
                     final_score.update({course : score})
-                    self.DEBUG.print(f'score {score} for course {str(course)}')
 
                 recommended_courses = dictionary_sort(final_score)
-
                 matches_dict.update({matched_fulfillment.get_template():recommended_courses})
-                self.DEBUG.print(f'max sorted match for template {str(matched_fulfillment.get_template())}: {[str(e) for e in recommended_courses]}')
 
-            recommender.update({best_template:matches_dict})
+                for course in recommended_courses:
+                    print(f'score {score} for course {str(course)}, highest keywords: {highlighted_keywords.get(course)[0:3]}')
+
+            recommendation.update({best_template:matches_dict})
        
-        return recommender
+        return recommendation
     
 
     def json(self) -> json:
@@ -635,94 +640,6 @@ def generate_combinatorics(bound:list, start_index=1) -> list:
             prev_combo.append(i)
             nth_combo.append(prev_combo)
     return nth_combo
-
-
-######################################
-# COURSE RELEVANCE CALCULATOR
-######################################
-
-
-def get_course_relevances(all_courses, taken_courses, wanted_courses) -> dict:
-    '''
-    Algorithm:
-
-    pre 1) generate a relations table of different words by reading academic articles
-    pre 2) generate a list of keywords that are most important ranging across all subject areas
-
-    1) for each course, compare it to each keyword and assign a degree of membership
-    2) for courses the user has taken, calculate an average of degree of membership
-    3) compare this average to all the courses being recommended using cross entropy and sort by highest similarity
-    '''
-
-
-
-    wanted_courses_sorting_value = dict()
-
-    keywords = dict()
-    for taken_course in taken_courses:
-        for keyword in taken_course.keywords:
-            keyword_count = keywords.get(keyword, 0)
-            keyword_count += 1
-            keywords.update({keyword:keyword_count})
-
-    for wanted_course in wanted_courses:
-        keyword_occurance_sum = 0
-        for keyword in wanted_course.keywords:
-            keyword_occurance_sum += keywords.get(keyword, 0)
-        wanted_courses_sorting_value.update({wanted_course:keyword_occurance_sum})
-
-    return wanted_courses_sorting_value
-
-
-######################################
-# SORTING
-######################################
-
-
-def dictionary_sort(dictionary:dict, return_dictionary:bool=False) -> list:
-    '''
-    sorts dictionary keys by their attached values
-    '''
-    sorted_tuples = sorted(dictionary.items(), key=lambda x:x[1])
-
-    if return_dictionary:
-        return dict(sorted_tuples)
-
-    sorted_list = list()
-    for key, _ in sorted_tuples:
-        sorted_list.append(key)
-
-    return sorted_list
-
-
-def bucket_sort(item_and_values:dict) -> list:
-    '''
-    Bucket sort that sorts courses inside requested_courses by the number of bindings they have
-    with courses within all_fulfillment, from least to most
-    '''
-    sorted = list()
-    buckets = list()
-
-    lowest_value = 0 # for offset
-    for l_value in item_and_values.values():
-        if l_value < lowest_value:
-            lowest_value = int(l_value)
-
-    for item, value in item_and_values.items():
-        # determine the appropriate bucket to put each course in
-        # generate the necessary empty buckets
-        value = int(value)
-        value -= lowest_value
-        for _ in range(0, value - len(buckets) + 1):
-            buckets.append(list())
-
-        # append to the appropriate bucket
-        buckets[value].append(item)
-
-    # condense the buckets into a single list
-    for bucket in buckets:
-        sorted.extend(bucket)
-    return sorted
 
 
 ######################################

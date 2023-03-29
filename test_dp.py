@@ -617,8 +617,36 @@ def test_fulfillment6():
     degree.recommend(catalog.get_all_courses())
 
 def test_recommender():
-    initialize_relations('potato', 'tacos')
 
+    with open('data/readings1.txt', 'r') as file1:
+        data1 = file1.read()
+    graph1 = initialize_relations('wikipedia', data1)
+    file1.close()
+
+    with open('data/readings2.txt', 'r') as file2:
+        data2 = file2.read()
+    initialize_relations('more data', data2, graph1)
+    file2.close()
+    
+    with open('data/readings3.txt', 'r') as file3:
+        data3 = file3.read()
+    initialize_relations('more data', data3, graph1)
+    file3.close()
+
+    print('graph1: ' + str(graph1) + '\n')
+
+    graph2 = initialize_relations('data structures', 'data structures is a class where students learn about solving problems '
+        + 'using a variety of data structures, including vectors, lists, hashmaps, sets and trees. Programming projects are required.'
+        + 'Students will also analyze the time complexity of various data structures and select ones that run optimally for the designed purpose')
+    print('graph2: ' + str(graph2))
+
+    input('press enter to continue')
+
+    planner = Planner('test_planner2', 10)
+    user = User(1)
+
+    run_cmd(planner, user, 'import, degree, computer science, add, 1, dat str, add, 2, oper sys 4210, add, 3, pro lang, add, 4, mac learn 4100, add, 5, deep learn 4')
+    run_cmd(planner, user, 'print, fulfillment, recommend')
 
 
 def run_cmd(planner, user, string):
