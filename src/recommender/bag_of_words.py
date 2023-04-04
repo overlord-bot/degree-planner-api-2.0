@@ -4,7 +4,7 @@ CURRENTLY PRETTY MUCH USELESS SO DON'T TOUCH
 import math
 import re
 from ..math.graph import Graph
-from ..io.dictionary_import import *
+from ..io.file_reader import *
 
 NOUN = 'Noun'
 VERB = 'Verb'
@@ -23,6 +23,7 @@ def catalog_graph(catalog):
         initialize_relations(course.name, course.attr('description'), graph, dictionary)
     return graph
 
+
 def import_dictionary():
     nouns = import_csv_as_set(NOUNS_PATH)
     verbs = import_csv_as_set(VERBS_PATH)
@@ -30,6 +31,7 @@ def import_dictionary():
     adverbs = import_csv_as_set(ADVERBS_PATH)
     dictionary = {NOUN : nouns, VERB : verbs, ADJ : adjectives, ADV : adverbs}
     return dictionary
+
 
 def get_keywords(text_body, dictionary) -> dict:
     if text_body is None:
@@ -56,7 +58,6 @@ def get_keywords(text_body, dictionary) -> dict:
             seen_count.update({word:seen_count.get(word, 0) + 1})
 
     return seen_count
-
 
 
 def initialize_relations(text_title:str, text_body:str, graph:Graph=None, dictionary=None) -> Graph:
@@ -97,10 +98,11 @@ def initialize_relations(text_title:str, text_body:str, graph:Graph=None, dictio
             strengthen_word(graph, word, last_seen)
 
     for i in range(len(graph.grid)):
-        soft_max(graph.grid[i])
+        hard_max(graph.grid[i])
 
     return graph
-            
+
+
 def eligible_keyword(dictionary, word:str) -> bool:
     if (word in {'a', 'an', 'it', 'so', 'well', 'in', 'out', 'as', 'can', 'since', 'this', 'course', 'class', 'is',
                 'learn', 'about', 'teaches', 'the', 'using', 'are', 'and', 'or', 'not', 'because', 'be', 'study', 
@@ -158,7 +160,7 @@ def sigmoid(num, multi=1.0, add=0.0):
     return 1 / (1 + math.exp(-(num * multi + add)))
 
 
-def soft_max(x:list):
+def hard_max(x:list):
     sum = 0.0
     for i in range(0, len(x)):
         if x[i] is None:

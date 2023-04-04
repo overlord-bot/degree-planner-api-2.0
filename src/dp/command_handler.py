@@ -238,8 +238,8 @@ class Planner():
                     io.print(f"no degree specified")
                 else:
                     io.store(f"{schedule.name} Fulfillment")
-                    io.store(f"  taken courses: {[str(e) for e in schedule.get_all_courses()]}")
-                    fulfillment = schedule.degree.fulfillment(schedule.get_all_courses())
+                    io.store(f"  taken courses: {[str(e) for e in schedule.courses()]}")
+                    fulfillment = schedule.degree.fulfillment(schedule.courses())
                     io.store(print_fulfillment(fulfillment))
                     io.view_cache()
                 user.command_queue.task_done()
@@ -250,7 +250,7 @@ class Planner():
                     io.print(f"no degree specified")
                 else:
                     io.store(f"{schedule.name} Recommended path of completion:")
-                    recommendation = schedule.degree.recommend(schedule.get_all_courses())
+                    recommendation = schedule.degree.recommend(schedule.courses())
                     io.store(print_recommendation(recommendation))
                     io.view_cache()
 
@@ -551,7 +551,7 @@ class Planner():
         io.print(f"Sucessfully parsed catalog data")
         
         # set up searcher for finding courses based on incomplete user input
-        self.course_search.update_items(self.catalog.get_all_course_names())
+        self.course_search.update_items(self.catalog.course_names())
         self.course_search.generate_index()
 
         parse_degrees(degree_file, self.catalog, io)

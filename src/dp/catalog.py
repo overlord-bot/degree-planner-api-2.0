@@ -23,6 +23,8 @@ class Catalog():
         self.__course_list = dict() # course name as key
         self.__degree_list = dict() # degree name as key
 
+        self.tags = dict() # { subject : [tags] }
+
         self.search = Search()
         self.lock = False
 
@@ -30,7 +32,7 @@ class Catalog():
         self.reindex_flag = False
 
     def reindex(self):
-        self.search.update_items(self.get_all_course_names())
+        self.search.update_items(self.course_names())
         self.search.generate_index()
 
     def add_course(self, course:Course):
@@ -47,6 +49,12 @@ class Catalog():
 
     def add_degree(self, degree:Degree):
         self.__degree_list.update({degree.name:degree})
+
+    def has_degree(self, degree):
+        if isinstance(degree, Degree):
+            return degree in self.degrees()
+        elif isinstance(degree, str):
+            return self.__degree_list.get(degree, None) is not None
 
     def add_degrees(self, degrees:set):
         for d in degrees:
@@ -76,16 +84,16 @@ class Catalog():
             print(f"CATALOG ERROR: catalog get course non unique course found: {str(name)}")
             return self.__course_list.get(name[0], None)
 
-    def get_all_courses(self):
+    def courses(self):
         return list(self.__course_list.values())
 
-    def get_all_course_names(self):
+    def course_names(self):
         return list(self.__course_list.keys())
 
     def get_degree(self, degree_name:str):
         return self.__degree_list.get(degree_name, None)
 
-    def get_all_degrees(self):
+    def degrees(self):
         return self.__degree_list.values()
 
     def get_course_match(self, target_template:Template) -> list:
@@ -134,7 +142,7 @@ class Catalog():
     def __eq__(self, other):
         if not isinstance(other, Catalog):
             return False
-        return self.get_all_courses() == other.get_all_courses()
+        return self.courses() == other.courses()
 
     def __len__(self):
         return len(self.__course_list)

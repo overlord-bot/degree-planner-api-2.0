@@ -9,7 +9,7 @@ from .template import *
 from ..math.graph import Graph
 from ..math.graph import Backwards_Overlap
 from ..io.output import *
-from .recommender import *
+from ..recommender.recommender import *
 from ..math.sorting import *
 
 class Bind_Type(Enum):
@@ -476,7 +476,7 @@ class Degree():
         for best_template, best_fulfillment in best_fulfillments.items():
             original_specification = best_template.original_specifications
             best_template_original = Template(best_template.name + ' original', specifications=original_specification, replacement=best_template.replacement, courses_required=1)
-            matches = get_course_match(best_template_original, self.catalog.get_all_courses())
+            matches = get_course_match(best_template_original, self.catalog.courses())
 
             status = matches[0]
             for matched_fulfillment in matches:
@@ -499,7 +499,7 @@ class Degree():
             best_template_original = Template(best_template.name + ' original', specifications=original_specification, replacement=best_template.replacement, courses_required=1)
 
             # here we receive the list of fulfillment sets from get course match
-            matches = get_course_match(best_template_original, self.catalog.get_all_courses())
+            matches = get_course_match(best_template_original, self.catalog.courses())
             matches_dict = {}
 
             for matched_fulfillment in matches:
@@ -514,21 +514,22 @@ class Degree():
                 for course in best_fulfillment.get_fulfillment_set():
                     recommended_courses.discard(course)
 
-                highlighted_keywords = dict()
+                explanation_for_ranking = dict()
 
                 course_R_bindings = num_bindings(max_fulfillments, recommended_courses, Bind_Type.R)
-                course_relevances = recommender.relevance(taken_courses, recommended_courses, highlighted_keywords)
+                course_relevances = recommender.embedded_relevance(taken_courses, recommended_courses, explanation_for_ranking)
                 
                 final_score = dict()
                 for course in recommended_courses:
-                    score = course_R_bindings.get(course) * (best_template.replacement * 2 - 1) + course_relevances.get(course) * 5
+                    #score = course_R_bindings.get(course) * (best_template.replacement * 2 - 1) + course_relevances.get(course) * 5
+                    score = course_relevances.get(course)
                     final_score.update({course : score})
 
                 recommended_courses = dictionary_sort(final_score)
                 matches_dict.update({matched_fulfillment.get_template():recommended_courses})
 
                 for course in recommended_courses:
-                    print(f'score {score} for course {str(course)}, highest keywords: {highlighted_keywords.get(course)[0:3]}')
+                    print(f'score {final_score.get(course)} for course {str(course)}, highest keywords: {explanation_for_ranking.get(course)}')
 
             recommendation.update({best_template:matches_dict})
        

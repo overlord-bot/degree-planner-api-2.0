@@ -47,7 +47,9 @@ Args:
     catalog (Catalog): catalog object to store parsed information into
     output (Output): debug output, default is print to console
 """
-def parse_degrees(file_name, catalog, io:Output=None):
+def parse_degrees(file_name, catalog:Catalog, io:Output=None):
+    if io is None:
+        io = Output(OUT.DEBUG, auto_clear=True)
     io.print("Beginning parsing degree data into catalog")
     
     ''' NOT IMPLEMENTED FOR JSON INPUT YET
@@ -66,7 +68,12 @@ def parse_degrees(file_name, catalog, io:Output=None):
 
     for degree_name, degree_templates in degrees.items():
         # degrees
-        degree = Degree(degree_name, catalog)
+        if catalog.has_degree(degree_name):
+            degree = catalog.get_degree(degree_name)
+            io.print(f"modified degree {str(degree)} in catalog")
+        else:
+            degree = Degree(degree_name, catalog)
+            io.print(f"added degree {str(degree)} to catalog")
 
         for template_name, template_properties in degree_templates.items():
             # templates within degree
@@ -75,19 +82,34 @@ def parse_degrees(file_name, catalog, io:Output=None):
             for property_name, property_value in template_properties.items():
                 # property dictionary within template
 
-                # courses required
-                if property_name == 'requires':
-                    template.courses_required = property_value
-
                 # replacement enabled
-                elif property_name == 'replacement':
+                if property_name == 'replacement':
                     template.replacement = property_value
 
                 # attributes for template course
                 elif property_name == 'attributes':
                     template.specifications.extend(property_value)
-
             degree.add_template(template)
         catalog.add_degree(degree)
-        io.print(f"added degree {str(degree)} to catalog")
+    
+    parse_tags('tags.json', catalog, io)
+        
 
+'''
+parses degree tags into their respective degrees within the catalog
+'''
+def parse_tags(file_name, catalog:Catalog, io:Output=None):
+    if io is None:
+        io = Output(OUT.DEBUG, auto_clear=True)
+    if os.path.isfile(os.getcwd() + "/data/" + file_name):
+        io.print(f"file found: {os.getcwd()}/data/" + file_name)
+        file_tags = open(os.getcwd() + "/data/" + file_name)
+    else:
+        io.print("degree file not found")
+        return
+        
+    tags = json.load(file_tags)
+    file_tags.close()
+
+    for subject, tag_list in tags.items():
+        catalog.tags.update({subject.casefold() : list(tag_list)})

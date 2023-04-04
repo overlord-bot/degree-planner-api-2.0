@@ -2,14 +2,14 @@
 sorting functions
 '''
 
-def dictionary_sort(dictionary:dict, return_dictionary:bool=False) -> list:
+def dictionary_sort(dictionary:dict, return_tuples:bool=False) -> list:
     '''
     sorts dictionary keys by their attached values
     '''
     sorted_tuples = sorted(dictionary.items(), key=lambda x:x[1])
 
-    if return_dictionary:
-        return dict(sorted_tuples)
+    if return_tuples:
+        return (sorted_tuples)
 
     sorted_list = list()
     for key, _ in sorted_tuples:

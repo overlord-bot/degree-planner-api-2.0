@@ -35,18 +35,6 @@ class Schedule():
             self.__master_list.append([])
 
 
-    def get_course_array(self) -> list:
-        ''' 
-        Directly returns the schedule's course array. If you wish to modify it without
-        affecting the schedule, remember to make a copy
-
-        Returns: 2D list, 1st dimension is semesters and 2nd dimension is courses for that semester
-
-        NOTE: duplications are allowed both within semester and across semesters!
-        '''
-        return self.__master_list
-
-
     def add_course(self, course:Course, semester:int) -> bool:
         '''
         Args:
@@ -94,7 +82,7 @@ class Schedule():
             return self.__master_list[semester]
 
 
-    def get_all_courses(self) -> set:
+    def courses(self) -> set:
         '''
         Returns:
             courses (set): all courses within this schedule

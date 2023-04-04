@@ -1,0 +1,38 @@
+{
+    "csci" : [
+        "artificial intelligence",
+        "systems and networks",
+        "computer networks",
+        "computer security",
+        "database systems",
+        "computer human computer interaction",
+        "computer vision and graphics",
+        "numerical analysis",
+        "programming languages",
+        "bioinformatics",
+        "computational finance"
+    ],
+    "ecse" : [
+        "Electromagnetic fields",
+        "Analysis of circuits",
+        "Computer systems",
+        "Digital electronics",
+        "Motor control",
+        "Digital signal processing",
+        "Analogue electrics",
+        "Circuit fabrication",
+        "Large scale design",
+        "Power systems design",
+        "Machine learning"
+    ],
+    "math" : [
+        "Calculus",
+        "Linear algebra",
+        "Numerical computing",
+        "Complex analysis",
+        "Differential equations",
+        "Geometry",
+        "Set theory",
+        "Financial computing"
+    ]
+}

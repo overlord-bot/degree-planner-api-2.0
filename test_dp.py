@@ -8,7 +8,7 @@ from src.dp.course import Course
 from src.user.user import User
 from src.dp.template import Template
 from src.dp.degree import *
-from src.io.relation_compute import *
+from src.recommender.bag_of_words import *
 
 class Test_Graph_Edge_Data_Gen(Edge_Generator):
 
@@ -121,7 +121,7 @@ def test_other():
     course5.add_attribute('bin.5')
     catalog.add_course(course5)
 
-    planner.course_search.update_items(catalog.get_all_course_names())
+    planner.course_search.update_items(catalog.course_names())
     planner.course_search.generate_index()
 
     testtemplate1 = Template('bin1', 'bin.1')
@@ -175,8 +175,8 @@ def test_other():
     testtemplate1.add_specification('bin.*')
     # get_course_match(testtemplate1, {course1, course2, course3, course4, course5})
 
-    print('\ntesting fulfillment recommendations: \n')
-    degree.recommend({course0, course1, course2, course3, course4, course5})
+    #print('\ntesting fulfillment recommendations: \n')
+    #degree.recommend({course0, course1, course2, course3, course4, course5})
 
 
 
@@ -218,7 +218,7 @@ def test_fulfillment():
     course5.add_attribute('bin.4')
     catalog.add_course(course5)
 
-    planner.course_search.update_items(catalog.get_all_course_names())
+    planner.course_search.update_items(catalog.course_names())
     planner.course_search.generate_index()
 
     testtemplate1 = Template('bin1', 'bin.1')
@@ -283,7 +283,7 @@ def test_fulfillment2():
     course6.add_attribute('bin.5')
     catalog.add_course(course6)
 
-    planner.course_search.update_items(catalog.get_all_course_names())
+    planner.course_search.update_items(catalog.course_names())
     planner.course_search.generate_index()
 
     testtemplate1 = Template('bin1', 'bin.1')
@@ -346,7 +346,7 @@ def test_fulfillment3():
     course6.add_attribute('bin.5')
     catalog.add_course(course6)
 
-    planner.course_search.update_items(catalog.get_all_course_names())
+    planner.course_search.update_items(catalog.course_names())
     planner.course_search.generate_index()
 
     testtemplate1 = Template('bin1', 'bin.1') # 6
@@ -389,7 +389,7 @@ def test_fulfillment4():
     course2.add_attribute('bin.2')
     catalog.add_course(course2)
 
-    planner.course_search.update_items(catalog.get_all_course_names())
+    planner.course_search.update_items(catalog.course_names())
     planner.course_search.generate_index()
 
     testtemplate1 = Template('bin1', 'bin.1', courses_required=1)
@@ -444,7 +444,7 @@ def test_fulfillment5():
     course5.add_attribute('bin.5')
     catalog.add_course(course5)
 
-    planner.course_search.update_items(catalog.get_all_course_names())
+    planner.course_search.update_items(catalog.course_names())
     planner.course_search.generate_index()
 
     testtemplate1 = Template('bin1', 'bin.1')
@@ -563,7 +563,7 @@ def test_fulfillment6():
     course11.add_attribute('concentration.AI')
     catalog.add_course(course11)
 
-    planner.course_search.update_items(catalog.get_all_course_names())
+    planner.course_search.update_items(catalog.course_names())
     planner.course_search.generate_index()
 
     testtemplate1 = Template('bin1', 'bin.1')
@@ -613,8 +613,8 @@ def test_fulfillment6():
     run_cmd(planner, user, 'print, fulfillment')
 
     
-    print('\ntesting fulfillment recommendations: \n')
-    degree.recommend(catalog.get_all_courses())
+    #print('\ntesting fulfillment recommendations: \n')
+    #degree.recommend(catalog.courses())
 
 def test_recommender():
 
@@ -645,7 +645,8 @@ def test_recommender():
     planner = Planner('test_planner2', 10)
     user = User(1)
 
-    run_cmd(planner, user, 'import, degree, computer science, add, 1, dat str, add, 2, oper sys 4210, add, 3, pro lang, add, 4, mac learn 4100, add, 5, deep learn 4')
+    run_cmd(planner, user, 'import, degree, computer science, add, 1, mac learn 4100, add, 1, deep learn 4, add, 1, 4270 csci vision, add, 1, reinforcement, add, 1, data sci 4350 csci')
+    # run_cmd(planner, user, 'add, 2, graph story, add, 2, 3d animation 4090, add, 2, 3d visual effect, add, 2, 3d modelling, add, 2, art history')
     run_cmd(planner, user, 'print, fulfillment, recommend')
 
 
