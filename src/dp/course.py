@@ -22,7 +22,8 @@ class Course():
         self.name = name
         self.subject = subject
         self.course_id = id
-        self.level = str(id)[0]
+
+        self.embedding_relevance = None # relative distances to the embedding of all keywords within this courses's subject
 
         # dict of lists of items, e.g. {'concentration.ai':[concentration, ai], 'ci.true':[ci, true]}
         self.attributes = dict()
@@ -34,6 +35,8 @@ class Course():
             self.set_subject(subject)
         if id not in (0, -1, '', 'NA', 'ANY'):
             self.set_id(id)
+            if len(str(id)):
+                self.set_level(str(id)[0])
 
         self.description = "" # text to be displayed describing the class
         
@@ -56,7 +59,7 @@ class Course():
     
     # determines the level of the course, 1000=1, 2000=2, 4000=4, etc
     def get_level(self):
-        return self.level
+        return self.attr('level')
     
     def get_credits(self):
         return self.attr('credits')
@@ -99,6 +102,10 @@ class Course():
     def set_credits(self, course_credits):
         self.remove_attribute_by_head('credits')
         self.add_attribute(f'credits.{course_credits}')
+
+    def set_level(self, level):
+        self.remove_attribute_by_head('level')
+        self.add_attribute(f'level.{level}')
     
 
     """
@@ -192,6 +199,7 @@ class Course():
                 if attribute[i] != queried_attr[i]:
                     good_match = False
                     break
+                i += 1
             if good_match:
                 remove_list.append(attr_string)
                 count += 1

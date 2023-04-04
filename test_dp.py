@@ -614,7 +614,7 @@ def test_fulfillment6():
 
     
     #print('\ntesting fulfillment recommendations: \n')
-    #degree.recommend(catalog.courses())
+    #degree.recommend(catalog.get_all_courses())
 
 def test_recommender():
 
@@ -645,7 +645,7 @@ def test_recommender():
     planner = Planner('test_planner2', 10)
     user = User(1)
 
-    run_cmd(planner, user, 'import, degree, computer science, add, 1, mac learn 4100, add, 1, deep learn 4, add, 1, 4270 csci vision, add, 1, reinforcement, add, 1, data sci 4350 csci')
+    run_cmd(planner, user, 'import, degree, computer science, add, 1, mac learn 4100, add, 1, deep learn 4, add, 1, 4270 csci vision, add, 1, reinforcement, add, 1, data sci 4350 csci, add, 2, math 2400')
     # run_cmd(planner, user, 'add, 2, graph story, add, 2, 3d animation 4090, add, 2, 3d visual effect, add, 2, 3d modelling, add, 2, art history')
     run_cmd(planner, user, 'print, fulfillment, recommend')
 

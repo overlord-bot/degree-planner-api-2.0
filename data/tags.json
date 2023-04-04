@@ -5,12 +5,13 @@
         "computer networks",
         "computer security",
         "database systems",
+        "data analysis",
         "computer human computer interaction",
         "computer vision and graphics",
         "numerical analysis",
         "programming languages",
         "bioinformatics",
-        "computational finance"
+        "finance"
     ],
     "ecse" : [
         "Electromagnetic fields",
@@ -32,7 +33,6 @@
         "Complex analysis",
         "Differential equations",
         "Geometry",
-        "Set theory",
-        "Financial computing"
+        "Finance"
     ]
 }

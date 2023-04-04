@@ -514,14 +514,11 @@ class Degree():
                 for course in best_fulfillment.get_fulfillment_set():
                     recommended_courses.discard(course)
 
-                explanation_for_ranking = dict()
-
                 course_R_bindings = num_bindings(max_fulfillments, recommended_courses, Bind_Type.R)
-                course_relevances = recommender.embedded_relevance(taken_courses, recommended_courses, explanation_for_ranking)
+                course_relevances = recommender.embedded_relevance(taken_courses, recommended_courses)
                 
                 final_score = dict()
                 for course in recommended_courses:
-                    #score = course_R_bindings.get(course) * (best_template.replacement * 2 - 1) + course_relevances.get(course) * 5
                     score = course_relevances.get(course)
                     final_score.update({course : score})
 
@@ -529,7 +526,7 @@ class Degree():
                 matches_dict.update({matched_fulfillment.get_template():recommended_courses})
 
                 for course in recommended_courses:
-                    print(f'score {final_score.get(course)} for course {str(course)}, highest keywords: {explanation_for_ranking.get(course)}')
+                    print(f'score {final_score.get(course)} for course {str(course)}, keywords: {course.keywords}')
 
             recommendation.update({best_template:matches_dict})
        

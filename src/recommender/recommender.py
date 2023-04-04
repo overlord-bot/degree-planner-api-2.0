@@ -9,11 +9,8 @@ class Recommender():
     def __init__(self, catalog):
 
         self.catalog = catalog
-        self.dictionary = import_dictionary()
+        # self.dictionary = import_dictionary()
         self.embedder = Sentence_Embedder()
-
-        self.embed_cache = dict()
-        self.course_tags = dict() # tags of a course
 
     
     def generate_tag_relevances(self):
@@ -44,10 +41,8 @@ class Recommender():
             x[i] = (np.exp(x[i])) / sum
         return x
     
-    '''
-    for numpy arrays
-    '''
-    def hard_max(self, x, adjust=1):
+
+    def hard_max(self, x, adjust=0.99):
         sum = 0
         for i in range(0, len(x)):
             sum += np.exp(x[i]) - adjust
@@ -56,100 +51,80 @@ class Recommender():
         return x
     
 
-    def loss(self, y:list, y_hat:list) -> float:
-        sum = 0
-        for i in range(0, len(y)):
-            sum += np.absolute(y[i] - y_hat[i])
-        return sum
+    def label_score_to_tag(self, subject, relevance) -> dict:
+        labelled_dict = dict()
+
+        i = 0
+        for score in relevance:
+            labelled_dict.update({self.catalog.tags.get(subject)[i] : score})
+            i += 1
+
+        return labelled_dict
     
 
-    def smallest_k_num_pos(self, input_list, k):
-        smallest_num_positions = []
-        for iter_input in range(len(input_list)):
-            if len(smallest_num_positions) < k:
-                smallest_num_positions.append(iter_input)
-                continue
+    def get_course_relevances(self, course):
+        # fetching necessary attributes about this course
+        subject = course.attr('subject')
+        tags = self.catalog.tags.get(subject)
+        if tags is None:
+            return None
+        if course.embedding_relevance is not None and len(course.embedding_relevance):
+            course_relevance_scores = course.embedding_relevance
+        else:
+            # generation of relevance scores using embedding comparison
+            course_relevance_scores = np.zeros(len(tags))
+            i = 0
+            for tag in tags:
+                course_relevance_scores[i] = self.embed_similarity(self.embed_message([course.attr('name')])[0], self.embed_message([tag])[0])
+                i += 1
 
-            com_pos = iter_input
-            for iter_tracker in range(len(smallest_num_positions)):
-                # if we find a number that is better and tracking list is at capacity:
-                if input_list[com_pos] < input_list[smallest_num_positions[iter_tracker]]:
-                    old_pos = smallest_num_positions[iter_tracker]
-                    smallest_num_positions[iter_tracker] = com_pos
-                    com_pos = old_pos
+            # adjusts the score such that the best fit is much lower than all others
+            smallest_num = min(course_relevance_scores)
+            course_relevance_scores = np.add(course_relevance_scores, - (smallest_num - 0.01))
 
-        return smallest_num_positions
+            # finds the best descriptors (for the sake of labelling)
+            descriptors = self.label_score_to_tag(subject, course_relevance_scores)
+            best_descriptors = dictionary_sort(descriptors, False)[:2]
+
+            course_relevance_scores = self.hard_max(course_relevance_scores)
+            course.embedding_relevance = course_relevance_scores
+            course.keywords = best_descriptors
+            # print(f'COURSE FINAL {course} tags: {tags} relevance: {course_relevance_scores} tags: {best_descriptors}')
+
+        return course_relevance_scores
 
 
-    def embedded_relevance(self, taken_courses:set, recommending_courses:set, reason:dict) -> dict:
+    def embedded_relevance(self, taken_courses:set, recommending_courses:set) -> dict:
         relevance = dict()
         
-        # building relevance dictionary
-        tag_relevances = self.generate_tag_relevances()
+        # building relevance dictionary based on course subject
+        overall_relevances = self.generate_tag_relevances() # {subject : relevance array}
 
+        # compute relevance of taken course and add to overall_relevances
         for course in taken_courses:
             subject = course.attr('subject')
-            tags = self.catalog.tags.get(subject)
-            if tags is None:
+            course_relevance_scores = self.get_course_relevances(course)
+            if course_relevance_scores is None:
                 continue
-            if self.embed_cache.get(course, None) is not None:
-                relevance_list = self.embed_cache.get(course)
-            else:
-                relevance_list = np.zeros(len(tags))
-                i = 0
-                for tag in tags:
-                    relevance_list[i] = self.embed_similarity(self.embed_message([course.attr('name')])[0], self.embed_message([tag])[0])
-                    i += 1
-                print(f'course pre softmax {course} tags: {tags} relevance: {relevance_list}')
-                smallest_num = relevance_list[self.smallest_k_num_pos(relevance_list, 1)[0]]
-                relevance_list = np.add(relevance_list, - (smallest_num - 0.01))
-                print(f'course post adjustment {course} tags: {tags} relevance: {relevance_list}')
-                best_descriptors = list()
-                smallest_nums = self.smallest_k_num_pos(relevance_list, 2)
-                for num in smallest_nums:
-                    best_descriptors.append(tags[num])
-                relevance_list = self.hard_max(relevance_list)
-                self.embed_cache.update({course:relevance_list})
-                self.course_tags.update({course : best_descriptors})
-                print(f'COURSE FINAL {course} tags: {tags} relevance: {relevance_list} tags: {best_descriptors}')
+            self.scale_relevances(overall_relevances, subject, course_relevance_scores, 1.0)
 
-            self.scale_relevances(tag_relevances, subject, relevance_list, 1.0)
+        self.apply_to_all(overall_relevances, self.hard_max) # normalization
+        print(f'overall relevances after hard max: {overall_relevances}')
 
-        self.apply_to_all(tag_relevances, self.hard_max)
-
+        # compute relevance of each individual course and compare to overall_relevances based on course subject
         for course in recommending_courses:
             subject = course.attr('subject')
-            tags = self.catalog.tags.get(subject)
-            if tags is None:
+            course_relevance_scores = self.get_course_relevances(course)
+            if course_relevance_scores is None:
                 relevance.update({course : -1})
                 continue
-            if self.embed_cache.get(course, None) is not None:
-                relevance_list = self.embed_cache.get(course)
-            else:
-                relevance_list = np.zeros(len(tags))
-                i = 0
-                for tag in tags:
-                    relevance_list[i] = self.embed_similarity(self.embed_message(course.attr('name'))[0], self.embed_message(tag)[0])
-                    i += 1
-                relevance_list = self.hard_max(relevance_list)
-                self.embed_cache.update({course:relevance_list})
-            
-            loss = self.embed_similarity(tag_relevances.get(subject), relevance_list)
-
-            relevance.update({course : loss})
+            similarity = self.embed_similarity(overall_relevances.get(subject), course_relevance_scores)
+            relevance.update({course : similarity})
 
         sorted_relevances = dictionary_sort(relevance, True)
 
         print('relevances by embedding: ' + str(['course: ' + str(c) + ' score: ' + str(s) + '\n' for c,s in sorted_relevances]))
         return relevance
-
-    
-    def embed_courses(self, courses:set):
-        message = []
-        for course in courses:
-            message.append(course.attr('description') + ' ' + course.attr('name') + '. ')
-        average_vector = np.average(self.embed_message(message))
-        return average_vector
 
 
     def embed_message(self, message):
@@ -208,4 +183,3 @@ class Recommender():
             highlighted_keywords.extend(dictionary_sort(keyword_ranking))
         
         return sum
-
