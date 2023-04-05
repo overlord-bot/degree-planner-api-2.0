@@ -8,7 +8,6 @@ from src.dp.course import Course
 from src.user.user import User
 from src.dp.template import Template
 from src.dp.degree import *
-from src.recommender.bag_of_words import *
 
 class Test_Graph_Edge_Data_Gen(Edge_Generator):
 
@@ -84,7 +83,7 @@ def test_graph():
 
 
 def test_other():
-    planner = Planner('test_planner')
+    planner = Planner()
     
     catalog = planner.catalog
     degree = Degree("computer science", catalog)
@@ -181,7 +180,7 @@ def test_other():
 
 
 def test_fulfillment():
-    planner = Planner('test_planner')
+    planner = Planner()
     user = User(1)
     
     catalog = planner.catalog
@@ -244,7 +243,7 @@ def test_fulfillment():
 
 
 def test_fulfillment2():
-    planner = Planner('test_planner2', 12)
+    planner = Planner(12)
     user = User(1)
     
     catalog = planner.catalog
@@ -307,7 +306,7 @@ def test_fulfillment2():
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6, print, fulfillment')
 
 def test_fulfillment3():
-    planner = Planner('test_planner2', 20)
+    planner = Planner(20)
     user = User(1)
     
     catalog = planner.catalog
@@ -371,7 +370,7 @@ def test_fulfillment3():
 
 
 def test_fulfillment4():
-    planner = Planner('test_planner2', 20)
+    planner = Planner(20)
     user = User(1)
     
     catalog = planner.catalog
@@ -408,7 +407,7 @@ def test_fulfillment4():
 
 
 def test_fulfillment5():
-    planner = Planner('test_planner2', 10)
+    planner = Planner(10)
     user = User(1)
     
     catalog = planner.catalog
@@ -468,7 +467,7 @@ def test_fulfillment5():
     run_cmd(planner, user, 'print, fulfillment')
 
 def test_fulfillment6():
-    planner = Planner('test_planner2', 10)
+    planner = Planner(10)
     user = User(1)
     
     catalog = planner.catalog
@@ -618,36 +617,22 @@ def test_fulfillment6():
 
 def test_recommender():
 
-    with open('data/readings1.txt', 'r') as file1:
-        data1 = file1.read()
-    graph1 = initialize_relations('wikipedia', data1)
-    file1.close()
+    planner = Planner(10)
+    user1 = User(1)
+    user2 = User(2)
+    user3 = User(3)
 
-    with open('data/readings2.txt', 'r') as file2:
-        data2 = file2.read()
-    initialize_relations('more data', data2, graph1)
-    file2.close()
-    
-    with open('data/readings3.txt', 'r') as file3:
-        data3 = file3.read()
-    initialize_relations('more data', data3, graph1)
-    file3.close()
-
-    print('graph1: ' + str(graph1) + '\n')
-
-    graph2 = initialize_relations('data structures', 'data structures is a class where students learn about solving problems '
-        + 'using a variety of data structures, including vectors, lists, hashmaps, sets and trees. Programming projects are required.'
-        + 'Students will also analyze the time complexity of various data structures and select ones that run optimally for the designed purpose')
-    print('graph2: ' + str(graph2))
-
-    input('press enter to continue')
-
-    planner = Planner('test_planner2', 10)
-    user = User(1)
-
-    run_cmd(planner, user, 'import, degree, computer science, add, 1, mac learn 4100, add, 1, deep learn 4, add, 1, 4270 csci vision, add, 1, reinforcement, add, 1, data sci 4350 csci, add, 2, math 2400')
+    run_cmd(planner, user1, 'import, degree, computer science, add, 1, mac learn 4100, add, 1, deep learn 4, add, 1, 4270 csci vision, add, 1, reinforcement, add, 1, data sci 4350 csci, add, 2, math 2400')
     # run_cmd(planner, user, 'add, 2, graph story, add, 2, 3d animation 4090, add, 2, 3d visual effect, add, 2, 3d modelling, add, 2, art history')
-    run_cmd(planner, user, 'print, fulfillment, recommend')
+    run_cmd(planner, user1, 'print, fulfillment, recommend')
+
+    print('BEGINNING TEST WITH USER 2 WITH IDENTICAL SCHEDULE FOR TESTING OF CACHING SYSTEM')
+    run_cmd(planner, user2, 'import, degree, computer science, add, 1, mac learn 4100, add, 1, deep learn 4, add, 1, 4270 csci vision, add, 1, reinforcement, add, 1, data sci 4350 csci, add, 2, math 2400')
+    run_cmd(planner, user2, 'print, fulfillment, recommend')
+
+    print('BEGINNING TEST WITH USER 3 WITH DIFFERENT SCHEDULE FOR TESTING OF CACHING SYSTEM')
+    run_cmd(planner, user3, 'import, degree, computer science, add, 1, csci 4380, add, 1, math 4120 geometry, add, 1, math 4040, add, 1, csci 4560, add, 1, csci 4440, add, 2, ecse 4750')
+    run_cmd(planner, user3, 'print, fulfillment, recommend')
 
 
 def run_cmd(planner, user, string):

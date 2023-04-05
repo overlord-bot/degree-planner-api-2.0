@@ -55,16 +55,16 @@ class Planner():
     It is essential to keep all user specific data inside the User class.
     '''
 
-    def __init__(self, name, SEMESTERS_MAX:int=10):
+    def __init__(self, SEMESTERS_MAX:int=10, io:Output=None):
         # each user is assigned a User object and stored in this dictionary
         # Users = <user id, User>
-        self.name = name
         self.users = dict()
         self.catalog = Catalog()
         self.course_search = self.catalog.search
         self.flags = set()
-
-        self.default_io = Output(OUT.CONSOLE, signature='INPUT HANDLER', auto_clear=True)
+        self.default_io = io
+        if self.default_io is None:
+            self.default_io = Output(OUT.CONSOLE, signature='INPUT HANDLER', auto_clear=True)
 
         self.SEMESTERS_MAX = SEMESTERS_MAX
 
@@ -103,13 +103,13 @@ class Planner():
             for command in commands:
                 user.command_queue.put(command)
 
-        self.command_handler(user, io)
+        self.command_executor(user, io)
         user.command_queue_locked = False
         io.debug(f'user {user.username} unlocked their command queue')
         return True
 
 
-    def command_handler(self, user:User, io:Output=None) -> None:
+    def command_executor(self, user:User, io:Output=None) -> None:
         ''' EXECUTES COMMANDS TAKEN FROM USER'S COMMAND QUEUE
 
         Args:
@@ -153,7 +153,7 @@ class Planner():
             if command.command == CMD.IMPORT:
                 io.info("BEGINNING DATA IMPORTING")
                 io.print("begin parsing data")
-                self.parse_data(io)
+                self.parse_courses_and_degrees(io)
                 io.info("FINISHED DATA IMPORTING")
                 io.print("parsing completed")
                 user.command_queue.task_done()
@@ -369,7 +369,7 @@ class Planner():
             list (list(Schedule)): returns a list of all schedule
                 objects
         '''
-        return user.get_all_schedules()
+        return user.schedules()
 
 
     def set_degree(self, schedule:Schedule, degree_name:str, io:Output=None) -> bool:
@@ -532,7 +532,7 @@ class Planner():
         return None
 
     
-    def parse_data(self, io:Output=None) -> Exception:
+    def parse_courses_and_degrees(self, io:Output=None) -> Exception:
         ''' Parse json data into a list of courses and degrees inside a catalog
 
         Args:

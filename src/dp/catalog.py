@@ -24,7 +24,7 @@ class Catalog():
         self.__degree_list = dict() # degree name as key
 
         self.tags = dict() # { subject : [tags] }
-        self.tags_embedding = dict()
+        self.tag_embeddings = dict()
 
         self.search = Search()
         self.lock = False

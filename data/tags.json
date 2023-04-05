@@ -2,29 +2,29 @@
     "csci" : [
         "artificial intelligence",
         "systems and networks",
+        "algorithm design",
         "computer networks",
         "computer security",
         "database systems",
-        "data analysis",
-        "computer human computer interaction",
+        "data science",
+        "human computer interaction and visualization",
         "computer vision and graphics",
         "numerical analysis",
-        "programming languages",
-        "bioinformatics",
-        "finance"
+        "robotics",
+        "technical writing and topics"
     ],
     "ecse" : [
-        "Electromagnetic fields",
-        "Analysis of circuits",
-        "Computer systems",
-        "Digital electronics",
-        "Motor control",
-        "Digital signal processing",
-        "Analogue electrics",
-        "Circuit fabrication",
-        "Large scale design",
-        "Power systems design",
-        "Machine learning"
+        "electromagnetism",
+        "analog circuits",
+        "computer systems",
+        "digital electronics",
+        "control systems",
+        "signal processing",
+        "circuit fabrication",
+        "large and distributed design",
+        "power systems design",
+        "artificial intelligence",
+        "technical writing and topics"
     ],
     "math" : [
         "Calculus",
@@ -34,5 +34,24 @@
         "Differential equations",
         "Geometry",
         "Finance"
+    ],
+    "arts" : [
+        "digital media",
+        "art theory",
+        "music",
+        "drawing",
+        "2D animation",
+        "3D modelling and animation",
+        "physical art media"
+    ],
+    "phys" : [
+        "electromagnetism",
+        "material science",
+        "quantum physics",
+        "general relativity",
+        "optics",
+        "thermodynamics",
+        "computational physics",
+        "technical writing and topics"
     ]
 }

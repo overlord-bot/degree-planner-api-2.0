@@ -37,7 +37,7 @@ class User():
         self.eligibility_rules = list()
 
 
-    def get_all_schedules(self) -> list:
+    def schedules(self) -> list:
         '''
         Creates a copied list of all current schedule objects
         '''

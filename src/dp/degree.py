@@ -33,6 +33,7 @@ class Degree():
         self.templates = list()
         self.catalog = catalog
         self.DEBUG = Output(OUT.DEBUG, signature='DEGREE')
+        self.recommender = None
 
         self.MAX_IMPORTANCE = 1000 # essentially the maximum number of templates possible
 
@@ -467,11 +468,14 @@ class Degree():
         if best_fulfillments is None:
             best_fulfillments = self.fulfillment(taken_courses)
 
+        if self.recommender is None:
+            self.recommender = Recommender(self.catalog)
+
         """
         compute max_fulfillments for the sake of potential bindings calculation
         """
         max_fulfillments = dict()
-        recommender = Recommender(self.catalog)
+        
 
         for best_template, best_fulfillment in best_fulfillments.items():
             original_specification = best_template.original_specifications
@@ -515,7 +519,7 @@ class Degree():
                     recommended_courses.discard(course)
 
                 course_R_bindings = num_bindings(max_fulfillments, recommended_courses, Bind_Type.R)
-                course_relevances = recommender.embedded_relevance(taken_courses, recommended_courses)
+                course_relevances = self.recommender.embedded_relevance(taken_courses, recommended_courses)
                 
                 final_score = dict()
                 for course in recommended_courses:

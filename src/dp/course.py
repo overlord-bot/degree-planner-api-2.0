@@ -24,6 +24,7 @@ class Course():
         self.course_id = id
 
         self.embedding_relevance = None # relative distances to the embedding of all keywords within this courses's subject
+        self.embedding = None
 
         # dict of lists of items, e.g. {'concentration.ai':[concentration, ai], 'ci.true':[ci, true]}
         self.attributes = dict()

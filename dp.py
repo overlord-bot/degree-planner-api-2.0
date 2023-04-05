@@ -10,7 +10,7 @@ from src.dp.command_handler import Planner
 from src.user.user import User
 from src.io.output import *
 
-planner = Planner('API2.0')
+planner = Planner()
 user = User(1)
 
 def terminal():
