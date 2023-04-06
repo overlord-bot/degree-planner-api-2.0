@@ -3,29 +3,34 @@ import numpy as np
 from ..math.sorting import *
 from ..recommender.embedding import Sentence_Embedder
 from ..io.output import *
+from ..dp.course import Course
+from ..recommender.cache import Cache
 
 class Recommender():
 
     def __init__(self, catalog):
 
         self.catalog = catalog
-        self.embedder = Sentence_Embedder()
+        self.embedder = Sentence_Embedder() # embedder object to calculate embeddings
+        self.cache = Cache()
         
-        self.tag_embeddings_cache = dict()
-        self.debug = Output(OUT.DEBUG)
+        self.debug = Output(OUT.DEBUG, auto_clear=True)
     
-    def generate_tag_relevances(self):
-        tag_relevances = dict() # { subject : [relevance score] }
+    def init_all_tag_relevances_dict(self):
+        '''
+        tag similarity describes the similarity of a course embedding to each of the tag embeddings of its respective subject
+        '''
+        tag_relevances_to_course = dict() # { subject : [relevance score] }
         for subject, tags_set in self.catalog.tags.items():
-            tag_relevances.update({subject : np.zeros(len(tags_set))})
-        return tag_relevances
+            tag_relevances_to_course.update({subject : np.zeros(len(tags_set))})
+        return tag_relevances_to_course
     
-    def scale_relevances(self, tag_relevances, subject, additive, multiplicative):
-        tag_relevances.update({subject : np.add(np.dot(tag_relevances.get(subject), multiplicative), additive)})
-
-    def apply_to_all(self, tag_relevances, func):
-        for key in tag_relevances.keys():
-            tag_relevances.update({key : func(tag_relevances.get(key))})
+    def scale_dictionary_values(self, dictionary, additive, multiplicative, key=None):
+        if key is not None:
+            dictionary.update({key : np.add(np.dot(dictionary.get(key), multiplicative), additive)})
+            return
+        for key in dictionary.keys():
+            dictionary.update({key : np.add(np.dot(dictionary.get(key), multiplicative), additive)})
     
     def array_similarity(self, vec1, vec2):
         return np.linalg.norm(np.add(vec1, np.multiply(vec2, -1))).item()
@@ -46,90 +51,90 @@ class Recommender():
             x[i] = (np.exp(x[i]) - adjust ) / sum
         return x
 
-    def label_score_to_tag(self, subject, relevance) -> dict:
-        labelled_dict = dict()
-
-        i = 0
-        for score in relevance:
-            labelled_dict.update({self.catalog.tags.get(subject)[i] : score})
-            i += 1
-
-        return labelled_dict
-
-    def get_course_relevances(self, course):
+    def compute_tag_relevances_to_course(self, course:Course):
+        '''
+        returns:
+            numpy array: contains the similarity score for the list of tags
+        '''
         # fetching necessary attributes about this course
         subject = course.attr('subject')
         tags = self.catalog.tags.get(subject)
         if tags is None:
             return None
-        if course.embedding_relevance is not None and len(course.embedding_relevance):
-            course_relevance_scores = course.embedding_relevance
-        else:
-            # generation of relevance scores using embedding comparison
-            course_relevance_scores = np.zeros(len(tags))
-            i = 0
-            for tag in tags:
+        
+        # generation of relevance scores using embedding comparison
+        tag_relevances_to_course = np.zeros(len(tags))
 
-                # accessing stored embedding caches
-                tag_embedding = self.tag_embeddings_cache.get(tag, None)
-                if tag_embedding is None:
-                    tag_embedding = self.embed_message([tag])[0]
-                    self.tag_embeddings_cache.update({tag:tag_embedding})
+        for i in range(len(tags)):
+            tag = tags[i]
 
-                course_embedding = course.embedding
-                if course_embedding is None:
-                    course_embedding = self.embed_message([course.attr('name')])[0]
-                    course.embedding = course_embedding
-                course_relevance_scores[i] = self.array_similarity(course_embedding, tag_embedding)
-                i += 1
+            # accessing stored embedding caches
+            # tag embeddings are stored inside the catalog
+            tag_embedding = self.catalog.tag_embeddings.get(tag, None)
+            if tag_embedding is None:
+                tag_embedding = self.embed_message([tag])[0]
+                self.catalog.tag_embeddings.update({tag:tag_embedding})
 
-            # adjusts the score such that the best fit is much lower than all others
-            smallest_num = min(course_relevance_scores)
-            course_relevance_scores = np.add(course_relevance_scores, - (smallest_num - 0.01))
+            # course embeddings are stored with each course
+            course_embedding = course.embedding
+            if course_embedding is None:
+                course_embedding = self.embed_message([course.attr('name')])[0]
+                course.embedding = course_embedding
+            tag_relevances_to_course[i] = self.array_similarity(course_embedding, tag_embedding)
 
-            # finds the best descriptors (for the sake of labelling)
-            descriptors = self.label_score_to_tag(subject, course_relevance_scores)
-            best_descriptors = dictionary_sort(descriptors, False)[:2]
+        # adjusts the score such that the best fit is much lower than all others
+        smallest_num = min(tag_relevances_to_course)
+        tag_relevances_to_course = np.add(tag_relevances_to_course, - (smallest_num - 0.01))
 
-            course_relevance_scores = self.hard_max(course_relevance_scores)
-            course.embedding_relevance = course_relevance_scores
-            course.keywords = best_descriptors
-            # print(f'COURSE FINAL {course} tags: {tags} relevance: {course_relevance_scores} tags: {best_descriptors}')
+        # finds the best descriptors (for the sake of labelling)
+        descriptors = dict(zip(self.catalog.tags.get(subject), tag_relevances_to_course))
 
-        return course_relevance_scores
+        # sorted_descriptors = dictionary_sort(descriptors, True)
+        sorted_descriptors = dictionary_sort(descriptors, True)[:3]
+        best_descriptors = list()
+        for tag, tag_relevance in sorted_descriptors:
+            if tag_relevance < 0.11:
+                best_descriptors.append(f'{tag} ({int(1 / tag_relevance)}%)')
+
+        tag_relevances_to_course = self.hard_max(tag_relevances_to_course)
+        course.tag_relevances = tag_relevances_to_course
+        course.keywords = best_descriptors
+        # print(f'COURSE FINAL {course} tags: {tags} relevance: {course_relevance_scores} tags: {best_descriptors}')
+
+        return tag_relevances_to_course
 
 
     def embedded_relevance(self, taken_courses:set, recommending_courses:set) -> dict:
-        relevance = dict()
+        all_course_relevances_to_user = dict()
         
-        # building relevance dictionary based on course subject
-        overall_relevances = self.generate_tag_relevances() # {subject : relevance array}
+        # sum of all similarities of a user's taken courses
+        all_tag_relevances_to_user = self.init_all_tag_relevances_dict() # {subject : relevance array}
 
         # compute relevance of taken course and add to overall_relevances
         for course in taken_courses:
             subject = course.attr('subject')
-            course_relevance_scores = self.get_course_relevances(course)
-            if course_relevance_scores is None:
+            tag_relevances_to_course = self.cache.tag_relevances_to_courses.get(course, None)
+            if tag_relevances_to_course is None:
                 continue
-            self.scale_relevances(overall_relevances, subject, course_relevance_scores, 1.0)
+            self.scale_dictionary_values(all_tag_relevances_to_user, tag_relevances_to_course, 1.0, key=subject)
 
-        self.apply_to_all(overall_relevances, self.hard_max) # normalization
-        self.debug.print(f'overall relevances for each subject: {overall_relevances}')
+        all_tag_relevances_to_user = {k: self.hard_max(v) for k, v in all_tag_relevances_to_user.items()} # normalization
+        self.debug.print(f'overall relevances for each subject: {all_tag_relevances_to_user}')
 
         # compute relevance of each individual course and compare to overall_relevances based on course subject
         for course in recommending_courses:
             subject = course.attr('subject')
-            course_relevance_scores = self.get_course_relevances(course)
-            if course_relevance_scores is None:
-                relevance.update({course : -1})
+            tag_relevances_to_course = self.cache.tag_relevances_to_courses.get(course, None)
+            if tag_relevances_to_course is None:
+                all_course_relevances_to_user.update({course : 1})
                 continue
-            similarity = self.array_similarity(overall_relevances.get(subject), course_relevance_scores)
-            relevance.update({course : similarity})
+            course_relevance_to_user = self.array_similarity(all_tag_relevances_to_user.get(subject), tag_relevances_to_course)
+            all_course_relevances_to_user.update({course : course_relevance_to_user})
 
-        sorted_relevances = dictionary_sort(relevance, True)
+        sorted_course_relevances_to_user = dictionary_sort(all_course_relevances_to_user, True)
 
-        self.debug.print('relevances by embedding: ' + str(['course: ' + str(c) + ' score: ' + str(s) + '\n' for c,s in sorted_relevances]))
-        return relevance
+        self.debug.print('relevances by embedding: ' + str(['course: ' + str(c) + ' score: ' + str(s) + '\n' for c,s in sorted_course_relevances_to_user]))
+        return all_course_relevances_to_user
 
 
     def embed_message(self, message):
