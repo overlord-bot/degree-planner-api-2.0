@@ -6,11 +6,11 @@ import sys
 import logging
 from datetime import datetime
 
-from src.dp.degree_planner import Planner
-from src.dp.user import User
+from src.dp.command_handler import Planner
+from src.user.user import User
 from src.io.output import *
 
-planner = Planner('API2.0')
+planner = Planner()
 user = User(1)
 
 def terminal():

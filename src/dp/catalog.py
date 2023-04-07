@@ -6,8 +6,10 @@ import json
 
 from .course import Course
 from .degree import Degree
-from .degree_template import *
-from .search import Search
+from .template import *
+from ..math.search import Search
+from ..recommender.recommender import Recommender
+from ..io.output import *
 
 class Catalog():
     '''
@@ -23,39 +25,56 @@ class Catalog():
         self.__course_list = dict() # course name as key
         self.__degree_list = dict() # degree name as key
 
-        self.search = Search()
+        self.tags = dict() # { subject : [tags] }
+        self.recommender = None
+        self.searcher = Search()
+
         self.lock = False
+        self.debug = Output(OUT.DEBUG)
 
-        # search must be reindexed after modification to course list
-        self.reindex_flag = False
+    def reindex(self, enable_recommender=True):
+        self.debug.print('starting search indexing')
+        self.searcher.update_items(self.course_names())
+        self.searcher.generate_index()
+        self.debug.print('finished search indexing')
 
-    def reindex(self):
-        self.search.update_items(self.__course_list.keys())
-        self.search.generate_index()
+        if enable_recommender:
+            self.debug.print('starting recommender indexing')
+            if self.recommender is None:
+                self.recommender = Recommender(self)
+            else:
+                self.recommender.reindex()
+            self.debug.print('finished recommender indexing')
 
-    def add_course(self, course:Course):
-        self.reindex_flag = True
+    def add_course(self, course):
+        if hasattr(course, '__iter__'):
+            for c in course:
+                self.__course_list.update({c.unique_name:c})
+            return
         self.__course_list.update({course.unique_name:course})
 
-    def add_courses(self, courses:set):
-        self.reindex_flag = True
-        for c in courses:
-            self.__course_list.update({c.unique_name:c})
-
-    def remove_course(self, course:Course):
-        self.__course_list.pop(course, None)
+    def remove_course(self, course):
+        if isinstance(course, str):
+            self.__course_list.pop(course, None)
+        else:
+            self.__course_list.pop(course.unique_name, None)
 
     def add_degree(self, degree:Degree):
         self.__degree_list.update({degree.name:degree})
 
-    def add_degrees(self, degrees:set):
-        for d in degrees:
-            self.__degree_list.update({d.name:d})
+    def has_degree(self, degree):
+        if isinstance(degree, Degree):
+            return degree.name in self.__degree_list
+        elif isinstance(degree, str):
+            return degree in self.__degree_list
 
-    def remove_degree(self, degree:Degree):
-        self.__degree_list.pop(degree, None)
+    def remove_degree(self, degree):
+        if isinstance(degree, str):
+            self.__degree_list.pop(degree, None)
+        else:
+            self.__degree_list.pop(degree.name, None)
 
-    def get_course(self, course_name:str) -> Course:
+    def get_course(self, unique_name:str) -> Course:
         '''
         Parameters:
             course_name (str): name of course to get. Must be a unique name
@@ -63,28 +82,29 @@ class Catalog():
         Returns:
             course (Course): course if found, otherwise None
         '''
-        if self.reindex_flag:
-            self.reindex()
-            self.reindex_flag = False
-        name = self.search.search(course_name.casefold())
+        name = self.search(unique_name)
         if len(name) == 0:
+            self.debug.print('CANNNT FIND COURSE ' + unique_name, OUT.WARN)
             return None
         if len(name) == 1:
             return self.__course_list.get(name[0], None)
         else:
-            print(f"CATALOG ERROR: catalog get course non unique course found: {str(name)}")
+            self.debug.print(f"CATALOG ERROR: catalog get course non unique course found: {str(name)}", OUT.WARN)
             return self.__course_list.get(name[0], None)
 
-    def get_all_courses(self):
-        return list(self.__course_list.values())
+    def search(self, course_name:str) -> str:
+        return self.searcher.search(course_name.casefold())
 
-    def get_all_course_names(self):
+    def courses(self):
+        return self.__course_list.values()
+
+    def course_names(self):
         return list(self.__course_list.keys())
 
     def get_degree(self, degree_name:str):
         return self.__degree_list.get(degree_name, None)
 
-    def get_all_degrees(self):
+    def degrees(self):
         return self.__degree_list.values()
 
     def get_course_match(self, target_template:Template) -> list:
@@ -126,10 +146,14 @@ class Catalog():
             count1+=1
         return printout
 
+    def __iter__(self):
+        for course in self.__course_list.values():
+            yield course
+
     def __eq__(self, other):
         if not isinstance(other, Catalog):
             return False
-        return self.get_all_courses() == other.get_all_courses()
+        return self.courses() == other.courses()
 
     def __len__(self):
         return len(self.__course_list)

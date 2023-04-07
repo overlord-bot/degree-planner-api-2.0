@@ -15,7 +15,7 @@ class CMD(Enum):
     SCHEDULE = '1.schedule'
     PRINT = '0.print'
     FULFILLMENT = '0.fulfillment'
-    AUTOCOMPLETE = '0.autocomplete'
+    RECOMMEND = '0.recommend'
     DEGREE = '1.degree '
     FIND = '1.find'
     DETAILS = '1.details'

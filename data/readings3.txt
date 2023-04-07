@@ -1,0 +1,23 @@
+Functions – In this section we will cover function notation/evaluation, determining the domain and range of a function and function composition.
+Inverse Functions – In this section we will define an inverse function and the notation used for inverse functions. We will also discuss the process for finding an inverse function.
+Trig Functions – In this section we will give a quick review of trig functions. We will cover the basic notation, relationship between the trig functions, the right triangle definition of the trig functions. We will also cover evaluation of trig functions as well as the unit circle (one of the most important ideas from a trig class!) and how it can be used to evaluate trig functions.
+Solving Trig Equations – In this section we will discuss how to solve trig equations. The answers to the equations in this section will all be one of the “standard” angles that most students have memorized after a trig class. However, the process used here can be used for any answer regardless of it being one of the standard angles or not.
+Solving Trig Equations with Calculators, Part I – In this section we will discuss solving trig equations when the answer will (generally) require the use of a calculator (i.e. they aren’t one of the standard angles). Note however, the process used here is identical to that for when the answer is one of the standard angles. The only difference is that the answers in here can be a little messy due to the need of a calculator. Included is a brief discussion of inverse trig functions.
+Solving Trig Equations with Calculators, Part II – In this section we will continue our discussion of solving trig equations when a calculator is needed to get the answer. The equations in this section tend to be a little trickier than the "normal" trig equation and are not always covered in a trig class.
+Exponential Functions – In this section we will discuss exponential functions. We will cover the basic definition of an exponential function, the natural exponential function, i.e. 
+e
+x
+, as well as the properties and graphs of exponential functions.
+Logarithm Functions – In this section we will discuss logarithm functions, evaluation of logarithms and their properties. We will discuss many of the basic manipulations of logarithms that commonly occur in Calculus (and higher) classes. Included is a discussion of the natural (
+ln
+(
+x
+)
+) and common logarithm (
+log
+(
+x
+)
+) as well as the change of base formula.
+Exponential and Logarithm Equations – In this section we will discuss various methods for solving equations that involve exponential functions or logarithm functions.
+Common Graphs – In this section we will do a very quick review of many of the most common functions and their graphs that typically show up in a Calculus class.

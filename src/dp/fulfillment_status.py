@@ -49,6 +49,8 @@ class Fulfillment_Status():
         self.fulfillment_set.add(course)
         return len_original != len(self.fulfillment_set)
 
+    def extend_fulfillment_set(self, iter) -> None:
+        self.fulfillment_set.update(iter)
     """
     returns whether the element requested to be removed is present (successful removal)
     """
