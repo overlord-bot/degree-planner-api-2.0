@@ -1,16 +1,15 @@
 {
     "csci" : [
         "artificial intelligence",
-        "systems and networks",
-        "algorithm design",
+        "algorithm theory and design",
         "computer networks",
         "computer security",
         "database systems",
-        "data science",
-        "human computer interaction and visualization",
-        "computer vision and graphics",
+        "computer vision",
+        "geometry",
         "numerical analysis",
         "robotics",
+        "social and finances",
         "technical writing and topics"
     ],
     "ecse" : [

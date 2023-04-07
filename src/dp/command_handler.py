@@ -1,4 +1,4 @@
-''' 
+'''
 DEGREE PLANNER MAIN CLASS
 '''
 
@@ -60,7 +60,7 @@ class Planner():
         # Users = <user id, User>
         self.users = dict()
         self.catalog = Catalog()
-        self.course_search = self.catalog.search
+
         self.flags = set()
         self.default_io = io
         if self.default_io is None:
@@ -88,13 +88,13 @@ class Planner():
             user.command_queue_locked = True
             io.debug(f'user {user.username} locked their command queue')
             user.command_decision = user_input.strip().casefold()
-        
+
         else:
             # if queue is locked, do not proceed
             if user.command_queue_locked:
                 io.print(f'queue busy, please try again later')
                 return False
-            
+
             user.command_queue_locked = True
             io.debug(f'user {user.username} locked their command queue')
             user.command_queue.join()
@@ -151,11 +151,9 @@ class Planner():
                 continue
 
             if command.command == CMD.IMPORT:
-                io.info("BEGINNING DATA IMPORTING")
-                io.print("begin parsing data")
-                self.parse_courses_and_degrees(io)
-                io.info("FINISHED DATA IMPORTING")
-                io.print("parsing completed")
+                io.print("begin importing data")
+                self.import_data(io)
+                io.print("importing completed")
                 user.command_queue.task_done()
                 continue
 
@@ -178,7 +176,7 @@ class Planner():
 
             # all commands after this requires an active schedule inside User
             schedule = user.get_current_schedule()
-            if schedule == None:
+            if schedule is None:
                 io.print(f"no schedule selected, creating one named {user.username}")
                 self.set_active_schedule(user, user.username, io)
                 schedule = user.get_current_schedule()
@@ -226,15 +224,14 @@ class Planner():
 
             if command.command == CMD.DEGREE:
                 if not command.arguments:
-                    io.print(f"no arguments found. " + \
-                        "Use degree, <degree name> to set your schedule's degree")
+                    io.print(f"no arguments found. Use degree, <degree name> to set your schedule's degree")
                 else:
                     self.set_degree(schedule, command.arguments[0], io)
                 user.command_queue.task_done()
                 continue
 
             if command.command == CMD.FULFILLMENT:
-                if schedule.degree == None:
+                if schedule.degree is None:
                     io.print(f"no degree specified")
                 else:
                     io.store(f"{schedule.name} Fulfillment")
@@ -246,7 +243,7 @@ class Planner():
                 continue
 
             if command.command == CMD.RECOMMEND:
-                if schedule.degree == None:
+                if schedule.degree is None:
                     io.print(f"no degree specified")
                 else:
                     io.store(f"{schedule.name} Recommended path of completion:")
@@ -259,7 +256,8 @@ class Planner():
 
             if command.command == CMD.DETAILS:
                 details = self.details(command.arguments[0])
-                if details is None: details = 'please enter valid full name of course'
+                if details is None:
+                    details = 'please enter valid full name of course'
                 io.store(details)
                 io.view_cache()
                 user.command_queue.task_done()
@@ -289,35 +287,35 @@ class Planner():
         if io is None:
             io = self.default_io
 
-        arg_list = [self.cleanse(e.strip().casefold()) for e in cmd.split(",") if e.strip()]
+        arg_list = [self.cleanse_input(e.strip().casefold()) for e in cmd.split(",") if e.strip()]
         cmd_queue = []
         last_command = None
 
-        for e in arg_list:
+        for argument in arg_list:
             # if we find a command, push the last command to the queue and create new command
-            if CMD.get(e) != CMD.NONE:
+            if CMD.get(argument) != CMD.NONE:
                 if last_command is not None:
                     cmd_queue.append(last_command)
-                last_command = Command(e)
+                last_command = Command(argument)
             # otherwise, add this as an argument to the last command
             else:
                 if last_command is not None:
-                    last_command.arguments.append(e)
+                    last_command.arguments.append(argument)
                 else:
-                    io.print(f"ERROR: invalid command '{e}'")
+                    io.print(f"ERROR: invalid command '{argument}'")
         # after exiting the loop, push the last command if it exists into the queue
         if last_command is not None:
             cmd_queue.append(last_command)
 
         # verify all commands have the required number of arguments
-        for e in cmd_queue:
-            if not e.valid():
-                io.print(f"ERROR: invalid arguments for command {str(e)}")
+        for argument in cmd_queue:
+            if not argument.valid():
+                io.print(f"ERROR: invalid arguments for command {str(argument)}")
         cmd_queue = [e for e in cmd_queue if e.valid()]
         return cmd_queue
 
 
-    def cleanse(self, msg:str) -> str:
+    def cleanse_input(self, msg:str) -> str:
         re.sub(r'\W+', '', msg)
         return msg
 
@@ -335,7 +333,7 @@ class Planner():
             io = self.default_io
 
         schedule = user.get_schedule(schedule_name)
-        if schedule == None:
+        if schedule is None:
             io.print(f"Schedule {schedule_name} not found, generating new one!")
             user.new_schedule(schedule_name, self.SEMESTERS_MAX)
             user.curr_schedule = schedule_name
@@ -382,22 +380,23 @@ class Planner():
             output (Output): user interface output
 
         Returns:
-            bool: if degree was successfully changed. 
+            bool: if degree was successfully changed.
                 False usually means specified degree was not found
         '''
         if io is None:
             io = self.default_io
 
         degree = self.catalog.get_degree(degree_name)
-        if degree == None:
+
+        if degree is None:
             io.print(f"invalid degree entered: {degree_name}")
             return False
-        else:
-            schedule.degree = degree
-            io.print(f"set your degree to {degree.name}")
-            return True
+        
+        schedule.degree = degree
+        io.print(f"set your degree to {degree.name}")
+        return True
 
-    
+
     def search(self, course_name:str, course_pool:set=None) -> list:
         ''' Returns list of courses to output that match input entry
 
@@ -405,17 +404,9 @@ class Planner():
             course_name (str): search for courses that contains this string in its name
             course_pool (set): pool of courses to search from
         '''
-        possible_courses = self.course_search.search(course_name)
+        possible_courses = self.catalog.search(course_name)
         if course_pool is not None:
             possible_courses = [e for e in possible_courses if self.catalog.get_course(e) in course_pool]
-        """ 
-        Note that while it is possible to use 
-        search = Search(course_pool)
-        possible_courses = search.search(course_name)
-        doing so means we're constructing a new search object and generating its index
-        everytime we do a search, drastically slowing down the program and defeating
-        the whole point of the searcher.
-        """
         return possible_courses
 
 
@@ -423,7 +414,7 @@ class Planner():
         ''' Returns:
             description (string): the course description. Returns None if invalid name
         '''
-        courses = self.search(course_name)
+        courses = self.catalog.search(course_name)
         if len(courses) == 0:
             return 'Course not found'
         if len(courses) == 1:
@@ -443,12 +434,12 @@ class Planner():
         if io is None:
             io = self.default_io
 
-        possible_courses = self.course_search.search(course_name)
+        possible_courses = self.catalog.search(course_name)
         possible_courses.sort()
         io.print(f"courses matching {course_name}: ")
         i = 1
-        for c in possible_courses:
-            course = self.catalog.get_course(c)
+        for course_name in possible_courses:
+            course = self.catalog.get_course(course_name)
             io.store(f"  {i}: {course.subject} {course.course_id} {course.name}")
             i += 1
         io.view_cache()
@@ -477,7 +468,7 @@ class Planner():
         
         # list of courses matching course_name
         semester = int(semester)
-        returned_courses = [self.catalog.get_course(c) for c in self.course_search.search(course_name)]
+        returned_courses = [self.catalog.get_course(c) for c in self.catalog.search(course_name)]
 
         if len(returned_courses) == 0:
             io.print(f"Course {course_name} not found")
@@ -532,7 +523,7 @@ class Planner():
         return None
 
     
-    def parse_courses_and_degrees(self, io:Output=None) -> Exception:
+    def import_data(self, io:Output=None) -> Exception:
         ''' Parse json data into a list of courses and degrees inside a catalog
 
         Args:
@@ -544,17 +535,18 @@ class Planner():
         if io is None:
             io = self.default_io
 
-        catalog_file = "catalog.json"
-        degree_file = "degrees.json"
-
-        parse_courses(catalog_file, self.catalog, io)
+        parse_courses(self.catalog, io)
         io.print(f"Sucessfully parsed catalog data")
         
         # set up searcher for finding courses based on incomplete user input
-        self.course_search.update_items(self.catalog.course_names())
-        self.course_search.generate_index()
+        io.print(f"generated search index")
 
-        parse_degrees(degree_file, self.catalog, io)
+        parse_degrees(self.catalog, io)
         io.print(f"Sucessfully parsed degree data")
         io.debug(f"Printing catalog:")
         io.debug(str(self.catalog))
+
+        parse_tags(self.catalog, io)
+        io.print(f"parsed tags")
+        
+        self.catalog.reindex()

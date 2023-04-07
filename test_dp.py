@@ -120,9 +120,6 @@ def test_other():
     course5.add_attribute('bin.5')
     catalog.add_course(course5)
 
-    planner.course_search.update_items(catalog.course_names())
-    planner.course_search.generate_index()
-
     testtemplate1 = Template('bin1', 'bin.1')
     testtemplate2 = Template('bin2', 'bin.2')
     testtemplate3 = Template('bin3', 'bin.3')
@@ -139,6 +136,8 @@ def test_other():
     degree.add_template(testtemplate3)
     degree.add_template(testtemplate4)
     degree.add_template(testtemplate5)
+
+    catalog.reindex(False)
 
     print(f'course0 credits: {course0.get_credits()}')
 
@@ -217,8 +216,7 @@ def test_fulfillment():
     course5.add_attribute('bin.4')
     catalog.add_course(course5)
 
-    planner.course_search.update_items(catalog.course_names())
-    planner.course_search.generate_index()
+    catalog.reindex(False)
 
     testtemplate1 = Template('bin1', 'bin.1')
     testtemplate2 = Template('bin2', 'bin.2')
@@ -282,9 +280,6 @@ def test_fulfillment2():
     course6.add_attribute('bin.5')
     catalog.add_course(course6)
 
-    planner.course_search.update_items(catalog.course_names())
-    planner.course_search.generate_index()
-
     testtemplate1 = Template('bin1', 'bin.1')
     testtemplate2 = Template('bin2', 'bin.2')
     testtemplate3 = Template('bin3', 'bin.3')
@@ -302,6 +297,8 @@ def test_fulfillment2():
     degree.add_template(testtemplate3)
     degree.add_template(testtemplate4)
     degree.add_template(testtemplate5)
+
+    catalog.reindex(False)
 
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6, print, fulfillment')
 
@@ -345,9 +342,6 @@ def test_fulfillment3():
     course6.add_attribute('bin.5')
     catalog.add_course(course6)
 
-    planner.course_search.update_items(catalog.course_names())
-    planner.course_search.generate_index()
-
     testtemplate1 = Template('bin1', 'bin.1') # 6
     testtemplate2 = Template('bin2', 'bin.2', courses_required=3) # 2, 3, 4
     testtemplate3 = Template('bin3', 'bin.3') # 3, 4
@@ -364,6 +358,8 @@ def test_fulfillment3():
     degree.add_template(testtemplate3)
     degree.add_template(testtemplate4)
     degree.add_template(testtemplate5)
+
+    catalog.reindex(False)
 
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6')
     run_cmd(planner, user, 'print, fulfillment')
@@ -388,9 +384,6 @@ def test_fulfillment4():
     course2.add_attribute('bin.2')
     catalog.add_course(course2)
 
-    planner.course_search.update_items(catalog.course_names())
-    planner.course_search.generate_index()
-
     testtemplate1 = Template('bin1', 'bin.1', courses_required=1)
     testtemplate2 = Template('bin2', 'bin.2')
     testtemplate3 = Template('bin3', 'bin.3')
@@ -401,6 +394,8 @@ def test_fulfillment4():
     degree.add_template(testtemplate1)
     degree.add_template(testtemplate2)
     degree.add_template(testtemplate3)
+
+    catalog.reindex(False)
 
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6')
     run_cmd(planner, user, 'print, fulfillment')
@@ -443,9 +438,6 @@ def test_fulfillment5():
     course5.add_attribute('bin.5')
     catalog.add_course(course5)
 
-    planner.course_search.update_items(catalog.course_names())
-    planner.course_search.generate_index()
-
     testtemplate1 = Template('bin1', 'bin.1')
     testtemplate2 = Template('bin2', 'bin.2', courses_required=2)
     testtemplate3 = Template('bin3', 'bin.3', courses_required=2)
@@ -462,6 +454,8 @@ def test_fulfillment5():
     degree.add_template(testtemplate3)
     degree.add_template(testtemplate4)
     degree.add_template(testtemplate5)
+
+    catalog.reindex(False)
 
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6')
     run_cmd(planner, user, 'print, fulfillment')
@@ -562,9 +556,6 @@ def test_fulfillment6():
     course11.add_attribute('concentration.AI')
     catalog.add_course(course11)
 
-    planner.course_search.update_items(catalog.course_names())
-    planner.course_search.generate_index()
-
     testtemplate1 = Template('bin1', 'bin.1')
     testtemplate2 = Template('bin2', 'bin.2', courses_required=2)
     testtemplate3 = Template('bin3', 'bin.3', courses_required=2)
@@ -602,6 +593,8 @@ def test_fulfillment6():
     templates.append(testtemplate9)
     templates.append(testtemplate10)
 
+    catalog.reindex(False)
+
     # templates.reverse()
 
     for t in templates:
@@ -622,17 +615,20 @@ def test_recommender():
     user2 = User(2)
     user3 = User(3)
 
-    run_cmd(planner, user1, 'import, degree, computer science, add, 1, mac learn 4100, add, 1, deep learn 4, add, 1, 4270 csci vision, add, 1, reinforcement, add, 1, data sci 4350 csci, add, 2, math 2400')
-    # run_cmd(planner, user, 'add, 2, graph story, add, 2, 3d animation 4090, add, 2, 3d visual effect, add, 2, 3d modelling, add, 2, art history')
+    run_cmd(planner, user1, 'import, schedule, user1, degree, computer science, add, 1, mac learn 4100, add, 1, deep learn 4, add, 1, 4270 csci vision, add, 1, reinforcement, add, 1, data sci 4350 csci, add, 2, math 2400')
     run_cmd(planner, user1, 'print, fulfillment, recommend')
 
-    print('BEGINNING TEST WITH USER 2 WITH IDENTICAL SCHEDULE FOR TESTING OF CACHING SYSTEM')
-    run_cmd(planner, user2, 'import, degree, computer science, add, 1, mac learn 4100, add, 1, deep learn 4, add, 1, 4270 csci vision, add, 1, reinforcement, add, 1, data sci 4350 csci, add, 2, math 2400')
+    print('\n\n\n\n\n\n')
+    print('BEGINNING TEST WITH USER 2 WITH IDENTICAL COURSES (but different schedule) FOR TESTING OF CACHING SYSTEM')
+    run_cmd(planner, user2, 'schedule, user2, degree, computer science, add, 5, mac learn 4100, add, 6, deep learn 4, add, 7, 4270 csci vision, add, 7, reinforcement, add, 7, data sci 4350 csci, add, 7, math 2400')
     run_cmd(planner, user2, 'print, fulfillment, recommend')
 
-    print('BEGINNING TEST WITH USER 3 WITH DIFFERENT SCHEDULE FOR TESTING OF CACHING SYSTEM')
-    run_cmd(planner, user3, 'import, degree, computer science, add, 1, csci 4380, add, 1, math 4120 geometry, add, 1, math 4040, add, 1, csci 4560, add, 1, csci 4440, add, 2, ecse 4750')
+    print('\n\n\n\n\n\n')
+    print('BEGINNING TEST WITH USER 3 WITH DIFFERENT SCHEDULE AND REIMPORTING')
+    run_cmd(planner, user3, 'import, schedule, user3, degree, computer science, add, 1, csci 4380, add, 1, math 4120 geometry, add, 1, math 4040, add, 1, csci 4560, add, 1, csci 4440, add, 2, ecse 4750')
+    run_cmd(planner, user3, 'add, 2, graph story, add, 2, 3d animation 4090, add, 2, 3d visual effect, add, 2, 3d modelling, add, 2, art history 1050')
     run_cmd(planner, user3, 'print, fulfillment, recommend')
+    print('\n')
 
 
 def run_cmd(planner, user, string):

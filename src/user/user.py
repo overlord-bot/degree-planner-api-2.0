@@ -4,8 +4,8 @@ User class and Flag enum that indicates command queue status for the user
 
 from enum import Enum
 import json
-from ..user.schedule import Schedule
 from queue import Queue
+from ..user.schedule import Schedule
 
 class Flag(Enum):
     '''
@@ -32,16 +32,15 @@ class User():
         self.command_decision = None
         self.command_paused = None
 
-        # list of rules that determines the set of courses the student is allowed to take
-        # (need to statisify only one rule)
-        self.eligibility_rules = list()
+        # template that determines the set of courses the student is allowed to take
+        self.eligibility = None
 
 
     def schedules(self) -> list:
         '''
         Creates a copied list of all current schedule objects
         '''
-        return list(self.__schedules.values())
+        return self.__schedules.values()
 
 
     def get_schedule(self, schedule_name:str) -> Schedule:

@@ -33,7 +33,6 @@ class Degree():
         self.templates = list()
         self.catalog = catalog
         self.DEBUG = Output(OUT.DEBUG, signature='DEGREE')
-        self.recommender = None
 
         self.MAX_IMPORTANCE = 1000 # essentially the maximum number of templates possible
 
@@ -52,7 +51,7 @@ class Degree():
 
     def has_template(self, template:Template):
         return template in self.templates
-    
+
 
     ##############################################################################################
     # fulfillment computation
@@ -83,7 +82,7 @@ class Degree():
                 fulfillment_status = max_fulfillment_possibilities[i][combo[i] - 1]
                 templates_to_use.append(fulfillment_status.get_template())
             all_template_combinations.append(templates_to_use)
-        
+
         return all_template_combinations
 
 
@@ -468,8 +467,7 @@ class Degree():
         if best_fulfillments is None:
             best_fulfillments = self.fulfillment(taken_courses)
 
-        if self.recommender is None:
-            self.recommender = Recommender(self.catalog)
+        start = timeit.default_timer()
 
         """
         compute max_fulfillments for the sake of potential bindings calculation
@@ -519,7 +517,7 @@ class Degree():
                     recommended_courses.discard(course)
 
                 course_R_bindings = num_bindings(max_fulfillments, recommended_courses, Bind_Type.R)
-                course_relevances = self.recommender.embedded_relevance(taken_courses, recommended_courses)
+                course_relevances = self.catalog.recommender.embedded_relevance(taken_courses, recommended_courses)
                 
                 final_score = dict()
                 for course in recommended_courses:
@@ -533,6 +531,9 @@ class Degree():
                     print(f'score {final_score.get(course)} for course {str(course)}, keywords: {course.keywords}')
 
             recommendation.update({best_template:matches_dict})
+
+        end = timeit.default_timer()
+        self.DEBUG.print(f'\rrecommendation runtime: {end - start}\n', OUT.INFO)
        
         return recommendation
     
@@ -560,8 +561,8 @@ class Degree():
 
     def __hash__(self):
         i = 0
-        for rule in self.rules:
-            i += hash(rule)
+        for template in self.templates:
+            i += hash(template)
         i += hash(self.name)
         return i
 

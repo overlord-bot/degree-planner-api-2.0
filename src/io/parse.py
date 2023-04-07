@@ -12,16 +12,20 @@ from ..dp.catalog import Catalog
 from ..dp.degree import Degree
 from ..dp.template import Template
 
+CATALOG_PATH = os.getcwd() + "/data/catalog.json"
+DEGREE_PATH = os.getcwd() + "/data/degrees.json"
+TAGS_PATH = os.getcwd() + "/data/tags.json"
 
-def parse_courses(file_name, catalog:Catalog, io:Output=None):
+
+def parse_courses(catalog:Catalog, io:Output=None):
     if io is None:
         io = Output(OUT.DEBUG, auto_clear=True)
 
     io.print("Beginning parsing course data into catalog")
     
-    if os.path.isfile(os.getcwd() + "/data/" + file_name):
-        io.print(f"file found: {os.getcwd()}/data/" + file_name)
-        file_catalog_results = open(os.getcwd() + "/data/" + file_name)
+    if os.path.isfile(CATALOG_PATH):
+        io.print(f"file found: {CATALOG_PATH}")
+        file_catalog_results = open(CATALOG_PATH)
     else:
         io.print("catalog file not found")
         return
@@ -47,7 +51,7 @@ Args:
     catalog (Catalog): catalog object to store parsed information into
     output (Output): debug output, default is print to console
 """
-def parse_degrees(file_name, catalog:Catalog, io:Output=None):
+def parse_degrees(catalog:Catalog, io:Output=None):
     if io is None:
         io = Output(OUT.DEBUG, auto_clear=True)
     io.print("Beginning parsing degree data into catalog")
@@ -56,9 +60,9 @@ def parse_degrees(file_name, catalog:Catalog, io:Output=None):
     There are 1 location(s) for degrees, checked in this order:
     1) data/
     '''
-    if os.path.isfile(os.getcwd() + "/data/" + file_name):
-        io.print(f"file found: {os.getcwd()}/data/" + file_name)
-        file_degree = open(os.getcwd() + "/data/" + file_name)
+    if os.path.isfile(DEGREE_PATH):
+        io.print(f"file found: {DEGREE_PATH}")
+        file_degree = open(DEGREE_PATH)
     else:
         io.print("degree file not found")
         return
@@ -69,11 +73,10 @@ def parse_degrees(file_name, catalog:Catalog, io:Output=None):
     for degree_name, degree_templates in degrees.items():
         # degrees
         if catalog.has_degree(degree_name):
-            degree = catalog.get_degree(degree_name)
-            io.print(f"modified degree {str(degree)} in catalog")
-        else:
-            degree = Degree(degree_name, catalog)
-            io.print(f"added degree {str(degree)} to catalog")
+            catalog.remove_degree(degree_name)
+            io.print(f"replaced degree {degree_name} in catalog")
+        degree = Degree(degree_name, catalog)
+        io.print(f"added degree {str(degree)} to catalog")
 
         for template_name, template_properties in degree_templates.items():
             # templates within degree
@@ -91,19 +94,17 @@ def parse_degrees(file_name, catalog:Catalog, io:Output=None):
                     template.specifications.extend(property_value)
             degree.add_template(template)
         catalog.add_degree(degree)
-    
-    parse_tags('tags.json', catalog, io)
         
 
 '''
 parses degree tags into their respective degrees within the catalog
 '''
-def parse_tags(file_name, catalog:Catalog, io:Output=None):
+def parse_tags(catalog:Catalog, io:Output=None):
     if io is None:
         io = Output(OUT.DEBUG, auto_clear=True)
-    if os.path.isfile(os.getcwd() + "/data/" + file_name):
-        io.print(f"file found: {os.getcwd()}/data/" + file_name)
-        file_tags = open(os.getcwd() + "/data/" + file_name)
+    if os.path.isfile(TAGS_PATH):
+        io.print(f"file found: {TAGS_PATH}")
+        file_tags = open(TAGS_PATH)
     else:
         io.print("degree file not found")
         return

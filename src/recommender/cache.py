@@ -51,7 +51,7 @@ class Cache():
         self.course_embeddings.clear()
         self.tag_embeddings.clear()
         self.tag_relevances_to_courses.clear()
-        self.write_to_file(self.CACHE_PATH, "")
+        # self.write_to_file(self.CACHE_PATH, "")
         
 
     def write_to_file(self, file, text):
