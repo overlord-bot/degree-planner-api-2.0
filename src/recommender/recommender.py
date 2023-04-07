@@ -29,7 +29,7 @@ class Recommender():
 
         self.init_tag_embeddings()
         self.init_course_embeddings()
-        self.init_tag_relevances_to_course()
+        self.calc_tag_relevances_to_course()
 
         self.debug.print('finished initialization of cache', OUT.INFO)
     
@@ -42,12 +42,15 @@ class Recommender():
             tag_relevances_to_course.update({bin : np.zeros(len(tags_set))})
         return tag_relevances_to_course
     
+    def scale_array(self, array, additive, multiplicative):
+        return np.add(np.dot(array, multiplicative), additive)
+
     def scale_dictionary_values(self, dictionary, additive, multiplicative, key=None):
         if key is not None:
-            dictionary.update({key : np.add(np.dot(dictionary.get(key), multiplicative), additive)})
+            dictionary.update({key : self.scale_array(dictionary.get(key), additive, multiplicative)})
             return
         for key in dictionary.keys():
-            dictionary.update({key : np.add(np.dot(dictionary.get(key), multiplicative), additive)})
+            dictionary.update({key : self.scale_array(dictionary.get(key), additive, multiplicative)})
     
     def array_similarity(self, vec1, vec2):
         return np.linalg.norm(np.add(vec1, np.multiply(vec2, -1))).item()
@@ -97,21 +100,31 @@ class Recommender():
         self.cache.course_embeddings.update({course:course_embedding})
 
 
-    def init_tag_relevances_to_course(self, course:Course=None):
+    def calc_tag_relevances_to_course(self, course:Course=None, tags:set=None, normalize=True):
         '''
         returns:
             numpy array: contains the similarity score for the list of tags
         '''
         if course is None:
+            relevances = dict()
             for course in self.catalog.courses():
-                self.init_tag_relevances_to_course(course)
-            return
+                relevance = self.calc_tag_relevances_to_course(course, tags, normalize)
+                if relevance is not None:
+                    relevances.update({course:relevance})
+            return relevances
         
         # fetching necessary attributes about this course
         bin = course.attr(self.ATTRIBUTE_BIN)
-        tags = self.catalog.tags.get(bin)
+
+        # default tags means we use the predefined tags that are used for everyone and therefore cached
+        # custom tags passed in through a parameter are uniquely requested by each user and therefore
+        # not cached. Instead, it's returned.
+        default_tags = False
         if tags is None:
-            return
+            default_tags = True
+            tags = self.catalog.tags.get(bin)
+            if tags is None:
+                return
         
         # generation of relevance scores using embedding comparison
         tag_relevances_to_course = np.zeros(len(tags))
@@ -124,21 +137,33 @@ class Recommender():
         for i in range(len(tags)):
             tag = tags[i]
             tag_embedding = self.cache.tag_embeddings.get(tag, None)
-            if tag_embedding is None:
+            if tag_embedding is None and default_tags:
                 return
+            elif tag_embedding is None:
+                tag_embedding = self.cache.temporary_tag_embeddings.get(tag, None)
+                if tag_embedding is None:
+                    self.debug.print(f'WARNING: embedded tag on the fly {tag}, MAY CAUSE PERFORMANCE PENALTY IF THIS HAPPENS TOO OFTEN (>100)', OUT.WARN)
+                    tag_embedding = self.embed_message(tag)
+                    if len(self.cache.temporary_tag_embeddings) > 100:
+                        self.cache.temporary_tag_embeddings.clear()
+                    self.cache.temporary_tag_embeddings.update({tag:tag_embedding})
 
             tag_relevances_to_course[i] = self.array_similarity(course_embedding, tag_embedding)
 
         # adjusts the score such that the best fit is much lower than all others
-        smallest_num = min(tag_relevances_to_course)
-        tag_relevances_to_course = np.add(tag_relevances_to_course, - (smallest_num - 0.01))
+        if normalize:
+            smallest_num = min(tag_relevances_to_course)
+            tag_relevances_to_course = np.add(tag_relevances_to_course, - (smallest_num - 0.01))
+            tag_relevances_to_course = self.hard_max(tag_relevances_to_course)
 
-        # finds the best descriptors (for the sake of labelling)
-        descriptors = dict(zip(self.catalog.tags.get(bin), tag_relevances_to_course))
-        course.keywords = self.best_descriptors(descriptors, 3, 0.11)
-
-        tag_relevances_to_course = self.hard_max(tag_relevances_to_course)
-        self.cache.tag_relevances_to_courses.update({course:tag_relevances_to_course})
+        if default_tags:
+            # finds the best descriptors (for the sake of labelling)
+            descriptors = dict(zip(self.catalog.tags.get(bin), tag_relevances_to_course))
+            course.keywords = self.best_descriptors(descriptors, 3, 0.11)
+            self.cache.tag_relevances_to_courses.update({course:tag_relevances_to_course})
+        else:
+            print(f'calculated custom tags {tags} for course {str(course)}')
+            return tag_relevances_to_course
 
     
     def best_descriptors(self, descriptors, amount:int, threshold:float):
@@ -150,7 +175,7 @@ class Recommender():
         return best_descriptors
 
 
-    def embedded_relevance(self, taken_courses:set, recommending_courses:set) -> dict:
+    def embedded_relevance(self, taken_courses:set, recommending_courses:set, custom_tags:set) -> dict:
         course_relevances_to_user = dict()
         
         # sum of all similarities of a user's taken courses
@@ -165,6 +190,7 @@ class Recommender():
             self.scale_dictionary_values(tag_relevances_to_user_by_bin, tag_relevances_to_course, 1.0, key=bin)
 
         tag_relevances_to_user_by_bin = {k: self.hard_max(v) for k, v in tag_relevances_to_user_by_bin.items()} # normalization
+
         self.debug.print(f'overall relevances for each subject: {tag_relevances_to_user_by_bin}')
         for bin, tags in self.catalog.tags.items():
             self.debug.print(f"user's best descriptors for {bin}: {self.best_descriptors(dict(zip(tags, tag_relevances_to_user_by_bin.get(bin))), 5, 0.3)}", OUT.INFO)
@@ -173,10 +199,15 @@ class Recommender():
         for course in recommending_courses:
             bin = course.attr(self.ATTRIBUTE_BIN)
             tag_relevances_to_course = self.cache.tag_relevances_to_courses.get(course, None)
-            if tag_relevances_to_course is None:
-                course_relevances_to_user.update({course : 1})
-                continue
-            course_relevance_to_user = self.array_similarity(tag_relevances_to_user_by_bin.get(bin), tag_relevances_to_course)
+            course_relevance_to_user = 10
+            if tag_relevances_to_course is not None:
+                course_relevance_to_user = self.array_similarity(tag_relevances_to_user_by_bin.get(bin), tag_relevances_to_course)
+            if custom_tags is not None:
+                custom_tag_relevances_to_course = self.calc_tag_relevances_to_course(course, custom_tags, False) # numpy array
+                custom_course_relevance_to_user = self.array_similarity(custom_tag_relevances_to_course, np.zeros(len(custom_tag_relevances_to_course)))
+                self.debug.print(f'custom relevance of course {course}: {custom_course_relevance_to_user}, real course relevance: {course_relevance_to_user}')
+                course_relevance_to_user += custom_course_relevance_to_user
+
             course_relevances_to_user.update({course : course_relevance_to_user})
 
         sorted_course_relevances_to_user = dictionary_sort(course_relevances_to_user, True)

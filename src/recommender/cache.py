@@ -9,6 +9,7 @@ class Cache():
 
         self.course_embeddings = dict() # {course: embedding}
         self.tag_embeddings = dict() # {tag : embedding}
+        self.temporary_tag_embeddings = dict()
         self.tag_relevances_to_courses = dict() # relative distances to the embedding of all keywords within this courses's subject
 
         self.debug = Output(OUT.DEBUG, auto_clear=True)

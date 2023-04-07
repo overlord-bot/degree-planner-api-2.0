@@ -458,7 +458,7 @@ class Degree():
     # fulfillment recommendation
     ##############################################################################################
 
-    def recommend(self, taken_courses, best_fulfillments:dict=None) -> dict:
+    def recommend(self, taken_courses, best_fulfillments:dict=None, custom_tags=None) -> dict:
         '''
         gives possible courses to take
 
@@ -466,6 +466,8 @@ class Degree():
         '''
         if best_fulfillments is None:
             best_fulfillments = self.fulfillment(taken_courses)
+        if custom_tags is not None and not len(custom_tags):
+            custom_tags = None
 
         start = timeit.default_timer()
 
@@ -517,7 +519,7 @@ class Degree():
                     recommended_courses.discard(course)
 
                 course_R_bindings = num_bindings(max_fulfillments, recommended_courses, Bind_Type.R)
-                course_relevances = self.catalog.recommender.embedded_relevance(taken_courses, recommended_courses)
+                course_relevances = self.catalog.recommender.embedded_relevance(taken_courses, recommended_courses, custom_tags)
                 
                 final_score = dict()
                 for course in recommended_courses:

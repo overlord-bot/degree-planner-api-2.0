@@ -170,7 +170,7 @@ class Planner():
                 if not command.arguments:
                     io.print(f"not enough arguments, please specify a schedule name")
                 else:
-                    self.set_active_schedule(user, command.arguments[0], io)
+                    self.user_set_active_schedule(user, command.arguments[0], io)
                 user.command_queue.task_done()
                 continue
 
@@ -178,7 +178,7 @@ class Planner():
             schedule = user.get_current_schedule()
             if schedule is None:
                 io.print(f"no schedule selected, creating one named {user.username}")
-                self.set_active_schedule(user, user.username, io)
+                self.user_set_active_schedule(user, user.username, io)
                 schedule = user.get_current_schedule()
 
             if command.command in (CMD.ADD, CMD.REMOVE):
@@ -226,7 +226,7 @@ class Planner():
                 if not command.arguments:
                     io.print(f"no arguments found. Use degree, <degree name> to set your schedule's degree")
                 else:
-                    self.set_degree(schedule, command.arguments[0], io)
+                    self.user_set_degree(user, command.arguments[0], io)
                 user.command_queue.task_done()
                 continue
 
@@ -247,7 +247,7 @@ class Planner():
                     io.print(f"no degree specified")
                 else:
                     io.store(f"{schedule.name} Recommended path of completion:")
-                    recommendation = schedule.degree.recommend(schedule.courses())
+                    recommendation = schedule.degree.recommend(schedule.courses(), custom_tags=command.arguments)
                     io.store(print_recommendation(recommendation))
                     io.view_cache()
 
@@ -320,7 +320,7 @@ class Planner():
         return msg
 
 
-    def set_active_schedule(self, user:User, schedule_name:str, io:Output=None) -> None:
+    def user_set_active_schedule(self, user:User, schedule_name:str, io:Output=None) -> None:
         ''' Changes user's active schedule selection and creates new schedule if
             specified schedule is not found
 
@@ -344,8 +344,7 @@ class Planner():
             return
 
 
-
-    def get_active_schedule(self, user:User) -> Schedule:
+    def user_get_active_schedule(self, user:User) -> Schedule:
         ''' Gets schedule currently being modified by user
 
         Args:
@@ -357,7 +356,7 @@ class Planner():
         return user.get_current_schedule()
 
 
-    def get_all_schedules(self, user:User) -> list:
+    def user_get_all_schedules(self, user:User) -> list:
         ''' Get all of user's schedule
 
         Args:
@@ -370,7 +369,7 @@ class Planner():
         return user.schedules()
 
 
-    def set_degree(self, schedule:Schedule, degree_name:str, io:Output=None) -> bool:
+    def user_set_degree(self, user:User, degree_name:str, io:Output=None) -> bool:
         ''' Changes user's active schedule's degree
 
         Args:
@@ -392,7 +391,7 @@ class Planner():
             io.print(f"invalid degree entered: {degree_name}")
             return False
         
-        schedule.degree = degree
+        user.get_current_schedule().degree = degree
         io.print(f"set your degree to {degree.name}")
         return True
 
@@ -415,12 +414,10 @@ class Planner():
             description (string): the course description. Returns None if invalid name
         '''
         courses = self.catalog.search(course_name)
-        if len(courses) == 0:
-            return 'Course not found'
         if len(courses) == 1:
             course = self.catalog.get_course(courses[0])
-            s = f'{repr(course)}: {course.description}'
-            return s
+            description = f'{repr(course)}: {course.description}'
+            return description
         return None
 
 

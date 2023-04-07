@@ -624,10 +624,10 @@ def test_recommender():
     run_cmd(planner, user2, 'print, fulfillment, recommend')
 
     print('\n\n\n\n\n\n')
-    print('BEGINNING TEST WITH USER 3 WITH DIFFERENT SCHEDULE AND REIMPORTING')
+    print('BEGINNING TEST WITH USER 3 WITH DIFFERENT SCHEDULE, REIMPORTING AND CUSTOM TAGS')
     run_cmd(planner, user3, 'import, schedule, user3, degree, computer science, add, 1, csci 4380, add, 1, math 4120 geometry, add, 1, math 4040, add, 1, csci 4560, add, 1, csci 4440, add, 2, ecse 4750')
     run_cmd(planner, user3, 'add, 2, graph story, add, 2, 3d animation 4090, add, 2, 3d visual effect, add, 2, 3d modelling, add, 2, art history 1050')
-    run_cmd(planner, user3, 'print, fulfillment, recommend')
+    run_cmd(planner, user3, 'print, fulfillment, recommend, machine learning, music, motor control')
     print('\n')
 
 

@@ -40,24 +40,20 @@ class User():
         '''
         Creates a copied list of all current schedule objects
         '''
-        return self.__schedules.values()
+        return list(self.__schedules.values())
 
 
     def get_schedule(self, schedule_name:str) -> Schedule:
         '''
         Returns schedule if found, otherwise None
         '''
-        if schedule_name not in self.__schedules:
-            return None
-        return self.__schedules.get(schedule_name)
+        return self.__schedules.get(schedule_name, None)
 
 
     def new_schedule(self, schedule_name:str, SEMESTERS_MAX:int=10) -> None:
         '''
         Creates a new schedule if the schedule does not yet exist
         '''
-        if self.__schedules.get(schedule_name, None) is not None:
-            return
         schedule = Schedule(schedule_name, SEMESTERS_MAX)
         self.__schedules.update({schedule_name : schedule})
 
@@ -69,9 +65,9 @@ class User():
         self.__schedules.update({schedule_name : schedule})
 
 
-    def get_current_schedule(self) -> str:
+    def get_current_schedule(self) -> Schedule:
         '''
-        Get schedule name being actively editted for this user
+        Get schedule being actively editted for this user
         '''
         return self.get_schedule(self.curr_schedule)
 
