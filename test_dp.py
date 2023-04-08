@@ -1,13 +1,26 @@
 import timeit
-import asyncio
 import sys
+import tracemalloc
 from datetime import datetime
+import os
+import psutil
+ 
+# inner psutil function
+def process_memory():
+    process = psutil.Process(os.getpid())
+    mem_info = process.memory_info()
+    return mem_info.rss
+
+mem_before = process_memory()
+
 from src.math.graph import *
 from src.dp.command_handler import Planner
 from src.dp.course import Course
 from src.user.user import User
 from src.dp.template import Template
 from src.dp.degree import *
+
+mem_after_imports = process_memory()
 
 class Test_Graph_Edge_Data_Gen(Edge_Generator):
 
@@ -659,8 +672,15 @@ input('press enter to continue')
 test_fulfillment5()
 input('press enter to continue')
 test_fulfillment6()
+
+tracemalloc.start()
 input('press enter to continue')
 test_recommender()
+# displaying the memory
+print('MEMORY USAGE:')
+mem_after = process_memory()
+print(f"memory report with psutil: (total usage) {mem_after - mem_before:,} (imports) {mem_after_imports - mem_before:,}")
+ 
 
 stop = timeit.default_timer()
 print('\ntime: ', stop - start)

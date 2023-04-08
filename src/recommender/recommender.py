@@ -54,7 +54,7 @@ class Recommender():
     
     def array_similarity(self, vec1, vec2):
         return np.linalg.norm(np.add(vec1, np.multiply(vec2, -1))).item()
-
+    
     def soft_max(self, x):
         sum = 0
         for i in range(0, len(x)):
@@ -205,7 +205,7 @@ class Recommender():
             if custom_tags is not None:
                 custom_tag_relevances_to_course = self.calc_tag_relevances_to_course(course, custom_tags, False) # numpy array
                 custom_course_relevance_to_user = self.array_similarity(custom_tag_relevances_to_course, np.zeros(len(custom_tag_relevances_to_course)))
-                self.debug.print(f'custom relevance of course {course}: {custom_course_relevance_to_user}, real course relevance: {course_relevance_to_user}')
+                self.debug.print(f'relevance of course {course}: {custom_course_relevance_to_user}, real course relevance: {course_relevance_to_user}')
                 course_relevance_to_user += custom_course_relevance_to_user
 
             course_relevances_to_user.update({course : course_relevance_to_user})
