@@ -55,11 +55,11 @@ class Planner():
     It is essential to keep all user specific data inside the User class.
     '''
 
-    def __init__(self, SEMESTERS_MAX:int=10, io:Output=None):
+    def __init__(self, SEMESTERS_MAX:int=10, io:Output=None, enable_tensorflow=True):
         # each user is assigned a User object and stored in this dictionary
         # Users = <user id, User>
         self.users = dict()
-        self.catalog = Catalog()
+        self.catalog = Catalog(enable_tensorflow=enable_tensorflow)
 
         self.flags = set()
         self.default_io = io
@@ -67,6 +67,7 @@ class Planner():
             self.default_io = Output(OUT.CONSOLE, signature='INPUT HANDLER', auto_clear=True)
 
         self.SEMESTERS_MAX = SEMESTERS_MAX
+        self.ENABLE_TENSORFLOW = enable_tensorflow
 
 
     def input_handler(self, user:User, user_input:str, io:Output=None) -> bool:
@@ -262,6 +263,14 @@ class Planner():
                 io.view_cache()
                 user.command_queue.task_done()
                 continue
+
+            if command.command == CMD.CACHE:
+                io.print("recomputing cache")
+                self.recompute_cache()
+                io.print("finished cache recompute")
+                user.command_queue.task_done()
+                continue
+
 
             else:
                 io.print(f"Unimplemented command {command.command} entered")
@@ -547,3 +556,8 @@ class Planner():
         io.print(f"parsed tags")
         
         self.catalog.reindex()
+
+
+    def recompute_cache(self):
+        if self.catalog.recommender is not None:
+            self.catalog.recommender.recompute()

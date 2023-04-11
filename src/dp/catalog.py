@@ -1,5 +1,5 @@
 '''
-Catalog class and get_course_match functions
+Catalog class
 '''
 
 import json
@@ -19,32 +19,28 @@ class Catalog():
     to search from
     '''
 
-    def __init__(self, name="main"):
+    def __init__(self, enable_tensorflow=True):
         # TODO also store graphs for further analysis and course prediction of free electives
-        self.name = name
         self.__course_list = dict() # course name as key
         self.__degree_list = dict() # degree name as key
 
         self.tags = dict() # { subject : [tags] }
-        self.recommender = None
+        self.recommender = Recommender(self, enable_tensorflow)
         self.searcher = Search()
-
-        self.lock = False
         self.debug = Output(OUT.DEBUG)
 
     def reindex(self, enable_recommender=True):
-        self.debug.print('starting search indexing')
+        self.debug.info('starting search indexing')
         self.searcher.update_items(self.course_names())
         self.searcher.generate_index()
-        self.debug.print('finished search indexing')
+        self.debug.info('finished search indexing')
 
-        if enable_recommender:
-            self.debug.print('starting recommender indexing')
-            if self.recommender is None:
-                self.recommender = Recommender(self)
-            else:
-                self.recommender.reindex()
-            self.debug.print('finished recommender indexing')
+        if not enable_recommender:
+            return
+        
+        self.debug.info('starting recommender indexing')
+        self.recommender.recompute()
+        self.debug.info('finished recommender indexing')
 
     def add_course(self, course):
         if hasattr(course, '__iter__'):

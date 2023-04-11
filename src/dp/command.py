@@ -19,6 +19,7 @@ class CMD(Enum):
     DEGREE = '1.degree '
     FIND = '1.find'
     DETAILS = '1.details'
+    CACHE = '0.cache'
 
     INFO = '0.info'
     IMPORT = '0.import'

@@ -104,7 +104,7 @@ def single_attribute_evaluation(attr:str, course:Course):
         return len(matches) > 0, {attr:matches}
     if '#' in attr:
         return len(course.get_attributes_by_head(attr[:attr.find('#') - 1])) > 0, {}
-    return course.has_attribute(attr), {}
+    return course.attr(attr) is not None, {}
 
 def parse_attribute(input:str, course:Course, true_given_for_wildcards:dict=None) -> str:
     '''

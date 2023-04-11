@@ -5,6 +5,7 @@ Course class
 import json
 from collections import OrderedDict
 from ..io.output import *
+from ..math.attributes import Attributes
 
 class Course():
     '''
@@ -18,13 +19,11 @@ class Course():
     def __init__(self, name, subject, id):
         # main attributes
         self.unique_name = name
-
         self.name = name
         self.subject = subject
         self.course_id = id
 
-        # dict of lists of items, e.g. {'concentration.ai':[concentration, ai], 'ci.true':[ci, true]}
-        self.attributes = dict()
+        self.attributes = Attributes()
         self.keywords = list()
 
         if name not in ('', 'NA', 'ANY'):
@@ -35,6 +34,8 @@ class Course():
             self.set_id(id)
             if len(str(id)):
                 self.set_level(str(id)[0])
+
+        self.generate_unique_name()
 
         self.description = "" # text to be displayed describing the class
         
@@ -63,7 +64,7 @@ class Course():
         return self.attr('credits')
     
     def get_crosslisted(self):
-        return [self.val(e) for e in self.get_attributes_by_head('cross_listed')]
+        return self.attr('cross_listed', True)
     
 
     """
@@ -72,13 +73,12 @@ class Course():
     
     def set_name(self, name):
         self.name = name
-        self.generate_unique_name()
         self.remove_attribute_by_head('name')
         self.add_attribute(f'name.{name}')
 
     def generate_unique_name(self):
-        if self.name == "":
-            self.unique_name = ""
+        if self.name == "" or self.get_subject() is None or self.get_id() is None:
+            self.unique_name = self.name
         else:
             self.unique_name = f"{self.get_subject().casefold()} {str(self.get_id())} {self.get_name().strip().casefold()}"
             self.unique_name = self.unique_name.replace(',', '')
@@ -111,116 +111,41 @@ class Course():
     but are internally stored in this class as a list
     """
     
-    def add_attribute(self, attr) -> None:
-        if isinstance(attr, list):
-            attr = '.'.join(attr)
-        self.attributes.update({attr.casefold():attr.casefold().split('.')})
+    def add_attribute(self, attr:str) -> None:
+        self.attributes.add_attribute(attr)
 
-    def replace_attribute(self, old_head, attr) -> None:
+    def replace_attribute(self, head, body) -> None:
         '''
         removes all attributes with the given head, and replaces it with the provided attribute
         '''
-        if isinstance(attr, list):
-            attr = '.'.join(attr)
-        self.remove_attribute_by_head(old_head)
-        self.add_attribute(attr)
+        self.attributes.replace_attribute(head, body)
 
     def remove_attribute(self, attr) -> None:
         '''
         removes attribute with exact match
         '''
-        if isinstance(attr, list):
-            attr = '.'.join(attr)
-        self.attributes.pop(attr)
-
-    def has_attribute(self, attr) -> bool:
-        '''
-        finds if the attribute exactly matches one stored here
-        '''
-        if isinstance(attr, list):
-            attr = '.'.join(attr)
-        return attr in self.attributes.keys()
+        self.attributes.remove_attribute(attr)
     
-    def val(self, attr) -> str:
+    def attr(self, attr:str, make_list=False) -> str:
         '''
-        helper function to return everything in the provided attribute string after the first period
+        finds attribute match within self and returns the value
         '''
-        attr = attr.split('.')
-        if len(attr) < 2:
-            return None
-        attr.pop(0)
-        return '.'.join(attr)
+        attributes = self.attributes.attr(attr)
+        if attributes is None or not make_list or hasattr(attributes, '__iter__'):
+            return attributes
+        return [attributes]
     
-    def attr(self, attr:str) -> str:
-        '''
-        finds unique attribute match within self and returns the value
-        '''
-        attrs = self.get_attributes_by_head(attr)
-        if len(attrs) != 1:
-            return None
-        return self.val(attrs[0])
-    
-    def get_attributes_by_head(self, queried_attr) -> list:
-        if isinstance(queried_attr, list):
-            queried_attr = '.'.join(queried_attr)
-        queried_attr = queried_attr.split('.')
-        matched_attrs = list()
-        for attr_string, attribute in self.attributes.items():
-            if len(attribute) < len(queried_attr):
-                continue
-            i = 0
-            good_match = True
-            while i < min(len(attribute), len(queried_attr)):
-                if attribute[i] != queried_attr[i]:
-                    good_match = False
-                    break
-                i += 1
-            if good_match:
-                matched_attrs.append(attr_string)
-        return matched_attrs
-    
-    def remove_attribute_by_head(self, queried_attr) -> int:
+    def get_attributes_by_head(self, attr) -> list:
+        return self.attributes.get_attributes_by_head(attr)
+        
+    def remove_attribute_by_head(self, attr) -> int:
         '''
         removes all attributes matching the provided head
         '''
-        if isinstance(queried_attr, list):
-            queried_attr = '.'.join(queried_attr)
-        queried_attr = queried_attr.split('.')
-        remove_list = list()
-        count = 0
-        for attr_string, attribute in self.attributes.items():
-            if len(attribute) < len(queried_attr):
-                continue
-            i = 0
-            good_match = True
-            while i < min(len(attribute), len(queried_attr)):
-                if attribute[i] != queried_attr[i]:
-                    good_match = False
-                    break
-                i += 1
-            if good_match:
-                remove_list.append(attr_string)
-                count += 1
-        for e in remove_list:
-            self.attributes.pop(e)
-        return count
+        self.attributes.remove_attributes_by_head(attr)
     
-    def has_attribute_head(self, attr) -> bool:
-        if isinstance(attr, list):
-            attr = '.'.join(attr)
-        return len(self.get_attributes_by_head(attr)) > 0
-    
-    def get_next(self, attr) -> set:
-        if isinstance(attr, list):
-            attr = '.'.join(attr)
-        matched_attrs = self.get_attributes_by_head(attr)
-        next_elements = set()
-        attr = attr.split('.')
-        for matched_attr in matched_attrs:
-            matched_attr = matched_attr.split('.')
-            if len(matched_attr) > len(attr):
-                next_elements.add(matched_attr[len(attr)])
-        return next_elements
+    def get_next(self, head) -> set:
+        return self.attributes.next_attr(head)
                 
     def json(self) -> OrderedDict:
         '''
@@ -232,21 +157,12 @@ class Course():
                 Some attributes will be omitted if empty, includes all attributes that
                 are the form of a list or set.
         '''
-        course = OrderedDict()
-        for v in self.attributes.keys():
-            elements = v.split('.')
-            key = elements.pop(0)
-            if (len(elements) == 1):
-                rest = elements[0]
-            else:
-                rest = elements
-            course.update({key : rest})
-        return json.dumps(course)
+        return json.dumps(list(self.attributes))
 
     def __repr__(self):
         st = (f"{self.unique_name if self.unique_name else 'None'}:\n{self.get_credits()} credits\n" + \
             f"crosslisted with: {str([str(e) for e in self.get_crosslisted()])}\n" + \
-            f"attributes: {list(self.attributes.keys())}" if len(self.attributes) > 0 else '' + '\n')
+            f"attributes: {self.attributes}" if len(self.attributes) > 0 else '' + '\n')
         return st.replace("set()", "none")
 
     def __str__(self):
@@ -255,8 +171,7 @@ class Course():
     def __eq__(self, other):
         if not isinstance(other, Course):
             return False
-        if (self.name == other.name and self.course_id == other.course_id
-            and self.subject == other.subject and self.attributes == other.attributes):
+        if (self.unique_name == other.unique_name):
             return True
         return False
     
@@ -270,5 +185,5 @@ class Course():
         return course
 
     def __hash__(self):
-        return hash(self.course_id) + len(self.attributes)*10 + hash(self.unique_name)*100
+        return hash(self.unique_name)
     

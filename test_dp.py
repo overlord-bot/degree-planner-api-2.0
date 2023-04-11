@@ -1,7 +1,5 @@
-import timeit
 import sys
 import tracemalloc
-from datetime import datetime
 import os
 import psutil
  
@@ -13,12 +11,16 @@ def process_memory():
 
 mem_before = process_memory()
 
+from datetime import datetime
+import timeit
+
 from src.math.graph import *
 from src.dp.command_handler import Planner
 from src.dp.course import Course
 from src.user.user import User
 from src.dp.template import Template
 from src.dp.degree import *
+from src.math.attributes import Attributes
 
 mem_after_imports = process_memory()
 
@@ -184,11 +186,21 @@ def test_other():
         print(f"  true given: {true_given}")
 
     testtemplate1.add_specification('bin.*')
-    # get_course_match(testtemplate1, {course1, course2, course3, course4, course5})
 
-    #print('\ntesting fulfillment recommendations: \n')
-    #degree.recommend({course0, course1, course2, course3, course4, course5})
+    print(f"testing attribute functions")
 
+    attribute = Attributes()
+    attribute.add_attribute('test.1')
+    attribute.add_attribute('test.1.1')
+    attribute.add_attribute('test.2')
+    attribute.add_attribute('test.2.1')
+    attribute.add_attribute('test.3')
+    attribute.remove_attribute('test.1')
+    attribute.remove_attribute('test.1.1')
+    print(f"get attr by head 'test' {attribute.get_attributes_by_head('test')}")
+    print(f"get attr by head 'test.2' {attribute.get_attributes_by_head('test.2')}")
+    print(f"removing attr by head 'test.2")
+    attribute.remove_attributes_by_head('test.2')
 
 
 def test_fulfillment():
@@ -621,14 +633,21 @@ def test_fulfillment6():
     #print('\ntesting fulfillment recommendations: \n')
     #degree.recommend(catalog.get_all_courses())
 
-def test_recommender():
+def test_recommender(recache, tf_disabled):
 
-    planner = Planner(10)
+    planner = Planner(10, enable_tensorflow=(not tf_disabled))
+    planner 
     user1 = User(1)
     user2 = User(2)
     user3 = User(3)
 
-    run_cmd(planner, user1, 'import, schedule, user1, degree, computer science, add, 1, mac learn 4100, add, 1, deep learn 4, add, 1, 4270 csci vision, add, 1, reinforcement, add, 1, data sci 4350 csci, add, 2, math 2400')
+    run_cmd(planner, user1, 'import')
+
+    if recache:
+        print('RECACHING ENABLED')
+        run_cmd(planner, user1, 'cache')
+
+    run_cmd(planner, user1, 'schedule, user1, degree, computer science, add, 1, mac learn 4100, add, 1, deep learn 4, add, 1, 4270 csci vision, add, 1, reinforcement, add, 1, data sci 4350 csci, add, 2, math 2400')
     run_cmd(planner, user1, 'print, fulfillment, recommend')
 
     print('\n\n\n\n\n\n')
@@ -637,8 +656,8 @@ def test_recommender():
     run_cmd(planner, user2, 'print, fulfillment, recommend')
 
     print('\n\n\n\n\n\n')
-    print('BEGINNING TEST WITH USER 3 WITH DIFFERENT SCHEDULE, REIMPORTING AND CUSTOM TAGS')
-    run_cmd(planner, user3, 'import, schedule, user3, degree, computer science, add, 1, csci 4380, add, 1, math 4120 geometry, add, 1, math 4040, add, 1, csci 4560, add, 1, csci 4440, add, 2, ecse 4750')
+    print('BEGINNING TEST WITH USER 3 WITH DIFFERENT SCHEDULE AND CUSTOM TAGS')
+    run_cmd(planner, user3, 'schedule, user3, degree, computer science, add, 1, csci 4380, add, 1, math 4120 geometry, add, 1, math 4040, add, 1, csci 4560, add, 1, csci 4440, add, 2, ecse 4750')
     run_cmd(planner, user3, 'add, 2, graph story, add, 2, 3d animation 4090, add, 2, 3d visual effect, add, 2, 3d modelling, add, 2, art history 1050')
     run_cmd(planner, user3, 'print, fulfillment, recommend, machine learning, music, motor control')
     print('\n')
@@ -674,8 +693,8 @@ input('press enter to continue')
 test_fulfillment6()
 
 tracemalloc.start()
-input('press enter to continue')
-test_recommender()
+user_input = input('INPUT C TO RECOMPUTE CACHE, INPUT F TO DISABLE TENSORFLOW, then press enter to continue\n')
+test_recommender('c' in user_input.casefold(), 'f' in user_input.casefold())
 # displaying the memory
 print('MEMORY USAGE:')
 mem_after = process_memory()

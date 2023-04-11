@@ -1,58 +1,85 @@
 import json
 import os
+import numpy as np
 from ..io.output import *
 
 class Cache():
 
-    def __init__(self):
-        self.CACHE_PATH = os.getcwd() + '/data/cache.json'
+    def __init__(self, cache_path=None):
+        self.cache_path = cache_path
+        if self.cache_path is None:
+            self.cache_path = os.getcwd() + '/data/cache.json'
 
-        self.course_embeddings = dict() # {course: embedding}
-        self.tag_embeddings = dict() # {tag : embedding}
-        self.temporary_tag_embeddings = dict()
-        self.tag_relevances_to_courses = dict() # relative distances to the embedding of all keywords within this courses's subject
+        # {course: embedding}
+        self.course_embeddings = dict()
+        
+        # {tag : embedding}
+        self.tag_embeddings = dict()
+        
+        # {course : [dist]} distances to the embedding of all tags for all course embeddings
+        self.tag_relevances_to_courses = dict()
+        
+        # {course : [keyword]}
+        self.course_keywords = dict()
+
+        # {word: embedding}
+        self.word_embeddings = dict()
 
         self.debug = Output(OUT.DEBUG, auto_clear=True)
 
 
-    def read_cache(self):
+    def load_cache(self):
     
-        if os.path.isfile(self.CACHE_PATH):
-            self.debug.print(f"file found: {self.CACHE_PATH}")
-            file_embedding_cache = open(self.CACHE_PATH)
-        else:
-            self.debug.print("cache file not found")
-            return
-        
-        json_data = json.load(file_embedding_cache)
-        file_embedding_cache.close()
+        self.debug.print(f"LOADING CACHE...", OUT.INFO)
 
-        for cache_category, cache in json_data.items():
-            if not isinstance(cache, dict):
-                self.debug.print('error: cache not a dictionary')
-                continue
-            if cache_category.casefold() == 'course_embeddings':
-                self.course_embeddings = cache
-            if cache_category.casefold() == 'tag_embeddings':
-                self.tag_embeddings = cache
-            if cache_category.casefold() == 'tag_relevances_to_courses':
-                self.tag_relevances_to_courses = cache
+        if os.path.isfile(self.cache_path):
+            self.debug.print(f"file found: {self.cache_path}")
+            file_embedding_cache = open(self.cache_path)
+        else:
+            self.debug.print("cache file not found", OUT.WARN)
+            return
+
+        try:
+            json_data = json.load(file_embedding_cache)
+            for cache_category, cache in json_data.items():
+                if not isinstance(cache, dict):
+                    self.debug.print(f'error: cache data {cache_category} not a dictionary')
+                    continue
+                if cache_category.casefold() == 'course_embeddings':
+                    self.course_embeddings = {key:np.array(value) for key, value in cache.items()}
+                if cache_category.casefold() == 'tag_embeddings':
+                    self.tag_embeddings = {key:np.array(value) for key, value in cache.items()}
+                if cache_category.casefold() == 'tag_relevances_to_courses':
+                    self.tag_relevances_to_courses = {key:np.array(value) for key, value in cache.items()}
+                if cache_category.casefold() == 'course_keywords':
+                    self.course_keywords = cache
+                if cache_category.casefold() == 'word_embeddings':
+                    self.word_embeddings = {key:np.array(value) for key, value in cache.items()}
+
+        except:
+            print("FAILED TO IMPORT CACHE", OUT.WARN)
+        
+        file_embedding_cache.close()
 
 
     def store_cache(self):
         cache = dict()
-        cache.update({'course_embeddings':self.course_embeddings})
-        cache.update({'tags_embeddings':self.tag_embeddings})
-        cache.update({'tag_relevances_to_courses':self.tag_relevances_to_courses})
+        cache.update({'course_embeddings':{key:value.tolist() for key, value in self.course_embeddings.items()}})
+        cache.update({'tags_embeddings':{key:value.tolist() for key, value in self.tag_embeddings.items()}})
+        cache.update({'tag_relevances_to_courses':{key:value.tolist() for key, value in self.tag_relevances_to_courses.items()}})
+        cache.update({'course_keywords':self.course_keywords})
+        cache.update({'word_embeddings':{key:value.tolist() for key, value in self.word_embeddings.items()}})
         cache_json = json.dumps(cache)
-        self.write_to_file(self.CACHE_PATH, cache_json)
+        self.write_to_file(self.cache_path, cache_json)
 
 
     def clear(self):
         self.course_embeddings.clear()
         self.tag_embeddings.clear()
         self.tag_relevances_to_courses.clear()
-        # self.write_to_file(self.CACHE_PATH, "")
+        self.course_keywords.clear()
+        self.word_embeddings.clear()
+        self.write_to_file(self.cache_path, "")
         
 
     def write_to_file(self, file, text):
@@ -64,3 +91,8 @@ class Cache():
         with open(file, "w") as output_file:
             output_file.write(text)
         output_file.close()
+
+
+    def __len__(self):
+        return (len(self.course_embeddings) + len(self.tag_embeddings) + len(self.tag_relevances_to_courses)
+            + len(self.course_keywords) + len(self.word_embeddings))
