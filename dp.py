@@ -6,7 +6,7 @@ import sys
 import logging
 from datetime import datetime
 
-from src.dp.command_handler import Planner
+from src.dp.planner import Planner
 from src.user.user import User
 from src.io.output import *
 

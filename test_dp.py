@@ -15,7 +15,7 @@ from datetime import datetime
 import timeit
 
 from src.math.graph import *
-from src.dp.command_handler import Planner
+from src.dp.planner import Planner
 from src.dp.course import Course
 from src.user.user import User
 from src.dp.template import Template
@@ -98,7 +98,7 @@ def test_graph():
 
 
 def test_other():
-    planner = Planner()
+    planner = Planner(enable_tensorflow=False)
     
     catalog = planner.catalog
     degree = Degree("computer science", catalog)
@@ -195,16 +195,21 @@ def test_other():
     attribute.add_attribute('test.2')
     attribute.add_attribute('test.2.1')
     attribute.add_attribute('test.3')
+    attribute.add_attribute('test.5')
     attribute.remove_attribute('test.1')
     attribute.remove_attribute('test.1.1')
     print(f"get attr by head 'test' {attribute.get_attributes_by_head('test')}")
     print(f"get attr by head 'test.2' {attribute.get_attributes_by_head('test.2')}")
     print(f"removing attr by head 'test.2")
     attribute.remove_attributes_by_head('test.2')
+    print(f"printing attribute: {attribute}")
+    print(f"replacing test.* with test.10")
+    attribute.replace_attribute('test', '10')
+    print(f"printing attribute: {attribute}")
 
 
 def test_fulfillment():
-    planner = Planner()
+    planner = Planner(enable_tensorflow=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -266,7 +271,7 @@ def test_fulfillment():
 
 
 def test_fulfillment2():
-    planner = Planner(12)
+    planner = Planner(12, enable_tensorflow=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -328,7 +333,7 @@ def test_fulfillment2():
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6, print, fulfillment')
 
 def test_fulfillment3():
-    planner = Planner(20)
+    planner = Planner(20, enable_tensorflow=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -391,7 +396,7 @@ def test_fulfillment3():
 
 
 def test_fulfillment4():
-    planner = Planner(20)
+    planner = Planner(20, enable_tensorflow=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -427,7 +432,7 @@ def test_fulfillment4():
 
 
 def test_fulfillment5():
-    planner = Planner(10)
+    planner = Planner(10, enable_tensorflow=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -486,7 +491,7 @@ def test_fulfillment5():
     run_cmd(planner, user, 'print, fulfillment')
 
 def test_fulfillment6():
-    planner = Planner(10)
+    planner = Planner(10, enable_tensorflow=False)
     user = User(1)
     
     catalog = planner.catalog

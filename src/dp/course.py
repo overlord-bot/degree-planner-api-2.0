@@ -73,8 +73,7 @@ class Course():
     
     def set_name(self, name):
         self.name = name
-        self.remove_attribute_by_head('name')
-        self.add_attribute(f'name.{name}')
+        self.replace_attribute('name', name)
 
     def generate_unique_name(self):
         if self.name == "" or self.get_subject() is None or self.get_id() is None:

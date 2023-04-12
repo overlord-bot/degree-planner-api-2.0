@@ -25,7 +25,7 @@ class Catalog():
         self.__degree_list = dict() # degree name as key
 
         self.tags = dict() # { subject : [tags] }
-        self.recommender = Recommender(self, enable_tensorflow)
+        self.recommender = Recommender(self, enable_tensorflow=enable_tensorflow)
         self.searcher = Search()
         self.debug = Output(OUT.DEBUG)
 
@@ -38,9 +38,12 @@ class Catalog():
         if not enable_recommender:
             return
         
-        self.debug.info('starting recommender indexing')
-        self.recommender.recompute()
-        self.debug.info('finished recommender indexing')
+        self.debug.info('starting recommender reindex')
+        self.recommender.reindex()
+        self.debug.info('finished recommender reindex')
+
+    def load_cache(self):
+        self.recommender.load_cache()
 
     def add_course(self, course):
         if hasattr(course, '__iter__'):

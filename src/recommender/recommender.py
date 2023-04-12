@@ -10,32 +10,45 @@ class Recommender():
     def __init__(self, catalog, cache_path=None, enable_tensorflow=True):
 
         self.catalog = catalog
-        self.cache = Cache(cache_path)
-        
-        self.debug = Output(OUT.DEBUG, auto_clear=True)
+        self.cache = None
+        self.scorer = None
+
+        if enable_tensorflow:
+            from ..recommender.scorer import Scorer
+            self.scorer = Scorer(self.catalog, self.cache)
+
         self.ATTRIBUTE_BIN = 'subject'
         self.ATTRIBUTE_TO_EMBED = 'name'
         self.ENABLE_TENSORFLOW = enable_tensorflow
+        self.CACHE_PATH = cache_path
 
-        self.cache.load_cache()
-        self.scorer = None
+        self.debug = Output(OUT.DEBUG, auto_clear=True)
 
 
     def get_scorer(self):
-        if not self.ENABLE_TENSORFLOW:
-            self.debug.warn("TENSORFLOW IS DISABLED!")
-            return None
         if self.scorer is None:
-            from ..recommender.scorer import Scorer
-            self.scorer = Scorer(self.catalog, self.cache)
+            self.debug.warn("TENSORFLOW IS DISABLED")
         return self.scorer
+    
+
+    def create_cache(self):
+        self.cache = Cache(self.CACHE_PATH)
+    
+
+    def load_cache(self):
+        if self.cache is None:
+            self.create_cache()
+        self.debug.info("recommender loading cache")
+        self.cache.load_cache()
 
 
-    def recompute(self):
+    def reindex(self):
         scorer = self.get_scorer()
         if scorer is None:
-            self.debug.warn("RECOMPUTE CACHE HALTED, NO CHANGES HAS BEEN MADE")
+            self.debug.warn("RECOMPUTE CACHE HALTED DUE TO TENSORFLOW DISABLED (no scorer found), NO CHANGES MADE")
             return
+        if self.cache is None:
+            self.create_cache()
         self.cache.clear()
         scorer.init_tag_relevances_to_courses()
         self.cache.store_cache()
@@ -79,7 +92,7 @@ class Recommender():
             if tag_relevances_to_course is not None:
                 course_relevance_to_user = array_similarity(tag_relevances_to_user_by_bin.get(bin), tag_relevances_to_course)
             
-            if custom_tags is not None:
+            if custom_tags is not None and self.ENABLE_TENSORFLOW:
                 custom_tag_relevances_to_course = self.get_custom_tag_relevances(course, custom_tags) # numpy array
                 custom_course_relevance_to_user = array_similarity(custom_tag_relevances_to_course, np.zeros(len(custom_tag_relevances_to_course)))
                 course_relevance_to_user += custom_course_relevance_to_user

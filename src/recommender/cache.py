@@ -57,7 +57,7 @@ class Cache():
                     self.word_embeddings = {key:np.array(value) for key, value in cache.items()}
 
         except:
-            print("FAILED TO IMPORT CACHE", OUT.WARN)
+            self.debug.print("FAILED TO IMPORT CACHE", OUT.WARN)
         
         file_embedding_cache.close()
 
