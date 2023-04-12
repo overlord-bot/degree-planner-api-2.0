@@ -669,7 +669,7 @@ def test_recommender(recache, tf_disabled):
 
 
 def run_cmd(planner, user, string):
-    planner.input_handler(user, string)
+    planner.user_input(user, string)
 
 
 start = timeit.default_timer()

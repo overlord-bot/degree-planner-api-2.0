@@ -8,6 +8,12 @@ from ..recommender.cache import Cache
 class Recommender():
 
     def __init__(self, catalog, cache_path=None, enable_tensorflow=True):
+        self.ATTRIBUTE_BIN = 'subject'
+        self.ATTRIBUTE_TO_EMBED = 'name'
+        self.ENABLE_TENSORFLOW = enable_tensorflow
+        self.CACHE_PATH = cache_path
+
+        self.debug = Output(OUT.DEBUG, auto_clear=True)
 
         self.catalog = catalog
         self.cache = None
@@ -15,14 +21,9 @@ class Recommender():
 
         if enable_tensorflow:
             from ..recommender.scorer import Scorer
+            if self.cache is None:
+                self.load_cache()
             self.scorer = Scorer(self.catalog, self.cache)
-
-        self.ATTRIBUTE_BIN = 'subject'
-        self.ATTRIBUTE_TO_EMBED = 'name'
-        self.ENABLE_TENSORFLOW = enable_tensorflow
-        self.CACHE_PATH = cache_path
-
-        self.debug = Output(OUT.DEBUG, auto_clear=True)
 
 
     def get_scorer(self):
@@ -62,6 +63,8 @@ class Recommender():
 
 
     def embedded_relevance(self, taken_courses:set, recommending_courses:set, custom_tags:set) -> dict:
+        if self.cache is None:
+            self.load_cache()
         course_relevances_to_user = dict()
         
         ''' STEP 1: initialize dictionary of arrays that represent the relevance scores of each subject for the user '''

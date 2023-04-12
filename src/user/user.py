@@ -18,9 +18,11 @@ class User():
     '''
     Stores user identification, schedules, course eligibility and command queue operatons info
     '''
-    def __init__(self, id):
+    def __init__(self, id, username=None):
         self.id = id # unique id for user
-        self.username = str(id) # username to display
+        self.username = username # username to display
+        if self.username is None:
+            username = id
         self.__schedules = dict() # all schedules this user created <schedule name, Schedule>
         self.curr_schedule = "" # schedule to modify
 
@@ -31,9 +33,6 @@ class User():
         self.command_queue_locked = False
         self.command_decision = None
         self.command_paused = None
-
-        # template that determines the set of courses the student is allowed to take
-        self.eligibility = None
 
 
     def schedules(self) -> list:

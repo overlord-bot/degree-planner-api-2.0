@@ -56,8 +56,8 @@ class Cache():
                 if cache_category.casefold() == 'word_embeddings':
                     self.word_embeddings = {key:np.array(value) for key, value in cache.items()}
 
-        except:
-            self.debug.print("FAILED TO IMPORT CACHE", OUT.WARN)
+        except Exception as e:
+            self.debug.print(f"FAILED TO IMPORT CACHE, exception {e}", OUT.WARN)
         
         file_embedding_cache.close()
 

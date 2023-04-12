@@ -42,9 +42,6 @@ class Catalog():
         self.recommender.reindex()
         self.debug.info('finished recommender reindex')
 
-    def load_cache(self):
-        self.recommender.load_cache()
-
     def add_course(self, course):
         if hasattr(course, '__iter__'):
             for c in course:
