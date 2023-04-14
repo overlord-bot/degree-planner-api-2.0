@@ -10,9 +10,6 @@ from src.dp.planner import Planner
 from src.user.user import User
 from src.io.output import *
 
-planner = Planner()
-user = User(1)
-
 def terminal():
     '''
     Infinite loop that calls command(user_input) upon user input
@@ -23,13 +20,20 @@ def terminal():
     print("  Project Overlord 2022")
     print("  YACS.n 2023")
     print(f"  {datetime.now()}")
-    if len(sys.argv) > 1 and '-d' in sys.argv:
-        print("  logging all debugging info")
-        logging.getLogger().setLevel(logging.DEBUG)
-    else:
-        logging.getLogger().setLevel(logging.WARNING)
+
+    ENABLE_TENSORFLOW = True
+    if len(sys.argv) > 1:
+        if '-d' in sys.argv:
+            print("  logging all debugging info")
+            logging.getLogger().setLevel(logging.DEBUG)
+        else:
+            logging.getLogger().setLevel(logging.WARNING)
+        if '-f' in sys.argv:
+            ENABLE_TENSORFLOW = False
 
     print("")
+    planner = Planner(ENABLE_TENSORFLOW=ENABLE_TENSORFLOW)
+    user = User(1, "user1")
     output = Output(OUT.CONSOLE, output_type=OUTTYPE.STRING, signature='DP', auto_clear=True)
     while 1:
         user_input = input("(degree planner) >>> ")

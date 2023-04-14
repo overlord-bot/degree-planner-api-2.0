@@ -14,7 +14,7 @@ class Schedule():
     without transferring any user specific data
     '''
 
-    def __init__(self, name:str, SEMESTERS_MAX:int=10):
+    def __init__(self, name:str, SEMESTERS_MAX:int=12):
         # 2D list, 1st dimension is semesters and 2nd dimension is courses for that semester
         # NOTE: duplications are allowed both within semester and across semesters!
         self.__master_list = list()
@@ -35,7 +35,7 @@ class Schedule():
             self.__master_list.append([])
 
 
-    def add_course(self, course:Course, semester:int) -> bool:
+    def add_course(self, semester, course:Course) -> bool:
         '''
         Args:
             course (Course): course to add
@@ -51,7 +51,7 @@ class Schedule():
             return True
 
 
-    def remove_course(self, course:Course, semester:int) -> bool:
+    def remove_course(self, semester, course:Course) -> bool:
         '''
         Args:
             course (Course): course to remove

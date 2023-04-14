@@ -38,18 +38,19 @@ class Recommender():
 
     def load_cache(self):
         if self.cache is None:
+            self.debug.info("creating cache")
             self.create_cache()
         self.debug.info("recommender loading cache")
         self.cache.load_cache()
 
 
-    def reindex(self):
+    def recache(self):
         scorer = self.get_scorer()
-        if scorer is None:
-            self.debug.warn("RECOMPUTE CACHE HALTED DUE TO TENSORFLOW DISABLED (no scorer found), NO CHANGES MADE")
-            return
         if self.cache is None:
-            self.create_cache()
+            self.load_cache()
+        if scorer is None:
+            self.debug.warn("RECOMPUTE CACHE HALTED DUE TO TENSORFLOW DISABLED (no scorer found), NO CHANGES TO STORED CACHE MADE")
+            return
         self.cache.clear()
         scorer.init_tag_relevances_to_courses()
         self.cache.store_cache()

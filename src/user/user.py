@@ -22,9 +22,9 @@ class User():
         self.id = id # unique id for user
         self.username = username # username to display
         if self.username is None:
-            username = id
+            self.username = id
         self.__schedules = dict() # all schedules this user created <schedule name, Schedule>
-        self.curr_schedule = "" # schedule to modify
+        self.active_schedule = "" # name of schedule to modify
 
         self.flag = set()
 
@@ -49,11 +49,11 @@ class User():
         return self.__schedules.get(schedule_name, None)
 
 
-    def new_schedule(self, schedule_name:str, SEMESTERS_MAX:int=10) -> None:
+    def new_schedule(self, schedule_name:str) -> None:
         '''
         Creates a new schedule if the schedule does not yet exist
         '''
-        schedule = Schedule(schedule_name, SEMESTERS_MAX)
+        schedule = Schedule(schedule_name)
         self.__schedules.update({schedule_name : schedule})
 
 
@@ -64,11 +64,18 @@ class User():
         self.__schedules.update({schedule_name : schedule})
 
 
-    def get_current_schedule(self) -> Schedule:
+    def get_active_schedule(self) -> Schedule:
         '''
         Get schedule being actively editted for this user
         '''
-        return self.get_schedule(self.curr_schedule)
+        return self.get_schedule(self.active_schedule)
+
+
+    def set_active_schedule(self, schedule):
+        if isinstance(schedule, Schedule):
+            schedule = schedule.name
+        if schedule in self.__schedules:
+            self.active_schedule = schedule
 
 
     def rename_schedule(self, old_name:str, new_name:str) -> bool:

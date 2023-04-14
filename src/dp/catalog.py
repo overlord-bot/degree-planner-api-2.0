@@ -29,18 +29,20 @@ class Catalog():
         self.searcher = Search()
         self.debug = Output(OUT.DEBUG)
 
-    def reindex(self, enable_recommender=True):
+    def reindex(self, recompute_cache=True):
+        '''
+        1) computes search index
+        2) recaches recommender if tensorflow is enabled
+        '''
         self.debug.info('starting search indexing')
         self.searcher.update_items(self.course_names())
         self.searcher.generate_index()
         self.debug.info('finished search indexing')
-
-        if not enable_recommender:
-            return
         
-        self.debug.info('starting recommender reindex')
-        self.recommender.reindex()
-        self.debug.info('finished recommender reindex')
+        if recompute_cache:
+            self.debug.info('starting recommender reindex')
+            self.recommender.recache()
+            self.debug.info('finished recommender reindex')
 
     def add_course(self, course):
         if hasattr(course, '__iter__'):
@@ -57,12 +59,6 @@ class Catalog():
 
     def add_degree(self, degree:Degree):
         self.__degree_list.update({degree.name:degree})
-
-    def has_degree(self, degree):
-        if isinstance(degree, Degree):
-            return degree.name in self.__degree_list
-        elif isinstance(degree, str):
-            return degree in self.__degree_list
 
     def remove_degree(self, degree):
         if isinstance(degree, str):

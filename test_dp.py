@@ -98,7 +98,7 @@ def test_graph():
 
 
 def test_other():
-    planner = Planner(enable_tensorflow=False)
+    planner = Planner(ENABLE_TENSORFLOW=False)
     
     catalog = planner.catalog
     degree = Degree("computer science", catalog)
@@ -152,7 +152,7 @@ def test_other():
     degree.add_template(testtemplate4)
     degree.add_template(testtemplate5)
 
-    catalog.reindex(False)
+    catalog.reindex(recompute_cache=False)
 
     print(f'course0 credits: {course0.get_credits()}')
 
@@ -209,7 +209,7 @@ def test_other():
 
 
 def test_fulfillment():
-    planner = Planner(enable_tensorflow=False)
+    planner = Planner(ENABLE_TENSORFLOW=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -246,7 +246,7 @@ def test_fulfillment():
     course5.add_attribute('bin.4')
     catalog.add_course(course5)
 
-    catalog.reindex(False)
+    catalog.reindex(recompute_cache=False)
 
     testtemplate1 = Template('bin1', 'bin.1')
     testtemplate2 = Template('bin2', 'bin.2')
@@ -271,7 +271,7 @@ def test_fulfillment():
 
 
 def test_fulfillment2():
-    planner = Planner(12, enable_tensorflow=False)
+    planner = Planner(ENABLE_TENSORFLOW=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -328,12 +328,12 @@ def test_fulfillment2():
     degree.add_template(testtemplate4)
     degree.add_template(testtemplate5)
 
-    catalog.reindex(False)
+    catalog.reindex()
 
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6, print, fulfillment')
 
 def test_fulfillment3():
-    planner = Planner(20, enable_tensorflow=False)
+    planner = Planner(ENABLE_TENSORFLOW=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -389,14 +389,14 @@ def test_fulfillment3():
     degree.add_template(testtemplate4)
     degree.add_template(testtemplate5)
 
-    catalog.reindex(False)
+    catalog.reindex()
 
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6')
     run_cmd(planner, user, 'print, fulfillment')
 
 
 def test_fulfillment4():
-    planner = Planner(20, enable_tensorflow=False)
+    planner = Planner(ENABLE_TENSORFLOW=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -425,14 +425,14 @@ def test_fulfillment4():
     degree.add_template(testtemplate2)
     degree.add_template(testtemplate3)
 
-    catalog.reindex(False)
+    catalog.reindex()
 
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6')
     run_cmd(planner, user, 'print, fulfillment')
 
 
 def test_fulfillment5():
-    planner = Planner(10, enable_tensorflow=False)
+    planner = Planner(ENABLE_TENSORFLOW=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -485,13 +485,13 @@ def test_fulfillment5():
     degree.add_template(testtemplate4)
     degree.add_template(testtemplate5)
 
-    catalog.reindex(False)
+    catalog.reindex()
 
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6')
     run_cmd(planner, user, 'print, fulfillment')
 
 def test_fulfillment6():
-    planner = Planner(10, enable_tensorflow=False)
+    planner = Planner(ENABLE_TENSORFLOW=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -623,7 +623,7 @@ def test_fulfillment6():
     templates.append(testtemplate9)
     templates.append(testtemplate10)
 
-    catalog.reindex(False)
+    catalog.reindex()
 
     # templates.reverse()
 
@@ -640,8 +640,7 @@ def test_fulfillment6():
 
 def test_recommender(recache, tf_disabled):
 
-    planner = Planner(10, enable_tensorflow=(not tf_disabled))
-    planner 
+    planner = Planner(ENABLE_TENSORFLOW=(not tf_disabled))
     user1 = User(1)
     user2 = User(2)
     user3 = User(3)
@@ -667,6 +666,12 @@ def test_recommender(recache, tf_disabled):
     run_cmd(planner, user3, 'print, fulfillment, recommend, machine learning, music, motor control')
     print('\n')
 
+    print('BEGINNING STRESS TEST')
+    for i in range(0, 10):
+        user = User(f"stressuser{i}")
+        run_cmd(planner, user, f'schedule, stressuser{i}, degree, computer science, add, 1, dat str, add, 2, pro lang, add, 3, int alg, add, 4, mac learn 4100, add, 5, computer organization')
+        run_cmd(planner, user, "print, fulfillment")
+        print('\n\n')
 
 def run_cmd(planner, user, string):
     planner.user_input(user, string)
@@ -676,26 +681,33 @@ start = timeit.default_timer()
 
 print(f'beginning test {datetime.now()}')
 
-if len(sys.argv) > 1 and '-d' in sys.argv:
-    logging.getLogger().setLevel(logging.DEBUG)
-    print('DEBUG MODE ON, PRINTING ALL DEBUGGING INFORMATION!')
-else:
-    logging.getLogger().setLevel(logging.INFO)
-test_graph()
-input('press enter to continue')
-test_other()
-input('press enter to continue')
-test_fulfillment()
-input('press enter to continue')
-test_fulfillment2()
-input('press enter to continue')
-test_fulfillment3()
-input('press enter to continue')
-test_fulfillment4()
-input('press enter to continue')
-test_fulfillment5()
-input('press enter to continue')
-test_fulfillment6()
+testall = False
+
+if len(sys.argv) > 1:
+    if '-d' in sys.argv:
+        logging.getLogger().setLevel(logging.DEBUG)
+        print('DEBUG MODE ON, PRINTING ALL DEBUGGING INFORMATION!')
+    else:
+        logging.getLogger().setLevel(logging.INFO)
+    if '-all' in sys.argv:
+        testall = True
+
+if testall:
+    test_graph()
+    input('press enter to continue')
+    test_other()
+    input('press enter to continue')
+    test_fulfillment()
+    input('press enter to continue')
+    test_fulfillment2()
+    input('press enter to continue')
+    test_fulfillment3()
+    input('press enter to continue')
+    test_fulfillment4()
+    input('press enter to continue')
+    test_fulfillment5()
+    input('press enter to continue')
+    test_fulfillment6()
 
 tracemalloc.start()
 user_input = input('INPUT C TO RECOMPUTE CACHE, INPUT F TO DISABLE TENSORFLOW, then press enter to continue\n')

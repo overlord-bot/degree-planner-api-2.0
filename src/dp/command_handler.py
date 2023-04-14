@@ -2,7 +2,6 @@ import re
 from ..user.user import *
 from ..io.output import *
 from ..dp.command import *
-from ..dp.degree import *
 
 def user_input(planner, user:User, user_input:str, io:Output=None) -> bool:
     ''' MAIN FUNCTION FOR ACCEPTING COMMAND ENTRIES
@@ -83,7 +82,7 @@ def execute_commands(planner, user:User, io:Output=None) -> None:
                 io.print(f"no arguments found. Use find, [courses] to find courses")
             else:
                 for entry in command.arguments:
-                    planner.print_matches(entry, io)
+                    planner.find(entry, io)
             user.command_queue.task_done()
             continue
 
@@ -91,41 +90,42 @@ def execute_commands(planner, user:User, io:Output=None) -> None:
             if not command.arguments:
                 io.print(f"not enough arguments, please specify a schedule name")
             else:
-                planner.user_set_active_schedule(user, command.arguments[0], io)
+                user.new_schedule(user.username)
+                user.set_active_schedule(command.arguments[0])
             user.command_queue.task_done()
             continue
 
         # all commands after this requires an active schedule inside User
-        schedule = user.get_current_schedule()
+        schedule = user.get_active_schedule()
         if schedule is None:
             io.print(f"no schedule selected, creating one named {user.username}")
-            planner.user_set_active_schedule(user, user.username, io)
-            schedule = user.get_current_schedule()
+            user.new_schedule(user.username)
+            user.set_active_schedule(user.username)
+            schedule = user.get_active_schedule()
 
         if command.command in (CMD.ADD, CMD.REMOVE):
             if Flag.CMD_PAUSED in user.flag:
                 decision = user.command_decision
-                courses = command.data_store
-                if not decision.isdigit() or int(decision) not in range(1, len(courses) + 1):
+                course_names = command.data_store
+                if not decision.isdigit() or int(decision) not in range(1, len(course_names) + 1):
                     io.print(f"Please enter a valid selection number")
                     break
-                course = courses[int(decision) - 1]
-                command.arguments[1] = course.get_unique_name()
+                course_name = course_names[int(decision) - 1]
+                command.arguments[1] = course_name
                 user.flag.remove(Flag.CMD_PAUSED)
 
             semester = command.arguments[0]
-            course = command.arguments[1]
+            course_name = command.arguments[1]
+            possible_courses = planner.find(course_name)
 
-            if command.command == CMD.ADD:
-                possible_courses = planner.add_course(user, course, semester, io)
-            else:
-                possible_courses = planner.remove_course(user, course, semester, io)
+            if not len(possible_courses):
+                io.print(f"no courses matching entry {course_name} found")
 
-            if possible_courses is not None:
-                io.print(f"entry {course} has multiple choices, please choose from list:")
+            if len(possible_courses) > 1:
+                io.print(f"entry {course_name} has multiple choices, please choose from list:")
                 i = 1
-                for c in possible_courses:
-                    io.store(f"  {i}: {c.subject} {c.course_id} {c.name}")
+                for course in possible_courses:
+                    io.store(f"  {i}: {course}")
                     i += 1
                 io.view_cache()
                 # pause command, set temporary variables/storage and break from the loop
@@ -133,6 +133,11 @@ def execute_commands(planner, user:User, io:Output=None) -> None:
                 user.command_paused = command
                 user.flag.add(Flag.CMD_PAUSED)
                 break
+
+            if command.command == CMD.ADD:
+                    planner.add_course(user, semester, course_name, io)
+            else:
+                planner.remove_course(user, semester, course_name, io)
 
             user.command_queue.task_done()
             continue
@@ -147,7 +152,7 @@ def execute_commands(planner, user:User, io:Output=None) -> None:
             if not command.arguments:
                 io.print(f"no arguments found. Use degree, <degree name> to set your schedule's degree")
             else:
-                planner.user_set_degree(user, command.arguments[0], io)
+                planner.degree(user, command.arguments[0], io)
             user.command_queue.task_done()
             continue
 
@@ -186,11 +191,10 @@ def execute_commands(planner, user:User, io:Output=None) -> None:
 
         if command.command == CMD.CACHE:
             io.print("recomputing cache")
-            planner.recompute_cache()
+            planner.cache()
             io.print("finished cache recompute")
             user.command_queue.task_done()
             continue
-
 
         else:
             io.print(f"Unimplemented command {command.command} entered")

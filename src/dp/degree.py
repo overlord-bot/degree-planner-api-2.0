@@ -570,53 +570,6 @@ class Degree():
 
 
 ######################################
-# PRINT FORMATTING
-######################################
-
-def print_fulfillment(all_fulfillment:dict) -> str:
-    '''
-    Print fulfillment dictionary in a neat string format
-    '''
-    printout = ''
-    fulfillments = list(all_fulfillment.values())
-    fulfillments.sort()
-    for status in fulfillments:
-        printout += (f"  Template '{status.template.name}':" + \
-            f"\n    replacement: {status.template.replacement}, importance: {status.template.importance}" + \
-            f"\n    required count: {status.get_required_count()}" + \
-            f"\n    actual count: {status.get_actual_count()}" + \
-            f"\n    specifications: {status.template.specifications}" + \
-            f"\n    original specifications: {status.template.original_specifications}\n")
-        simplified_fulfillment_set = set()
-        for course in status.get_fulfillment_set():
-            simplified_fulfillment_set.add(course.get_unique_name())
-        printout += f"    fulfillment set: {simplified_fulfillment_set}\n"
-    return printout
-
-
-def print_recommendation(recommendation:dict) -> str:
-    '''
-    Print recommendation dictionary in a neat string format
-    '''
-    printout = ''
-    templates = list(recommendation.keys())
-    templates.sort()
-    templates.reverse()
-    for template in templates:
-        printout += (f"\n  Original Template '{template.name}':" + \
-            f"\n    replacement: {template.replacement}, importance: {template.importance}" + \
-            f"\n    required count: {template.get_required_count()}" + \
-            f"\n    specifications: {template.specifications}\n")
-        
-        for generated_template, fulfillment_courses in recommendation.get(template).items():
-            printout += (f"\n    Generated Template '{generated_template.name}':" + \
-            f"\n      specifications: {generated_template.specifications}" + \
-            f"\n      fulfillment courses: {[str(e) for e in fulfillment_courses]}\n")
-
-    return printout
-
-
-######################################
 # COMBINATIONS
 ######################################
 

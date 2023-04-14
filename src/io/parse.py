@@ -72,7 +72,7 @@ def parse_degrees(catalog:Catalog, io:Output=None):
 
     for degree_name, degree_templates in degrees.items():
         # degrees
-        if catalog.has_degree(degree_name):
+        if catalog.get_degree(degree_name) is not None:
             catalog.remove_degree(degree_name)
             io.print(f"replaced degree {degree_name} in catalog")
         degree = Degree(degree_name, catalog)

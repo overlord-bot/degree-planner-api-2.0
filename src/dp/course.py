@@ -3,8 +3,6 @@ Course class
 '''
 
 import json
-from collections import OrderedDict
-from ..io.output import *
 from ..math.attributes import Attributes
 
 class Course():
@@ -146,7 +144,7 @@ class Course():
     def get_next(self, head) -> set:
         return self.attributes.next_attr(head)
                 
-    def json(self) -> OrderedDict:
+    def json(self):
         '''
         Returns:
             course (OrderedDict): all course attributes within an ordered dictionary
@@ -165,7 +163,7 @@ class Course():
         return st.replace("set()", "none")
 
     def __str__(self):
-        return self.name
+        return f"{self.subject} {self.course_id} {self.name}"
 
     def __eq__(self, other):
         if not isinstance(other, Course):
