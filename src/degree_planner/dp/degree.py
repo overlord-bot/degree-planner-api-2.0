@@ -35,7 +35,7 @@ class Degree():
         self.name = name
         self.templates = list()
         self.catalog = catalog
-        self.DEBUG = Output(Output.OUT.DEBUG, signature='DEGREE')
+        self.io = Output(Output.OUT.CONSOLE, auto_clear=True)
 
         self.MAX_IMPORTANCE = 1000 # essentially the maximum number of templates possible
 
@@ -136,7 +136,7 @@ class Degree():
                     continue
                 all_fulfillment.update({template:self.template_fill(template, all_fulfillment, max_fulfillments)})
 
-            self.DEBUG.print(f'after NR fulfillment: {Output.print_fulfillment(all_fulfillment)}')
+            self.io.debug(f'after NR fulfillment: {Output.print_fulfillment(all_fulfillment)}')
 
             '''
             NR TEMPLATE STEAL
@@ -145,7 +145,7 @@ class Degree():
             for template in template_set:
                 self.template_steal(template, all_fulfillment, max_fulfillments, graph)
             
-            self.DEBUG.print(f'after NR steal: {Output.print_fulfillment(all_fulfillment)}')
+            self.io.debug(f'after NR steal: {Output.print_fulfillment(all_fulfillment)}')
 
             '''
             R TEMPLATE FIRST COME FIRST SERVE FILL
@@ -155,7 +155,7 @@ class Degree():
                     continue
                 all_fulfillment.update({template:self.template_fill(template, all_fulfillment, max_fulfillments)})
 
-            self.DEBUG.print(f'after R fulfillment: {Output.print_fulfillment(all_fulfillment)}')
+            self.io.debug(f'after R fulfillment: {Output.print_fulfillment(all_fulfillment)}')
 
             '''
             R TEMPLATE STEAL/TRADE
@@ -164,7 +164,7 @@ class Degree():
                 #continue
                 self.replacement_template_steal(template, all_fulfillment, max_fulfillments)
 
-            self.DEBUG.print(f'after R steal: {Output.print_fulfillment(all_fulfillment)}')
+            self.io.debug(f'after R steal: {Output.print_fulfillment(all_fulfillment)}')
 
             '''
             R TEMPLATE FORCE STEAL/TRADE
@@ -183,7 +183,7 @@ class Degree():
                 best_fulfillment = fulfillment
 
         end = timeit.default_timer()
-        self.DEBUG.print(f'\nfulfillment runtime: {end - start}\n', Output.OUT.INFO)
+        self.io.info(f'\nfulfillment runtime: {end - start}\n')
         return best_fulfillment
 
 
@@ -203,7 +203,7 @@ class Degree():
                     continue
                 graph.update_connection(fulfillment_status1.get_template(), fulfillment_status2.get_template())
         graph.roots = bfs_roots
-        self.DEBUG.print(str(graph))
+        self.io.debug(str(graph))
         return graph
 
 
@@ -245,7 +245,7 @@ class Degree():
 
         requested_courses = max_fulfillments.get(template).get_fulfillment_set()
 
-        self.DEBUG.print(f"template {template} requests: {[str(e) for e in requested_courses]}")
+        self.io.debug(f"template {template} requests: {[str(e) for e in requested_courses]}")
 
         if template.replacement:
             requested_courses = sorting.dictionary_sort(num_wanted_bindings(all_fulfillment, max_fulfillments, requested_courses, Bind_Type.R))
@@ -313,7 +313,7 @@ class Degree():
         
         # the path to move courses, recorded as a list of templates traversed
         path = bfs.get_path(target_template)
-        self.DEBUG.print('path: ' + ' -> '.join([str(e) for e in path]) + ' --> ' + str(template))
+        self.io.debug('path: ' + ' -> '.join([str(e) for e in path]) + ' --> ' + str(template))
 
         # shifts courses along the path such that we obtain a new course
         for i in range(0, len(path) - 1):
@@ -324,10 +324,10 @@ class Degree():
             # avoid being greedy and taking courses that fulfill replaceable templates for yourself!
             transferred_course = sorting.bucket_sort(num_bindings(max_fulfillments, transferred_courses, Bind_Type.R))[0]
 
-            self.DEBUG.print(f'transferring course {transferred_course} from {giver} to {receiver}')
+            self.io.debug(f'transferring course {transferred_course} from {giver} to {receiver}')
             self.course_move(all_fulfillment.get(giver), all_fulfillment.get(receiver), transferred_course, graph)
 
-        self.DEBUG.print(f'transferring course {course} from {path[-1]} to {all_fulfillment.get(template)}')
+        self.io.debug(f'transferring course {course} from {path[-1]} to {all_fulfillment.get(template)}')
         self.course_move(all_fulfillment.get(path[-1]), all_fulfillment.get(template), course, graph)
 
 
@@ -434,14 +434,14 @@ class Degree():
             template_with_course = templates_containing_course(all_fulfillment, course, True)
 
             if not bfs.contains_node(template_with_course):
-                self.DEBUG.print(f'R template attempting to steal course {course} failed, not found in bfs tree {bfs}')
+                self.io.debug(f'R template attempting to steal course {course} failed, not found in bfs tree {bfs}')
                 course_bindings_clear(all_fulfillment, course, Bind_Type.R)
                 all_fulfillment.pop(dummy_donor_template)
                 max_fulfillments.pop(dummy_donor_template)
                 all_fulfillment.pop(dummy_receiver_template)
                 max_fulfillments.pop(dummy_receiver_template)
                 continue
-            self.DEBUG.print(f'R template stealing course {course}')
+            self.io.debug(f'R template stealing course {course}')
             self.course_steal(dummy_receiver_template, course, all_fulfillment, max_fulfillments, graph, less_important_templates=less_important_templates)
 
             traded_course = max_fulfillments.get(dummy_donor_template).get_fulfillment_set() - dummy_donor_fulfillment.get_fulfillment_set()
@@ -515,7 +515,7 @@ class Degree():
                 for each match, rank the matched courses
                 """
 
-                self.DEBUG.print(f'max match for template {best_template_original}: \n{matches}\n')
+                self.io.debug(f'max match for template {best_template_original}: \n{matches}\n')
                 # remove the courses already taken
                 recommended_courses = matched_fulfillment.get_fulfillment_set()
                 for course in best_fulfillment.get_fulfillment_set():
@@ -533,12 +533,12 @@ class Degree():
                 matches_dict.update({matched_fulfillment.get_template():recommended_courses})
 
                 for course in recommended_courses:
-                    print(f'score {final_score.get(course)} for course {str(course)}, keywords: {course.keywords}')
+                    self.io.print(f'score {final_score.get(course)} for course {str(course)}, keywords: {course.keywords}')
 
             recommendation.update({best_template:matches_dict})
 
         end = timeit.default_timer()
-        self.DEBUG.print(f'\rrecommendation runtime: {end - start}\n', Output.OUT.INFO)
+        self.io.info(f'\rrecommendation runtime: {end - start}\n')
        
         return recommendation
     

@@ -2,13 +2,15 @@
 Command line shell for degree planner
 '''
 # pylint: disable=line-too-long
+
+
 import sys
 import logging
 from datetime import datetime
 
-from src.dp.planner import Planner
-from src.user.user import User
-from src.io.output import Output
+from degree_planner.planner import Planner
+from degree_planner.user.user import User
+from degree_planner.io.output import Output
 
 def terminal():
     '''

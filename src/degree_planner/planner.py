@@ -2,11 +2,11 @@
 DEGREE PLANNER MAIN CLASS
 '''
 
-from ..io.output import Output
-from .catalog import Catalog
-from ..user.user import User
-from src.io.parse import parsing
-from .command_handler import command_handler
+from .io.output import Output
+from .io.parse import parsing
+from .dp.catalog import Catalog
+from .dp.command_handler import command_handler
+from .user.user import User
 
 VERSION = "API 2.0"
 

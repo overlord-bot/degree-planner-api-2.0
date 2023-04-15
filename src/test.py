@@ -2,7 +2,6 @@ import sys
 import tracemalloc
 import os
 import psutil
-import logging
  
 # inner psutil function
 def process_memory():
@@ -12,18 +11,20 @@ def process_memory():
 
 mem_before = process_memory()
 
+import logging
 from datetime import datetime
 import timeit
 
-from src.math.graph import *
-from src.math.sorting import sorting
-from src.dp.planner import Planner
-from src.dp.course import Course
-from src.user.user import User
-from src.dp.template import Template
-from src.dp.degree import Degree
-from src.dp.template import template_parsing
-from src.math.attributes import Attributes
+from degree_planner.planner import Planner
+from degree_planner.dp.degree import Degree
+from degree_planner.dp.course import Course
+from degree_planner.dp.template import Template
+from degree_planner.dp.template import template_parsing
+from degree_planner.math.attributes import Attributes
+from degree_planner.math.graph import Graph
+from degree_planner.math.graph import Edge_Generator
+from degree_planner.math.sorting import sorting
+from degree_planner.user.user import User
 
 mem_after_imports = process_memory()
 
@@ -685,13 +686,11 @@ start = timeit.default_timer()
 print(f'beginning test {datetime.now()}')
 
 testall = False
-
+logging.getLogger().setLevel(logging.INFO)
 if len(sys.argv) > 1:
     if '-d' in sys.argv:
         logging.getLogger().setLevel(logging.DEBUG)
         print('DEBUG MODE ON, PRINTING ALL DEBUGGING INFORMATION!')
-    else:
-        logging.getLogger().setLevel(logging.INFO)
     if '-all' in sys.argv:
         testall = True
 

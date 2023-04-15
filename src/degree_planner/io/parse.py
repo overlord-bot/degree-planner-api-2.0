@@ -12,9 +12,11 @@ from ..dp.catalog import Catalog
 from ..dp.degree import Degree
 from ..dp.template import Template
 
-CATALOG_PATH = os.getcwd() + "/data/catalog.json"
-DEGREE_PATH = os.getcwd() + "/data/degrees.json"
-TAGS_PATH = os.getcwd() + "/data/tags.json"
+CATALOG_PATH = os.getcwd() + "/degree_planner/data/catalog.json"
+DEGREE_PATH = os.getcwd() + "/degree_planner/data/degrees.json"
+TAGS_PATH = os.getcwd() + "/degree_planner/data/tags.json"
+
+print('current working directory: ' + os.getcwd())
 
 
 class parsing():

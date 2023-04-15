@@ -3,13 +3,12 @@ import os
 import numpy as np
 from ..io.output import Output
 
+CACHE_PATH = os.getcwd() + '/degree_planner/data/cache.json'
+
 class Cache():
 
-    def __init__(self, cache_path=None):
-        self.cache_path = cache_path
-        if self.cache_path is None:
-            self.cache_path = os.getcwd() + '/data/cache.json'
-
+    def __init__(self, cache_file_name=None):
+        self.cache_file_name = cache_file_name
         # {course: embedding}
         self.course_embeddings = dict()
         
@@ -32,9 +31,9 @@ class Cache():
     
         self.debug.print(f"LOADING CACHE...", Output.OUT.INFO)
 
-        if os.path.isfile(self.cache_path):
-            self.debug.print(f"file found: {self.cache_path}")
-            file_embedding_cache = open(self.cache_path)
+        if os.path.isfile(CACHE_PATH):
+            self.debug.print(f"file found: {CACHE_PATH}")
+            file_embedding_cache = open(CACHE_PATH)
         else:
             self.debug.print("cache file not found", Output.OUT.WARN)
             return

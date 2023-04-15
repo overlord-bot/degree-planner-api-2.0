@@ -81,20 +81,26 @@ class command_handler():
                 continue
 
             if command.command == CMD.FIND:
-                if len(command.arguments) == 0:
+                if not len(command.arguments):
                     io.print(f"no arguments found. Use find, [courses] to find courses")
                 else:
                     for entry in command.arguments:
-                        planner.find(entry, io)
+                        io.print(planner.find(entry))
                 user.command_queue.task_done()
                 continue
 
             if command.command == CMD.SCHEDULE:
-                if not command.arguments:
+                if not len(command.arguments):
                     io.print(f"not enough arguments, please specify a schedule name")
                 else:
-                    user.new_schedule(user.username)
-                    user.set_active_schedule(command.arguments[0])
+                    schedule_name = command.arguments[0]
+                    if user.get_schedule(schedule_name) is None:
+                        io.print(f"creating new schedule {schedule_name}")
+                        user.new_schedule(schedule_name)
+                        user.set_active_schedule(schedule_name)
+                    else:
+                        io.print(f"switched schedule to {schedule_name}")
+                        user.set_active_schedule(schedule_name)
                 user.command_queue.task_done()
                 continue
 

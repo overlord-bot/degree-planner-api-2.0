@@ -12,7 +12,7 @@ class Recommender():
         self.ENABLE_TENSORFLOW = enable_tensorflow
         self.CACHE_PATH = cache_path
 
-        self.debug = Output(Output.OUT.DEBUG, auto_clear=True)
+        self.io = Output(Output.OUT.CONSOLE, auto_clear=True)
 
         self.catalog = catalog
         self.cache = None
@@ -27,7 +27,7 @@ class Recommender():
 
     def get_scorer(self):
         if self.scorer is None:
-            self.debug.warn("TENSORFLOW IS DISABLED")
+            self.io.warn("TENSORFLOW IS DISABLED")
         return self.scorer
     
 
@@ -37,9 +37,9 @@ class Recommender():
 
     def load_cache(self):
         if self.cache is None:
-            self.debug.info("creating cache")
+            self.io.info("creating cache")
             self.create_cache()
-        self.debug.info("recommender loading cache")
+        self.io.info("recommender loading cache")
         self.cache.load_cache()
 
 
@@ -48,7 +48,7 @@ class Recommender():
         if self.cache is None:
             self.load_cache()
         if scorer is None:
-            self.debug.warn("RECOMPUTE CACHE HALTED DUE TO TENSORFLOW DISABLED (no scorer found), NO CHANGES TO STORED CACHE MADE")
+            self.io.warn("RECOMPUTE CACHE HALTED DUE TO TENSORFLOW DISABLED (no scorer found), NO CHANGES TO STORED CACHE MADE")
             return
         self.cache.clear()
         scorer.init_tag_relevances_to_courses()
@@ -85,7 +85,7 @@ class Recommender():
 
         # printing user's preference scores
         for bin, tags in self.catalog.tags.items():
-            self.debug.print(f"user's best descriptors for {bin}: {af.best_descriptors(dict(zip(tags, tag_relevances_to_user_by_bin.get(bin))), 5, 0.3)}", Output.OUT.INFO)
+            self.io.print(f"user's best descriptors for {bin}: {af.best_descriptors(dict(zip(tags, tag_relevances_to_user_by_bin.get(bin))), 5, 0.3)}", Output.OUT.CONSOLE)
 
         ''' STEP 4: compute relevance of each recommending course and compare to user's tag relevances and relevance to the custom tag '''
         for course in recommending_courses:
