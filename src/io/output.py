@@ -4,28 +4,7 @@ Output class
 
 import logging
 from enum import Enum
-import os
-import copy
 import json
-
-DELIMITER_TITLE = ' :: '
-LJUSTIFY = 13
-
-class OUT(Enum):
-    NONE = 0
-
-    CONSOLE = 1
-    INFO = 2
-    DEBUG = 3
-    WARN = 4
-    ERROR = 5
-
-    STORE = 6
-    FILE = 7
-
-class OUTTYPE(Enum):
-    STRING = 1
-    JSON = 2
 
 class Output():
     '''
@@ -37,6 +16,23 @@ class Output():
         file (file): file to print to if printing to file
         signature (str): used for embed titles
     '''
+
+    class OUT(Enum):
+        NONE = 0
+
+        CONSOLE = 1
+        INFO = 2
+        DEBUG = 3
+        WARN = 4
+        ERROR = 5
+
+        STORE = 6
+        FILE = 7
+
+    class OUTTYPE(Enum):
+        STRING = 1
+        JSON = 2
+
 
     def __init__(self, output_location:OUT, output_type:OUTTYPE=OUTTYPE.STRING, user=None, 
             file=None, signature:str=None, auto_clear=False):
@@ -50,8 +46,13 @@ class Output():
         self.cache = list()
         self.signature = signature
 
+        self.DELIMITER_TITLE = ' :: '
+        self.LJUSTIFY = 13
+
+
     def println(self, printout, output_location:OUT=None, file_name:str=None) -> None:
         self.print('\n' + printout, output_location=output_location, file_name=file_name)
+
 
     def print(self, printout, output_location:OUT=None, file_name:str=None, no_signature:bool=False) -> None:
         '''
@@ -65,7 +66,7 @@ class Output():
         '''
         outlocation = self.output_location if output_location == None else output_location
 
-        if self.output_type == OUTTYPE.JSON:
+        if self.output_type == self.OUTTYPE.JSON:
             if isinstance(printout, dict):
                 output = json.dumps(printout)
             elif isinstance (printout, str):
@@ -76,37 +77,37 @@ class Output():
             output = ''
             if isinstance(printout, dict):
                 for entry_key, entry_value in printout.items():
-                    output += f'{entry_key}{DELIMITER_TITLE}{entry_value}\n'
+                    output += f'{entry_key}{self.DELIMITER_TITLE}{entry_value}\n'
             elif isinstance (printout, str):
                 if not no_signature and not self.signature is None and len(self.signature):
-                    output = f'{self.signature.ljust(LJUSTIFY) if LJUSTIFY != 0 else self.signature}{DELIMITER_TITLE}{printout}'
+                    output = f'{self.signature.ljust(self.LJUSTIFY) if self.LJUSTIFY != 0 else self.signature}{self.DELIMITER_TITLE}{printout}'
                 else:
                     output = printout
             elif isinstance (printout, json):
                 output = str(json.loads(printout))
 
-            if outlocation == OUT.INFO:
+            if outlocation == self.OUT.INFO:
                 logging.info(output)
-            elif outlocation == OUT.DEBUG:
+            elif outlocation == self.OUT.DEBUG:
                 logging.debug(output)
-            elif outlocation == OUT.WARN:
+            elif outlocation == self.OUT.WARN:
                 logging.warning(output)
-            elif outlocation == OUT.ERROR:
+            elif outlocation == self.OUT.ERROR:
                 logging.error(output)
-            elif outlocation == OUT.CONSOLE:
+            elif outlocation == self.OUT.CONSOLE:
                 print(output)
 
-        if (output_location == OUT.STORE):
+        if (output_location == self.OUT.STORE):
             self.cache.append(output)
 
-        elif (output_location == OUT.FILE):
+        elif (output_location == self.OUT.FILE):
             f = open(file_name, 'a')
             f.write(output)
             f.close
 
 
     def store(self, printout):
-        self.print(printout, OUT.STORE, no_signature=True)
+        self.print(printout, self.OUT.STORE, no_signature=True)
 
     def view_cache(self, output_redirect=None) -> None:
         '''
@@ -137,69 +138,67 @@ class Output():
             self.cache.pop(-1)
 
     def get_cache(self) -> list:
-        '''
-        returns a copy of the cache and clears cache
-        '''
-        cache_copy = copy.deepcopy(self.cache)
-        self.cache.clear()
-        return cache_copy
+        cache = self.cache
+        self.cache = list()
+        return cache
 
     def debug(self, data) :
-        self.print(data, output_location=OUT.DEBUG)
+        self.print(data, output_location=self.OUT.DEBUG)
     
     def info(self, data):
-        self.print(data, output_location=OUT.INFO)
+        self.print(data, output_location=self.OUT.INFO)
     
     def warn(self, data):
-        self.print(data, output_location=OUT.WARN)
+        self.print(data, output_location=self.OUT.WARN)
     
     def error(self, data):
-        self.print(data, output_location=OUT.ERROR)
+        self.print(data, output_location=self.OUT.ERROR)
 
 
 
-######################################
-# PRINT FORMATTING
-######################################
+    ######################################
+    # PRINT FORMATTING
+    ######################################
 
-def print_fulfillment(all_fulfillment:dict) -> str:
-    '''
-    Print fulfillment dictionary in a neat string format
-    '''
-    printout = ''
-    fulfillments = list(all_fulfillment.values())
-    fulfillments.sort()
-    for status in fulfillments:
-        printout += (f"  Template '{status.template.name}':" + \
-            f"\n    replacement: {status.template.replacement}, importance: {status.template.importance}" + \
-            f"\n    required count: {status.get_required_count()}" + \
-            f"\n    actual count: {status.get_actual_count()}" + \
-            f"\n    specifications: {status.template.specifications}" + \
-            f"\n    original specifications: {status.template.original_specifications}\n")
-        simplified_fulfillment_set = set()
-        for course in status.get_fulfillment_set():
-            simplified_fulfillment_set.add(course.get_unique_name())
-        printout += f"    fulfillment set: {simplified_fulfillment_set}\n"
-    return printout
+    @staticmethod
+    def print_fulfillment(all_fulfillment:dict) -> str:
+        '''
+        Print fulfillment dictionary in a neat string format
+        '''
+        printout = ''
+        fulfillments = list(all_fulfillment.values())
+        fulfillments.sort()
+        for status in fulfillments:
+            printout += (f"  Template '{status.template.name}':" + \
+                f"\n    replacement: {status.template.replacement}, importance: {status.template.importance}" + \
+                f"\n    required count: {status.get_required_count()}" + \
+                f"\n    actual count: {status.get_actual_count()}" + \
+                f"\n    specifications: {status.template.specifications}" + \
+                f"\n    original specifications: {status.template.original_specifications}\n")
+            simplified_fulfillment_set = set()
+            for course in status.get_fulfillment_set():
+                simplified_fulfillment_set.add(course.get_unique_name())
+            printout += f"    fulfillment set: {simplified_fulfillment_set}\n"
+        return printout
 
+    @staticmethod
+    def print_recommendation(recommendation:dict) -> str:
+        '''
+        Print recommendation dictionary in a neat string format
+        '''
+        printout = ''
+        templates = list(recommendation.keys())
+        templates.sort()
+        templates.reverse()
+        for template in templates:
+            printout += (f"\n  Original Template '{template.name}':" + \
+                f"\n    replacement: {template.replacement}, importance: {template.importance}" + \
+                f"\n    required count: {template.get_required_count()}" + \
+                f"\n    specifications: {template.specifications}\n")
+            
+            for generated_template, fulfillment_courses in recommendation.get(template).items():
+                printout += (f"\n    Generated Template '{generated_template.name}':" + \
+                f"\n      specifications: {generated_template.specifications}" + \
+                f"\n      fulfillment courses: {[str(e) for e in fulfillment_courses]}\n")
 
-def print_recommendation(recommendation:dict) -> str:
-    '''
-    Print recommendation dictionary in a neat string format
-    '''
-    printout = ''
-    templates = list(recommendation.keys())
-    templates.sort()
-    templates.reverse()
-    for template in templates:
-        printout += (f"\n  Original Template '{template.name}':" + \
-            f"\n    replacement: {template.replacement}, importance: {template.importance}" + \
-            f"\n    required count: {template.get_required_count()}" + \
-            f"\n    specifications: {template.specifications}\n")
-        
-        for generated_template, fulfillment_courses in recommendation.get(template).items():
-            printout += (f"\n    Generated Template '{generated_template.name}':" + \
-            f"\n      specifications: {generated_template.specifications}" + \
-            f"\n      fulfillment courses: {[str(e) for e in fulfillment_courses]}\n")
-
-    return printout
+        return printout

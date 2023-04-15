@@ -72,84 +72,88 @@ class Template():
         return hash(self.name) + len(self.specifications)
 
 
-###################################################################################################
-#
-# CONTEXT FREE GRAMMAR PARSING (thanks programming languages I do not miss you)
-#
-###################################################################################################
+class template_parsing():
 
+    ###################################################################################################
+    #
+    # CONTEXT FREE GRAMMAR PARSING (thanks programming languages I do not miss you)
+    #
+    ###################################################################################################
 
-def course_fulfills_template(template:Template, course:Course):
-    conditions = dict()
-    for attr in template.specifications:
-        if 'NA' in attr or 'ANY' in attr or '-1' in attr:
-            continue
-        if not parse_attribute(attr, course, conditions):
+    @staticmethod
+    def course_fulfills_template(template:Template, course:Course):
+        conditions = dict()
+        for attr in template.specifications:
+            if 'NA' in attr or 'ANY' in attr or '-1' in attr:
+                continue
+            if not template_parsing.parse_attribute(attr, course, conditions):
+                return False, {}
+        return True, conditions
+
+    @staticmethod
+    def single_attribute_evaluation(attr:str, course:Course):
+        attr = attr.strip()
+        if attr == '':
+            return True, {}
+        if attr == 'True':
+            return True, {}
+        if attr == 'False':
             return False, {}
-    return True, conditions
+        if attr in ('True', 'False', True, False):
+            return attr
+        if '*' in attr:
+            matches = course.get_attributes_by_head(attr[:attr.find('*') - 1])
+            return len(matches) > 0, {attr:matches}
+        if '#' in attr:
+            return len(course.get_attributes_by_head(attr[:attr.find('#') - 1])) > 0, {}
+        return course.attr(attr) is not None, {}
 
-def single_attribute_evaluation(attr:str, course:Course):
-    attr = attr.strip()
-    if attr == '':
-        return True, {}
-    if attr == 'True':
-        return True, {}
-    if attr == 'False':
-        return False, {}
-    if attr in ('True', 'False', True, False):
-        return attr
-    if '*' in attr:
-        matches = course.get_attributes_by_head(attr[:attr.find('*') - 1])
-        return len(matches) > 0, {attr:matches}
-    if '#' in attr:
-        return len(course.get_attributes_by_head(attr[:attr.find('#') - 1])) > 0, {}
-    return course.attr(attr) is not None, {}
+    @staticmethod
+    def parse_attribute(input:str, course:Course, true_given_for_wildcards:dict=None) -> str:
+        '''
+        Input -> Attribute
+        Input -> True|False
+        Input -> (Input)
+        Input -> Input & Input
+        Input -> Input | Input
 
-def parse_attribute(input:str, course:Course, true_given_for_wildcards:dict=None) -> str:
-    '''
-    Input -> Attribute
-    Input -> True|False
-    Input -> (Input)
-    Input -> Input & Input
-    Input -> Input | Input
+        single_attribute_evaluation(Attribute, course) -> True|False
 
-    single_attribute_evaluation(Attribute, course) -> True|False
+        returns a True or False value based on whether the course fulfills the template
+        '''
+        # print('accepted input ' + str(input))
 
-    returns a True or False value based on whether the course fulfills the template
-    '''
-    # print('accepted input ' + str(input))
+        if '(' in input:
+            open_bracket_loc = input.find('(')
+            close_bracket_loc = len(input) # we allow close brackets to be omitted if it's at the end of the input
+            passed_bracket_count = 0
 
-    if '(' in input:
-        open_bracket_loc = input.find('(')
-        close_bracket_loc = len(input) # we allow close brackets to be omitted if it's at the end of the input
-        passed_bracket_count = 0
+            # calculate the location of the closing bracket for the current bracket
+            for i in range(open_bracket_loc + 1, len(input)):
+                if input[i] == '(':
+                    passed_bracket_count += 1
+                if input[i] == ')':
+                    if passed_bracket_count == 0:
+                        close_bracket_loc = i
+                        break
+                    passed_bracket_count -= 1
 
-        # calculate the location of the closing bracket for the current bracket
-        for i in range(open_bracket_loc + 1, len(input)):
-            if input[i] == '(':
-                passed_bracket_count += 1
-            if input[i] == ')':
-                if passed_bracket_count == 0:
-                    close_bracket_loc = i
-                    break
-                passed_bracket_count -= 1
-
-        new_string = input[: open_bracket_loc] + str(parse_attribute(input[open_bracket_loc + 1 : close_bracket_loc], course, true_given_for_wildcards)) + input[close_bracket_loc + 1:]
-        return parse_attribute(new_string, course, true_given_for_wildcards)
-    
-    elif '&' in input:
-        and_loc = input.find('&')
-        return parse_attribute(input[: and_loc], course, true_given_for_wildcards) and parse_attribute(input[and_loc + 1:], course, true_given_for_wildcards)
-    
-    elif '|' in input:
-        and_loc = input.find('|')
-        return parse_attribute(input[: and_loc], course, true_given_for_wildcards) or parse_attribute(input[and_loc + 1:], course, true_given_for_wildcards)
-    
-    else:
-        truth, true_given_entries = single_attribute_evaluation(input, course)
-        if len(true_given_entries):
-            true_given_for_wildcards.update(true_given_entries)
-        return truth
+            new_string = input[: open_bracket_loc] + str(template_parsing.parse_attribute(input[open_bracket_loc + 1 : close_bracket_loc], course, true_given_for_wildcards)) + input[close_bracket_loc + 1:]
+            return template_parsing.parse_attribute(new_string, course, true_given_for_wildcards)
+        
+        elif '&' in input:
+            and_loc = input.find('&')
+            return template_parsing.parse_attribute(input[: and_loc], course, true_given_for_wildcards) and template_parsing.parse_attribute(input[and_loc + 1:], course, true_given_for_wildcards)
+        
+        elif '|' in input:
+            and_loc = input.find('|')
+            return template_parsing.parse_attribute(input[: and_loc], course, true_given_for_wildcards) or template_parsing.parse_attribute(input[and_loc + 1:], course, true_given_for_wildcards)
+        
+        else:
+            truth, true_given_entries = template_parsing.single_attribute_evaluation(input, course)
+            if len(true_given_entries):
+                true_given_for_wildcards.update(true_given_entries)
+            return truth
 
 
 def get_course_match(template:Template, courses) -> list:
@@ -186,7 +190,7 @@ def get_course_match(template:Template, courses) -> list:
     curr_fulfillment = Fulfillment_Status(template, template.courses_required, set())
 
     for course in courses:
-        good_match, conditions = course_fulfills_template(template, course)
+        good_match, conditions = template_parsing.course_fulfills_template(template, course)
 
         # updates all_conditions with possible values for wildcard replacement
         for condition, condition_sat_set in conditions.items():

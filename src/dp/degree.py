@@ -9,7 +9,7 @@ from .template import *
 from ..math.graph import Graph
 from ..math.graph import Backwards_Overlap
 from ..math.array_math import array_functions as af
-from ..io.output import *
+from ..io.output import Output
 from ..recommender.recommender import *
 from ..math.sorting import sorting
 
@@ -33,7 +33,7 @@ class Degree():
         self.name = name
         self.templates = list()
         self.catalog = catalog
-        self.DEBUG = Output(OUT.DEBUG, signature='DEGREE')
+        self.DEBUG = Output(Output.OUT.DEBUG, signature='DEGREE')
 
         self.MAX_IMPORTANCE = 1000 # essentially the maximum number of templates possible
 
@@ -134,7 +134,7 @@ class Degree():
                     continue
                 all_fulfillment.update({template:self.template_fill(template, all_fulfillment, max_fulfillments)})
 
-            self.DEBUG.print(f'after NR fulfillment: {print_fulfillment(all_fulfillment)}')
+            self.DEBUG.print(f'after NR fulfillment: {Output.print_fulfillment(all_fulfillment)}')
 
             '''
             NR TEMPLATE STEAL
@@ -143,7 +143,7 @@ class Degree():
             for template in template_set:
                 self.template_steal(template, all_fulfillment, max_fulfillments, graph)
             
-            self.DEBUG.print(f'after NR steal: {print_fulfillment(all_fulfillment)}')
+            self.DEBUG.print(f'after NR steal: {Output.print_fulfillment(all_fulfillment)}')
 
             '''
             R TEMPLATE FIRST COME FIRST SERVE FILL
@@ -153,7 +153,7 @@ class Degree():
                     continue
                 all_fulfillment.update({template:self.template_fill(template, all_fulfillment, max_fulfillments)})
 
-            self.DEBUG.print(f'after R fulfillment: {print_fulfillment(all_fulfillment)}')
+            self.DEBUG.print(f'after R fulfillment: {Output.print_fulfillment(all_fulfillment)}')
 
             '''
             R TEMPLATE STEAL/TRADE
@@ -162,7 +162,7 @@ class Degree():
                 #continue
                 self.replacement_template_steal(template, all_fulfillment, max_fulfillments)
 
-            self.DEBUG.print(f'after R steal: {print_fulfillment(all_fulfillment)}')
+            self.DEBUG.print(f'after R steal: {Output.print_fulfillment(all_fulfillment)}')
 
             '''
             R TEMPLATE FORCE STEAL/TRADE
@@ -181,7 +181,7 @@ class Degree():
                 best_fulfillment = fulfillment
 
         end = timeit.default_timer()
-        self.DEBUG.print(f'\nfulfillment runtime: {end - start}\n', OUT.INFO)
+        self.DEBUG.print(f'\nfulfillment runtime: {end - start}\n', Output.OUT.INFO)
         return best_fulfillment
 
 
@@ -536,7 +536,7 @@ class Degree():
             recommendation.update({best_template:matches_dict})
 
         end = timeit.default_timer()
-        self.DEBUG.print(f'\rrecommendation runtime: {end - start}\n', OUT.INFO)
+        self.DEBUG.print(f'\rrecommendation runtime: {end - start}\n', Output.OUT.INFO)
        
         return recommendation
     

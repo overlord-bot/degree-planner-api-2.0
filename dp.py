@@ -1,14 +1,14 @@
 '''
 Command line shell for degree planner
 '''
-
+# pylint: disable=line-too-long
 import sys
 import logging
 from datetime import datetime
 
 from src.dp.planner import Planner
 from src.user.user import User
-from src.io.output import *
+from src.io.output import Output
 
 def terminal():
     '''
@@ -34,7 +34,7 @@ def terminal():
     print("")
     planner = Planner(ENABLE_TENSORFLOW=ENABLE_TENSORFLOW)
     user = User(1, "user1")
-    output = Output(OUT.CONSOLE, output_type=OUTTYPE.STRING, signature='DP', auto_clear=True)
+    output = Output(Output.OUT.CONSOLE, output_type=Output.OUTTYPE.STRING, signature='DP', auto_clear=True)
     while 1:
         user_input = input("(degree planner) >>> ")
         if user_input.casefold() == "quit":

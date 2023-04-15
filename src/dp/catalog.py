@@ -9,7 +9,7 @@ from .degree import Degree
 from .template import *
 from ..math.search import Search
 from ..recommender.recommender import Recommender
-from ..io.output import *
+from ..io.output import Output
 
 class Catalog():
     '''
@@ -27,7 +27,7 @@ class Catalog():
         self.tags = dict() # { subject : [tags] }
         self.recommender = Recommender(self, enable_tensorflow=enable_tensorflow)
         self.searcher = Search()
-        self.debug = Output(OUT.DEBUG)
+        self.debug = Output(Output.OUT.DEBUG)
 
     def reindex(self, recompute_cache=True):
         '''
@@ -76,12 +76,12 @@ class Catalog():
         '''
         name = self.search(unique_name)
         if len(name) == 0:
-            self.debug.print('CANNNT FIND COURSE ' + unique_name, OUT.WARN)
+            self.debug.print('CANNNT FIND COURSE ' + unique_name, Output.OUT.WARN)
             return None
         if len(name) == 1:
             return self.__course_list.get(name[0], None)
         else:
-            self.debug.print(f"CATALOG ERROR: catalog get course non unique course found: {str(name)}", OUT.WARN)
+            self.debug.print(f"CATALOG ERROR: catalog get course non unique course found: {str(name)}", Output.OUT.WARN)
             return self.__course_list.get(name[0], None)
 
     def search(self, course_name:str) -> str:

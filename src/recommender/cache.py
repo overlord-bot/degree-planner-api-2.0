@@ -1,7 +1,7 @@
 import json
 import os
 import numpy as np
-from ..io.output import *
+from ..io.output import Output
 
 class Cache():
 
@@ -25,18 +25,18 @@ class Cache():
         # {word: embedding}
         self.word_embeddings = dict()
 
-        self.debug = Output(OUT.DEBUG, auto_clear=True)
+        self.debug = Output(Output.OUT.DEBUG, auto_clear=True)
 
 
     def load_cache(self):
     
-        self.debug.print(f"LOADING CACHE...", OUT.INFO)
+        self.debug.print(f"LOADING CACHE...", Output.OUT.INFO)
 
         if os.path.isfile(self.cache_path):
             self.debug.print(f"file found: {self.cache_path}")
             file_embedding_cache = open(self.cache_path)
         else:
-            self.debug.print("cache file not found", OUT.WARN)
+            self.debug.print("cache file not found", Output.OUT.WARN)
             return
 
         try:
@@ -57,7 +57,7 @@ class Cache():
                     self.word_embeddings = {key:np.array(value) for key, value in cache.items()}
 
         except Exception as e:
-            self.debug.print(f"FAILED TO IMPORT CACHE, exception {e}", OUT.WARN)
+            self.debug.print(f"FAILED TO IMPORT CACHE, exception {e}", Output.OUT.WARN)
         
         file_embedding_cache.close()
 

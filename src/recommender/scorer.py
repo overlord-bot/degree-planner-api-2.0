@@ -1,7 +1,7 @@
 import numpy as np
 from ..math.array_math import array_functions as af
 from .cache import Cache
-from ..io.output import *
+from ..io.output import Output
 from .embed import Sentence_Embedder
 
 class Scorer():
@@ -16,7 +16,7 @@ class Scorer():
         self.ATTRIBUTE_TO_EMBED = 'name'
         self.BEST_DESCRIPTORS_AMOUNT = 3
         self.BEST_DESCRIPTORS_THRESHOLD = 0.1
-        self.debug = Output(OUT.DEBUG)
+        self.debug = Output(Output.OUT.DEBUG)
 
     def init_word_embeddings(self):
         pass

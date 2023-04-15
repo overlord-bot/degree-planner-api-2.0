@@ -6,7 +6,7 @@ You will need to make your own parser for every data input file
 
 import json
 import os
-from .output import *
+from .output import Output
 from ..dp.course import Course
 from ..dp.catalog import Catalog
 from ..dp.degree import Degree
@@ -19,7 +19,7 @@ TAGS_PATH = os.getcwd() + "/data/tags.json"
 
 def parse_courses(catalog:Catalog, io:Output=None):
     if io is None:
-        io = Output(OUT.DEBUG, auto_clear=True)
+        io = Output(Output.OUT.DEBUG, auto_clear=True)
 
     io.print("Beginning parsing course data into catalog")
     
@@ -53,7 +53,7 @@ Args:
 """
 def parse_degrees(catalog:Catalog, io:Output=None):
     if io is None:
-        io = Output(OUT.DEBUG, auto_clear=True)
+        io = Output(Output.OUT.DEBUG, auto_clear=True)
     io.print("Beginning parsing degree data into catalog")
     
     ''' NOT IMPLEMENTED FOR JSON INPUT YET
@@ -101,7 +101,7 @@ parses degree tags into their respective degrees within the catalog
 '''
 def parse_tags(catalog:Catalog, io:Output=None):
     if io is None:
-        io = Output(OUT.DEBUG, auto_clear=True)
+        io = Output(Output.OUT.DEBUG, auto_clear=True)
     if os.path.isfile(TAGS_PATH):
         io.print(f"file found: {TAGS_PATH}")
         file_tags = open(TAGS_PATH)

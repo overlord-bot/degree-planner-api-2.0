@@ -2,12 +2,12 @@
 DEGREE PLANNER MAIN CLASS
 '''
 
-from ..io.output import *
+from ..io.output import Output
 from .catalog import Catalog
 from ..user.user import User
 from src.io.parse import *
 from .degree import *
-from .command_handler import *
+from .command_handler import command_handler
 
 VERSION = "API 2.0"
 
@@ -59,16 +59,16 @@ class Planner():
 
         self.default_io = io
         if self.default_io is None:
-            self.default_io = Output(OUT.CONSOLE, signature='INPUT HANDLER', auto_clear=True)
+            self.default_io = Output(Output.OUT.CONSOLE, signature='INPUT HANDLER', auto_clear=True)
 
         self.ENABLE_TENSORFLOW = ENABLE_TENSORFLOW
         self.SEMESTERS_MAX  = 12
 
-    
+
     def user_input(self, user:User, input:str, io=None):
         if io is None:
             io = self.default_io
-        user_input(self, user, input, io)
+        command_handler.user_input(self, user, input, io)
 
 
     def schedule(self, user:User, schedule_name:str, io:Output=None) -> None:
@@ -167,7 +167,7 @@ class Planner():
         if not semester.isdigit() or int(semester) not in range(0, self.SEMESTERS_MAX):
             io.print(f"Invalid semester {semester}, enter number between 0 and {self.SEMESTERS_MAX}")
             return
-        
+
         # list of courses matching course_name
         semester = int(semester)
         matched_course_names = self.catalog.search(course_name)
@@ -178,7 +178,7 @@ class Planner():
         if len(matched_course_names) > 1:
             io.print(f"Too many options for course {course_name}")
             return
-        
+
         # at this point, returned_courses have exactly one course, so we can perform the addition immediately
         course = matched_course_names[0]
         user.get_active_schedule().add_course(semester, self.catalog.get_course(course))
@@ -204,7 +204,7 @@ class Planner():
         if not semester.isdigit() or int(semester) not in range(0, self.SEMESTERS_MAX):
             io.print(f"Invalid semester {semester}, enter number between 0 and {self.SEMESTERS_MAX}")
             return
-        
+
         semester = int(semester)
         this_semester_courses = user.get_active_schedule().get_semester(semester)
 
@@ -220,8 +220,8 @@ class Planner():
         course = matched_course_names[0]
         user.get_active_schedule().remove_course(semester, self.catalog.get_course(course))
         io.print(f"Removed course {course} from semester {semester}")
-    
-    
+
+
     def find(self, course_name:str) -> None:
         ''' Print list of courses to output that match input entry, searches from entire catalog
 
@@ -233,7 +233,7 @@ class Planner():
         possible_courses.sort()
         return possible_courses
 
-    
+
     def import_data(self, io:Output=None) -> Exception:
         ''' Parse json data into a list of courses and degrees inside a catalog
 
@@ -254,7 +254,7 @@ class Planner():
 
         parse_tags(self.catalog, io)
         io.print(f"parsed tags")
-        
+
         self.catalog.reindex()
 
 

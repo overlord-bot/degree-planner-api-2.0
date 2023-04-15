@@ -2,6 +2,7 @@ import sys
 import tracemalloc
 import os
 import psutil
+import logging
  
 # inner psutil function
 def process_memory():
@@ -20,7 +21,8 @@ from src.dp.planner import Planner
 from src.dp.course import Course
 from src.user.user import User
 from src.dp.template import Template
-from src.dp.degree import *
+from src.dp.degree import Degree
+from src.dp.degree import template_parsing
 from src.math.attributes import Attributes
 
 mem_after_imports = process_memory()
@@ -181,7 +183,7 @@ def test_other():
     }
     for example, answer in example_attributes.items():
         true_given = dict()
-        response = parse_attribute(example, course0, true_given)
+        response = template_parsing.parse_attribute(example, course0, true_given)
         print(f"parse attribute {example} \n  response: {response}\n  correct response: {answer}")
         print(f"  answer is {'correct :)' if str(response).casefold() == str(answer).casefold() else 'INCORRECT INCORRECT INCORRECT!'}")
         print(f"  true given: {true_given}")

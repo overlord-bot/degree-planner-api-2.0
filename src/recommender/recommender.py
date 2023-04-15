@@ -2,7 +2,7 @@ import numpy as np
 
 from ..math.sorting import *
 from ..math.array_math import array_functions as af
-from ..io.output import *
+from ..io.output import Output
 from ..recommender.cache import Cache
 
 class Recommender():
@@ -13,7 +13,7 @@ class Recommender():
         self.ENABLE_TENSORFLOW = enable_tensorflow
         self.CACHE_PATH = cache_path
 
-        self.debug = Output(OUT.DEBUG, auto_clear=True)
+        self.debug = Output(Output.OUT.DEBUG, auto_clear=True)
 
         self.catalog = catalog
         self.cache = None
@@ -86,7 +86,7 @@ class Recommender():
 
         # printing user's preference scores
         for bin, tags in self.catalog.tags.items():
-            self.debug.print(f"user's best descriptors for {bin}: {af.best_descriptors(dict(zip(tags, tag_relevances_to_user_by_bin.get(bin))), 5, 0.3)}", OUT.INFO)
+            self.debug.print(f"user's best descriptors for {bin}: {af.best_descriptors(dict(zip(tags, tag_relevances_to_user_by_bin.get(bin))), 5, 0.3)}", Output.OUT.INFO)
 
         ''' STEP 4: compute relevance of each recommending course and compare to user's tag relevances and relevance to the custom tag '''
         for course in recommending_courses:
