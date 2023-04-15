@@ -8,9 +8,10 @@ from enum import Enum
 from .template import *
 from ..math.graph import Graph
 from ..math.graph import Backwards_Overlap
+from ..math.array_math import array_functions as af
 from ..io.output import *
 from ..recommender.recommender import *
-from ..math.sorting import *
+from ..math.sorting import sorting
 
 class Bind_Type(Enum):
     NR = False
@@ -70,7 +71,7 @@ class Degree():
         bound_array = [len(e) for e in max_fulfillment_possibilities]
 
         # all possible combinations using all generated templates
-        combos = generate_combinatorics(bound_array, 1)
+        combos = af.generate_combinatorics(bound_array, 1)
         all_template_combinations = list()
 
         for combo in combos:
@@ -245,7 +246,7 @@ class Degree():
         self.DEBUG.print(f"template {template} requests: {[str(e) for e in requested_courses]}")
 
         if template.replacement:
-            requested_courses = dictionary_sort(num_wanted_bindings(all_fulfillment, max_fulfillments, requested_courses, Bind_Type.R))
+            requested_courses = sorting.dictionary_sort(num_wanted_bindings(all_fulfillment, max_fulfillments, requested_courses, Bind_Type.R))
             requested_courses.reverse()
         this_fulfillment = Fulfillment_Status(template, template.courses_required, set())
 
@@ -319,7 +320,7 @@ class Degree():
             transferred_courses = graph.edge_data(giver, receiver, False)
 
             # avoid being greedy and taking courses that fulfill replaceable templates for yourself!
-            transferred_course = bucket_sort(num_bindings(max_fulfillments, transferred_courses, Bind_Type.R))[0]
+            transferred_course = sorting.bucket_sort(num_bindings(max_fulfillments, transferred_courses, Bind_Type.R))[0]
 
             self.DEBUG.print(f'transferring course {transferred_course} from {giver} to {receiver}')
             self.course_move(all_fulfillment.get(giver), all_fulfillment.get(receiver), transferred_course, graph)
@@ -396,7 +397,7 @@ class Degree():
             return
 
         requested_courses = max_fulfillments.get(template).get_fulfillment_set().difference(all_fulfillment.get(template).get_fulfillment_set())
-        requested_courses_sorted = bucket_sort(num_bindings(all_fulfillment, requested_courses, Bind_Type.R))
+        requested_courses_sorted = sorting.bucket_sort(num_bindings(all_fulfillment, requested_courses, Bind_Type.R))
 
         for course in requested_courses_sorted:
             if this_fulfillment.fulfilled():
@@ -526,7 +527,7 @@ class Degree():
                     score = course_relevances.get(course)
                     final_score.update({course : score})
 
-                recommended_courses = dictionary_sort(final_score)
+                recommended_courses = sorting.dictionary_sort(final_score)
                 matches_dict.update({matched_fulfillment.get_template():recommended_courses})
 
                 for course in recommended_courses:
@@ -567,37 +568,6 @@ class Degree():
             i += hash(template)
         i += hash(self.name)
         return i
-
-
-######################################
-# COMBINATIONS
-######################################
-
-
-def generate_combinatorics(bound:list, start_index=1) -> list:
-    '''
-    recursively generates a list of all combinations from picking a wildcard evaluation possibility
-
-    e.g. suppose degree with two templates, 1) level.* and 2) subject.* resolves into
-    1) level.1, level.4 and 2) subject.csci, subject.biol for a certain user
-
-    this will return a list of 
-    [[level.1, subject.csci], [level.1, subject.biol], [level.4, subject.csci], [level.4, subject.biol]]
-
-    Returns:
-        list: contains all possible combinations
-    '''
-    if len(bound) == 0:
-        return [[]]
-    bound_cpy = copy.copy(bound)
-    last_num = bound_cpy.pop(-1)
-    nth_combo = []
-    for i in range(start_index, last_num + start_index):
-        prev_combos = generate_combinatorics(bound_cpy)
-        for prev_combo in prev_combos:
-            prev_combo.append(i)
-            nth_combo.append(prev_combo)
-    return nth_combo
 
 
 ######################################

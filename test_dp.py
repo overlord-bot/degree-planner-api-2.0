@@ -15,6 +15,7 @@ from datetime import datetime
 import timeit
 
 from src.math.graph import *
+from src.math.sorting import sorting
 from src.dp.planner import Planner
 from src.dp.course import Course
 from src.user.user import User
@@ -93,8 +94,8 @@ def test_graph():
     print(f'testing graph iterator: getting all items endpoints: {[str(e) for e in graph.edge_items()]}')
 
     print(f'sorting:')
-    print(str(dictionary_sort({'machine learning':1, 'robotics':2, 'animation':3, 'computer vision':4, 'banana':10, 'oranges':9, 'apple':8, 'tesla':7,'citrus':2.5}, True)))
-    print(str(bucket_sort({'machine learning':1, 'robotics':2, 'animation':3, 'computer vision':4, 'banana':10, 'oranges':9, 'apple':8, 'tesla':7,'citrus':2.5})))
+    print(str(sorting.dictionary_sort({'machine learning':1, 'robotics':2, 'animation':3, 'computer vision':4, 'banana':10, 'oranges':9, 'apple':8, 'tesla':7,'citrus':2.5}, True)))
+    print(str(sorting.bucket_sort({'machine learning':1, 'robotics':2, 'animation':3, 'computer vision':4, 'banana':10, 'oranges':9, 'apple':8, 'tesla':7,'citrus':2.5})))
 
 
 def test_other():

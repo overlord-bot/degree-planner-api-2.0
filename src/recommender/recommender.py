@@ -1,7 +1,7 @@
 import numpy as np
 
 from ..math.sorting import *
-from ..math.array_math import *
+from ..math.array_math import array_functions as af
 from ..io.output import *
 from ..recommender.cache import Cache
 
@@ -79,14 +79,14 @@ class Recommender():
             tag_relevances_to_course = self.cache.tag_relevances_to_courses.get(course.unique_name, None)
             if tag_relevances_to_course is None:
                 continue
-            scale_dictionary_values(tag_relevances_to_user_by_bin, tag_relevances_to_course, 1.0, key=bin)
+            af.scale_dictionary_values(tag_relevances_to_user_by_bin, tag_relevances_to_course, 1.0, key=bin)
 
         ''' STEP 3: normalization '''
-        tag_relevances_to_user_by_bin = {k: hard_max(v) for k, v in tag_relevances_to_user_by_bin.items()}
+        tag_relevances_to_user_by_bin = {k: af.hard_max(v) for k, v in tag_relevances_to_user_by_bin.items()}
 
         # printing user's preference scores
         for bin, tags in self.catalog.tags.items():
-            self.debug.print(f"user's best descriptors for {bin}: {best_descriptors(dict(zip(tags, tag_relevances_to_user_by_bin.get(bin))), 5, 0.3)}", OUT.INFO)
+            self.debug.print(f"user's best descriptors for {bin}: {af.best_descriptors(dict(zip(tags, tag_relevances_to_user_by_bin.get(bin))), 5, 0.3)}", OUT.INFO)
 
         ''' STEP 4: compute relevance of each recommending course and compare to user's tag relevances and relevance to the custom tag '''
         for course in recommending_courses:
@@ -94,11 +94,11 @@ class Recommender():
             tag_relevances_to_course = self.cache.tag_relevances_to_courses.get(course.unique_name, None)
             course_relevance_to_user = 10
             if tag_relevances_to_course is not None:
-                course_relevance_to_user = array_similarity(tag_relevances_to_user_by_bin.get(bin), tag_relevances_to_course)
+                course_relevance_to_user = af.array_similarity(tag_relevances_to_user_by_bin.get(bin), tag_relevances_to_course)
             
             if custom_tags is not None and self.ENABLE_TENSORFLOW:
                 custom_tag_relevances_to_course = self.get_custom_tag_relevances(course, custom_tags) # numpy array
-                custom_course_relevance_to_user = array_similarity(custom_tag_relevances_to_course, np.zeros(len(custom_tag_relevances_to_course)))
+                custom_course_relevance_to_user = af.array_similarity(custom_tag_relevances_to_course, np.zeros(len(custom_tag_relevances_to_course)))
                 course_relevance_to_user += custom_course_relevance_to_user
             
             course_relevances_to_user.update({course : course_relevance_to_user})

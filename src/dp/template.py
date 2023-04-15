@@ -86,7 +86,6 @@ def course_fulfills_template(template:Template, course:Course):
             continue
         if not parse_attribute(attr, course, conditions):
             return False, {}
-    # print(f'conditions for {course} in {template} : {conditions}')
     return True, conditions
 
 def single_attribute_evaluation(attr:str, course:Course):

@@ -8,7 +8,7 @@
         "core - FOCS": {
             "requires": 1,
             "replacement": false,
-            "attributes":["subject.csci", "course_id.2200"]
+            "attributes":["subject.csci & course_id.2200"]
         },
         "core - Computer Organization": {
             "requires": 1,

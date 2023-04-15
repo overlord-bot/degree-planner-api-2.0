@@ -1,5 +1,5 @@
 import numpy as np
-from ..math.array_math import *
+from ..math.array_math import array_functions as af
 from .cache import Cache
 from ..io.output import *
 from .embed import Sentence_Embedder
@@ -42,13 +42,13 @@ class Scorer():
         for i in range(len(tags)):
             # fetch tag embedding or create it if not already created
             tag = tags[i]
-            tag_relevances_to_course[i] = array_similarity(self.get_course_embedding(course, cache), self.get_tag_embedding(tag, cache))
+            tag_relevances_to_course[i] = af.array_similarity(self.get_course_embedding(course, cache), self.get_tag_embedding(tag, cache))
         return tag_relevances_to_course
 
     def normalize(self, array):
         smallest_num = min(array)
         array = np.add(array, - (smallest_num - 0.01))
-        array = hard_max(array)
+        array = af.hard_max(array)
         return array
 
     def init_tag_relevances_to_courses(self, normalize=True):
@@ -87,7 +87,7 @@ class Scorer():
 
             ''' STEP 4: find the best descriptors for this course by finding tags with high relevance '''
             descriptors = dict(zip(self.catalog.tags.get(bin), tag_relevances_to_course))
-            self.cache.course_keywords.update({course.unique_name : best_descriptors(descriptors, self.BEST_DESCRIPTORS_AMOUNT, self.BEST_DESCRIPTORS_THRESHOLD)})
+            self.cache.course_keywords.update({course.unique_name : af.best_descriptors(descriptors, self.BEST_DESCRIPTORS_AMOUNT, self.BEST_DESCRIPTORS_THRESHOLD)})
             ''' STEP 5: update the tag relevances to course value within cache '''
             self.cache.tag_relevances_to_courses.update({course.unique_name : tag_relevances_to_course})
 
