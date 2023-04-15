@@ -6,7 +6,6 @@ import json
 
 from .course import Course
 from .degree import Degree
-from .template import *
 from ..math.search import Search
 from ..recommender.recommender import Recommender
 from ..io.output import Output
@@ -98,15 +97,6 @@ class Catalog():
 
     def degrees(self):
         return self.__degree_list.values()
-
-    def get_course_match(self, target_template:Template) -> list:
-        ''' Intakes a criteria of courses that we want returned
-            matches against the entire catalog
-
-            Returns:
-                matched dictionary (dict): { template : course set }
-        '''
-        return get_course_match(target_template, self.__course_list.values(), True)
 
     def json(self):
         catalog = dict()

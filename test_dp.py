@@ -22,7 +22,7 @@ from src.dp.course import Course
 from src.user.user import User
 from src.dp.template import Template
 from src.dp.degree import Degree
-from src.dp.degree import template_parsing
+from src.dp.template import template_parsing
 from src.math.attributes import Attributes
 
 mem_after_imports = process_memory()

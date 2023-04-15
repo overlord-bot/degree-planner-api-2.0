@@ -4,14 +4,16 @@ contains degree class and a set of helper functions
 
 import json
 import timeit
+import copy
 from enum import Enum
-from .template import *
+from .template import Template
 from ..math.graph import Graph
 from ..math.graph import Backwards_Overlap
 from ..math.array_math import array_functions as af
 from ..io.output import Output
-from ..recommender.recommender import *
 from ..math.sorting import sorting
+from .course import Course
+from .fulfillment_status import Fulfillment_Status
 
 class Bind_Type(Enum):
     NR = False
@@ -65,7 +67,7 @@ class Degree():
         # max fulfillment set for every template, including wildcards
         max_fulfillment_possibilities = list()
         for template in self.templates:
-            max_fulfillment_possibilities.append(get_course_match(template, taken_courses))
+            max_fulfillment_possibilities.append(template.get_course_match(taken_courses))
 
         # if template contains wildcards, this is how many templates can result from the wildcard
         bound_array = [len(e) for e in max_fulfillment_possibilities]
@@ -122,7 +124,7 @@ class Degree():
 
             # runs fulfillment checking using this specific combination of templates
             for template in template_set:
-                max_fulfillments.update({template:get_course_match(template, taken_courses)[0]})
+                max_fulfillments.update({template:template.get_course_match(taken_courses)[0]})
 
             all_fulfillment = dict()
 
@@ -481,7 +483,7 @@ class Degree():
         for best_template, best_fulfillment in best_fulfillments.items():
             original_specification = best_template.original_specifications
             best_template_original = Template(best_template.name + ' original', specifications=original_specification, replacement=best_template.replacement, courses_required=1)
-            matches = get_course_match(best_template_original, self.catalog.courses())
+            matches = best_template_original.get_course_match(self.catalog.courses())
 
             status = matches[0]
             for matched_fulfillment in matches:
@@ -504,7 +506,7 @@ class Degree():
             best_template_original = Template(best_template.name + ' original', specifications=original_specification, replacement=best_template.replacement, courses_required=1)
 
             # here we receive the list of fulfillment sets from get course match
-            matches = get_course_match(best_template_original, self.catalog.courses())
+            matches = best_template_original.get_course_match(self.catalog.courses())
             matches_dict = {}
 
             for matched_fulfillment in matches:

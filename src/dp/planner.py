@@ -5,8 +5,7 @@ DEGREE PLANNER MAIN CLASS
 from ..io.output import Output
 from .catalog import Catalog
 from ..user.user import User
-from src.io.parse import *
-from .degree import *
+from src.io.parse import parsing
 from .command_handler import command_handler
 
 VERSION = "API 2.0"
@@ -246,13 +245,13 @@ class Planner():
         if io is None:
             io = self.default_io
 
-        parse_courses(self.catalog, io)
+        parsing.parse_courses(self.catalog, io)
         io.print(f"Sucessfully parsed catalog data")
 
-        parse_degrees(self.catalog, io)
+        parsing.parse_degrees(self.catalog, io)
         io.print(f"Sucessfully parsed degree data")
 
-        parse_tags(self.catalog, io)
+        parsing.parse_tags(self.catalog, io)
         io.print(f"parsed tags")
 
         self.catalog.reindex()

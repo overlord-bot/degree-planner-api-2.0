@@ -1,6 +1,5 @@
 import numpy as np
 
-from ..math.sorting import *
 from ..math.array_math import array_functions as af
 from ..io.output import Output
 from ..recommender.cache import Cache

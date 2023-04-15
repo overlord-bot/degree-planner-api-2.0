@@ -1,6 +1,4 @@
-from absl import logging
 import tensorflow_hub as hub
-import numpy as np
 from ..io.output import Output
 
 class Sentence_Embedder():
