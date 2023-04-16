@@ -5,6 +5,7 @@ Output class
 import logging
 from enum import Enum
 import json
+import os
 
 class Output():
     '''
@@ -32,6 +33,9 @@ class Output():
     class OUTTYPE(Enum):
         STRING = 1
         JSON = 2
+
+
+    DATA_FOLDER_PATH = os.getcwd() + "/degree_planner/data/"
 
 
     def __init__(self, output_location:OUT, output_type:OUTTYPE=OUTTYPE.STRING, user=None, 
@@ -65,6 +69,9 @@ class Output():
                 without altering the stored location within this object
         '''
         outlocation = self.output_location if output_location == None else output_location
+
+        if output_location == self.OUT.NONE:
+            return
 
         if self.output_type == self.OUTTYPE.JSON:
             if isinstance(printout, dict):

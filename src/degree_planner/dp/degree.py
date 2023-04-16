@@ -38,6 +38,7 @@ class Degree():
         self.io = Output(Output.OUT.CONSOLE, auto_clear=True)
 
         self.MAX_IMPORTANCE = 1000 # essentially the maximum number of templates possible
+        self.VISUALIZATION = Output(output_location=Output.OUT.FILE, file=Output.DATA_FOLDER_PATH + "visualization.txt")
 
     def add_template(self, template:Template):
         '''
@@ -50,10 +51,15 @@ class Degree():
         self.templates.append(template)
 
     def remove_template(self, template:Template):
+        ''' removes template object '''
         self.templates.remove(template)
 
-    def has_template(self, template:Template):
-        return template in self.templates
+    def get_template(self, template_name) -> Template:
+        ''' gets template by name, O(n) time '''
+        for template in self.templates:
+            if template.name == template_name:
+                return template
+        return None
 
 
     ##############################################################################################
@@ -117,14 +123,16 @@ class Degree():
         # all fulfillment sets based on each possible combination of templates resulted from wildcard templates
         potential_fulfillments = list()
 
+        
+
         for template_set in self.generate_template_combinations(taken_courses):
 
             # all courses that fulfills each template
             max_fulfillments = dict()
-
-            # runs fulfillment checking using this specific combination of templates
             for template in template_set:
                 max_fulfillments.update({template:template.get_course_match(taken_courses)[0]})
+
+            self.VISUALIZATION.print(f'max fulfillment:\n\n{max_fulfillments}\n\n\n')
 
             all_fulfillment = dict()
 
@@ -257,6 +265,9 @@ class Degree():
         the fulfillment of previous templates
         """
         for course in requested_courses:
+
+            self.VISUALIZATION.print(f'all fulfillment template fill:\n\n{all_fulfillment}\n\n\n')
+
             # course hasn't been added to any fulfillment sets yet, or if this template is replacement enabled
             # and the course is not in any no replacement templates
             if (not num_bindings(all_fulfillment, course)
@@ -271,6 +282,8 @@ class Degree():
                 this_fulfillment.add_fulfillment_course(course)
                 all_fulfillment.update({template:this_fulfillment})
                 continue
+
+        self.VISUALIZATION.print(f'all fulfillment template fill:\n\n{all_fulfillment}\n\n\n')
 
         return this_fulfillment
 
@@ -327,8 +340,12 @@ class Degree():
             self.io.debug(f'transferring course {transferred_course} from {giver} to {receiver}')
             self.course_move(all_fulfillment.get(giver), all_fulfillment.get(receiver), transferred_course, graph)
 
+            self.VISUALIZATION.print(f'all fulfillment course steal:\n\n{all_fulfillment}\n\n\n')
+
         self.io.debug(f'transferring course {course} from {path[-1]} to {all_fulfillment.get(template)}')
         self.course_move(all_fulfillment.get(path[-1]), all_fulfillment.get(template), course, graph)
+
+        self.VISUALIZATION.print(f'all fulfillment course steal 1 step finished:\n\n{all_fulfillment}\n\n\n')
 
 
     def template_steal(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, graph:Graph, importance_level:int=-1) -> None:

@@ -88,10 +88,6 @@ class Template():
         if not len(all_conditions):
             fulfillment_sets.append(curr_fulfillment)
 
-
-        # print(f'all conditions: ' + str(all_conditions))
-        # print(f'fulfillments: ' + str([repr(e) for e in fulfillment_sets]))
-
         if self.original_specifications is None:
             self.original_specifications = copy.deepcopy(self.specifications)
 
