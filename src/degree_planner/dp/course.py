@@ -14,12 +14,12 @@ class Course():
     dictionary
     '''
 
-    def __init__(self, name, subject, id):
+    def __init__(self, name, subject, course_id):
         # main attributes
         self.unique_name = name
         self.name = name
         self.subject = subject
-        self.course_id = id
+        self.course_id = course_id
 
         self.attributes = Attributes()
         self.keywords = list()
@@ -28,47 +28,47 @@ class Course():
             self.set_name(name)
         if subject not in ('', 'NA', 'ANY'):
             self.set_subject(subject)
-        if id not in (0, -1, '', 'NA', 'ANY'):
-            self.set_id(id)
-            if len(str(id)):
-                self.set_level(str(id)[0])
+        if course_id not in (0, -1, '', 'NA', 'ANY'):
+            self.set_id(course_id)
+            if len(str(course_id)):
+                self.set_level(str(course_id)[0])
 
         self.generate_unique_name()
 
         self.description = "" # text to be displayed describing the class
-        
 
-    """ 
+
+    """
     Getters
     """
-    
+
     def get_name(self):
         return self.name
-    
+
     def get_unique_name(self):
         return self.unique_name
-    
+
     def get_subject(self):
         return self.subject
-    
+
     def get_id(self):
         return self.course_id
-    
+
     # determines the level of the course, 1000=1, 2000=2, 4000=4, etc
     def get_level(self):
         return self.attr('level')
-    
+
     def get_credits(self):
         return self.attr('credits')
-    
+
     def get_crosslisted(self):
         return self.attr('cross_listed', True)
-    
+
 
     """
     Setters
     """
-    
+
     def set_name(self, name):
         self.name = name
         self.replace_attribute('name', name)
@@ -77,7 +77,7 @@ class Course():
         if self.name == "" or self.get_subject() is None or self.get_id() is None:
             self.unique_name = self.name
         else:
-            self.unique_name = f"{self.get_subject().casefold()} {str(self.get_id())} {self.get_name().strip().casefold()}"
+            self.unique_name = f"{self.get_subject().casefold()} {str(self.get_id()).casefold()} {self.get_name().strip().casefold()}"
             self.unique_name = self.unique_name.replace(',', '')
         self.remove_attribute_by_head('unique_name')
         self.add_attribute(f'unique_name.{self.unique_name}')
@@ -101,13 +101,13 @@ class Course():
     def set_level(self, level):
         self.remove_attribute_by_head('level')
         self.add_attribute(f'level.{level}')
-    
+
 
     """
-    Attributes are expressed as elements joined by periods, 
+    Attributes are expressed as elements joined by periods,
     but are internally stored in this class as a list
     """
-    
+
     def add_attribute(self, attr:str) -> None:
         self.attributes.add_attribute(attr)
 
@@ -122,7 +122,7 @@ class Course():
         removes attribute with exact match
         '''
         self.attributes.remove_attribute(attr)
-    
+
     def attr(self, attr:str, make_list=False) -> str:
         '''
         finds attribute match within self and returns the value
@@ -131,19 +131,19 @@ class Course():
         if attributes is None or not make_list or hasattr(attributes, '__iter__'):
             return attributes
         return [attributes]
-    
+
     def get_attributes_by_head(self, attr) -> list:
         return self.attributes.get_attributes_by_head(attr)
-        
+
     def remove_attribute_by_head(self, attr) -> int:
         '''
         removes all attributes matching the provided head
         '''
         self.attributes.remove_attributes_by_head(attr)
-    
+
     def get_next(self, head) -> set:
         return self.attributes.next_attr(head)
-                
+
     def json(self):
         '''
         Returns:
@@ -157,10 +157,10 @@ class Course():
         return json.dumps(list(self.attributes))
 
     def __repr__(self):
-        st = (f"{self.unique_name if self.unique_name else 'None'}:\n{self.get_credits()} credits\n" + \
-            f"crosslisted with: {str([str(e) for e in self.get_crosslisted()])}\n" + \
+        string = (f"{self.unique_name}:\n{self.get_credits()} credits\n" + \
+            f"crosslisted with: {self.get_crosslisted()}\n" + \
             f"attributes: {self.attributes}" if len(self.attributes) > 0 else '' + '\n')
-        return st.replace("set()", "none")
+        return string.replace("set()", "none")
 
     def __str__(self):
         return f"{self.subject} {self.course_id} {self.name}"
@@ -171,7 +171,7 @@ class Course():
         if (self.unique_name == other.unique_name):
             return True
         return False
-    
+
     def __add__(self, other):
         course = Course('ANY', 'ANY', 'ANY')
         for attr in self.attributes:
@@ -183,4 +183,3 @@ class Course():
 
     def __hash__(self):
         return hash(self.unique_name)
-    

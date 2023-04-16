@@ -7,13 +7,6 @@ import json
 from queue import Queue
 from ..user.schedule import Schedule
 
-class Flag(Enum):
-    '''
-    For command queue use
-    '''
-    CMD_PAUSED = 100
-    CMD_RUNNING = 101
-
 class User():
     '''
     Stores user identification, schedules, course eligibility and command queue operatons info
@@ -33,6 +26,13 @@ class User():
         self.command_queue_locked = False
         self.command_decision = None
         self.command_paused = None
+
+    class Flag(Enum):
+        '''
+        For command queue use
+        '''
+        CMD_PAUSED = 100
+        CMD_RUNNING = 101
 
 
     def schedules(self) -> list:

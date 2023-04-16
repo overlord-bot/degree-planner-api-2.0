@@ -23,7 +23,7 @@ def terminal():
     print("  YACS.n 2023")
     print(f"  {datetime.now()}")
 
-    ENABLE_TENSORFLOW = True
+    enable_tensorflow = True
     if len(sys.argv) > 1:
         if '-d' in sys.argv:
             print("  logging all debugging info")
@@ -31,10 +31,10 @@ def terminal():
         else:
             logging.getLogger().setLevel(logging.WARNING)
         if '-f' in sys.argv:
-            ENABLE_TENSORFLOW = False
+            enable_tensorflow = False
 
     print("")
-    planner = Planner(ENABLE_TENSORFLOW=ENABLE_TENSORFLOW)
+    planner = Planner(enable_tensorflow=enable_tensorflow)
     user = User(1, "user1")
     output = Output(Output.OUT.CONSOLE, output_type=Output.OUTTYPE.STRING, signature='DP', auto_clear=True)
     while 1:

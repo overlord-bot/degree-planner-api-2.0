@@ -4,49 +4,50 @@ Command class and command enums
 
 from enum import Enum
 
-class CMD(Enum):
-    '''
-    Command Enum
-    '''
-
-    # the number presents minimum number of arguments for that command
-    ADD = '2.add'
-    REMOVE = '2.remove'
-    SCHEDULE = '1.schedule'
-    PRINT = '0.print'
-    FULFILLMENT = '0.fulfillment'
-    RECOMMEND = '0.recommend'
-    DEGREE = '1.degree '
-    FIND = '1.find'
-    DETAILS = '1.details'
-    CACHE = '0.cache'
-
-    INFO = '0.info'
-    IMPORT = '0.import'
-    TAG = '1.tag'
-    NONE = '0.none'
-    
-    def get(string:str):
-        '''
-        gets command enum from string
-
-        Returns:
-            cmd enum (CMD): matched enum, CMD.NONE if cannot find enum
-        '''
-        try:
-            enum = CMD[string.upper()]
-        except:
-            enum = CMD.NONE
-        return enum
-
 class Command():
     '''
     User command object, contains the command as a enum
     and a list of arguments
     '''
 
+    class CMD(Enum):
+        '''
+        Command Enum
+        '''
+
+        # the number presents minimum number of arguments for that command
+        ADD = '2.add'
+        REMOVE = '2.remove'
+        SCHEDULE = '1.schedule'
+        PRINT = '0.print'
+        FULFILLMENT = '0.fulfillment'
+        RECOMMEND = '0.recommend'
+        DEGREE = '1.degree '
+        FIND = '1.find'
+        DETAILS = '1.details'
+        CACHE = '0.cache'
+
+        INFO = '0.info'
+        IMPORT = '0.import'
+        TAG = '1.tag'
+        NONE = '0.none'
+    
+        @staticmethod
+        def get(string:str):
+            '''
+            gets command enum from string
+
+            Returns:
+                cmd enum (CMD): matched enum, CMD.NONE if cannot find enum
+            '''
+            try:
+                enum = Command.CMD[string.upper()]
+            except:
+                enum = Command.CMD.NONE
+            return enum
+
     def __init__(self, command:str):
-        self.command = CMD.get(command)
+        self.command = Command.CMD.get(command)
         self.arguments = []
         self.data_store = None
 

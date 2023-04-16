@@ -82,10 +82,10 @@ class Attributes():
         return len(self.attributes_full_str_to_list)
     
     def __str__(self):
-        return ','.join(self.attributes_full_str_to_list.keys())
+        return ', '.join(self.attributes_full_str_to_list.keys())
     
     def __repr__(self):
-        return ','.join(self.attributes_full_str_to_list.keys())
+        return ', '.join(self.attributes_full_str_to_list.keys())
     
     def __hash__(self):
         hash = 0

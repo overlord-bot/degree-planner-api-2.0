@@ -44,13 +44,14 @@ class Fulfillment_Status():
     """
     returns whether the element is added (not previously present)
     """
-    def add_fulfillment_course(self, course:Course) -> bool:
+    def add_fulfillment_course(self, course) -> bool:
         len_original = len(self.fulfillment_set)
+        if hasattr(course, '__iter__'):
+            self.fulfillment_set.update(course)
+            return
         self.fulfillment_set.add(course)
         return len_original != len(self.fulfillment_set)
 
-    def extend_fulfillment_set(self, iter) -> None:
-        self.fulfillment_set.update(iter)
     """
     returns whether the element requested to be removed is present (successful removal)
     """

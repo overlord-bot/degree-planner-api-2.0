@@ -19,7 +19,10 @@ class Catalog():
     '''
 
     def __init__(self, enable_tensorflow=True):
-        # TODO also store graphs for further analysis and course prediction of free electives
+        '''
+        catalog stores a list of courses, degrees, tags for the recommendation system,
+        a recommender object and a search object
+        '''
         self.__course_list = dict() # course name as key
         self.__degree_list = dict() # degree name as key
 
@@ -37,29 +40,45 @@ class Catalog():
         self.searcher.update_items(self.course_names())
         self.searcher.generate_index()
         self.debug.info('finished search indexing')
-        
+
         if recompute_cache:
             self.debug.info('starting recommender reindex')
             self.recommender.recache()
             self.debug.info('finished recommender reindex')
 
-    def add_course(self, course):
-        if hasattr(course, '__iter__'):
-            for c in course:
-                self.__course_list.update({c.unique_name:c})
+    def add_course(self, courses):
+        '''
+        may take a list of courses or a single course object
+        '''
+        if hasattr(courses, '__iter__'):
+            for course in courses:
+                self.add_course(course)
             return
-        self.__course_list.update({course.unique_name:course})
+        self.__course_list.update({courses.unique_name:courses})
 
-    def remove_course(self, course):
-        if isinstance(course, str):
-            self.__course_list.pop(course, None)
+    def remove_course(self, courses):
+        '''
+        may take a list of courses or a single course object/name
+        '''
+        if hasattr(courses, '__iter__'):
+            for course in courses:
+                self.remove_course(course)
+            return
+        if isinstance(courses, str):
+            self.__course_list.pop(courses, None)
         else:
-            self.__course_list.pop(course.unique_name, None)
+            self.__course_list.pop(courses.unique_name, None)
 
     def add_degree(self, degree:Degree):
+        '''
+        adds degree to catalog
+        '''
         self.__degree_list.update({degree.name:degree})
 
     def remove_degree(self, degree):
+        '''
+        removes degree from catalog
+        '''
         if isinstance(degree, str):
             self.__degree_list.pop(degree, None)
         else:
@@ -75,30 +94,46 @@ class Catalog():
         '''
         name = self.search(unique_name)
         if len(name) == 0:
-            self.debug.print('CANNNT FIND COURSE ' + unique_name, Output.OUT.WARN)
+            self.debug.warn(f'CANNNT FIND COURSE {unique_name}')
             return None
-        if len(name) == 1:
-            return self.__course_list.get(name[0], None)
-        else:
-            self.debug.print(f"CATALOG ERROR: catalog get course non unique course found: {str(name)}", Output.OUT.WARN)
-            return self.__course_list.get(name[0], None)
+        if len(name) > 1:
+            self.debug.warn(f"CATALOG ERROR: non unique course name found: {str(name)}")
+        return self.__course_list.get(name[0], None)
 
     def search(self, course_name:str) -> str:
+        '''
+        returns a list of course names that matches input
+        '''
         return self.searcher.search(course_name.casefold())
 
     def courses(self):
+        '''
+        returns list of all courses within the catalog
+        '''
         return self.__course_list.values()
 
     def course_names(self):
+        '''
+        returns list of all course names within the catalog
+        '''
         return list(self.__course_list.keys())
 
     def get_degree(self, degree_name:str):
+        '''
+        gets degree by name
+        '''
         return self.__degree_list.get(degree_name, None)
 
     def degrees(self):
+        '''
+        returns all degrees within catalog
+        '''
         return self.__degree_list.values()
 
     def json(self):
+        '''
+        return catalog as a json object
+        '''
         catalog = dict()
         catalog.update({'courses':list(self.__course_list.keys())})
         catalog.update({'degrees':list(self.__degree_list.keys())})
@@ -115,7 +150,7 @@ class Catalog():
             printout+=str(count1) + ": " + repr(degree) + "\n"
             count1+=1
         return printout
-    
+
     def __str__(self):
         count1 = 1
         printout = ""

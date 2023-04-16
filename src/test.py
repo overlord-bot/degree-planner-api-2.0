@@ -102,7 +102,7 @@ def test_graph():
 
 
 def test_other():
-    planner = Planner(ENABLE_TENSORFLOW=False)
+    planner = Planner(enable_tensorflow=False)
     
     catalog = planner.catalog
     degree = Degree("computer science", catalog)
@@ -213,7 +213,7 @@ def test_other():
 
 
 def test_fulfillment():
-    planner = Planner(ENABLE_TENSORFLOW=False)
+    planner = Planner(enable_tensorflow=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -275,7 +275,7 @@ def test_fulfillment():
 
 
 def test_fulfillment2():
-    planner = Planner(ENABLE_TENSORFLOW=False)
+    planner = Planner(enable_tensorflow=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -337,7 +337,7 @@ def test_fulfillment2():
     run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6, print, fulfillment')
 
 def test_fulfillment3():
-    planner = Planner(ENABLE_TENSORFLOW=False)
+    planner = Planner(enable_tensorflow=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -400,7 +400,7 @@ def test_fulfillment3():
 
 
 def test_fulfillment4():
-    planner = Planner(ENABLE_TENSORFLOW=False)
+    planner = Planner(enable_tensorflow=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -436,7 +436,7 @@ def test_fulfillment4():
 
 
 def test_fulfillment5():
-    planner = Planner(ENABLE_TENSORFLOW=False)
+    planner = Planner(enable_tensorflow=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -495,7 +495,7 @@ def test_fulfillment5():
     run_cmd(planner, user, 'print, fulfillment')
 
 def test_fulfillment6():
-    planner = Planner(ENABLE_TENSORFLOW=False)
+    planner = Planner(enable_tensorflow=False)
     user = User(1)
     
     catalog = planner.catalog
@@ -644,7 +644,7 @@ def test_fulfillment6():
 
 def test_recommender(recache, tf_disabled):
 
-    planner = Planner(ENABLE_TENSORFLOW=(not tf_disabled))
+    planner = Planner(enable_tensorflow=(not tf_disabled))
     user1 = User(1)
     user2 = User(2)
     user3 = User(3)

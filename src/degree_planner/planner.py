@@ -12,18 +12,17 @@ VERSION = "API 2.0"
 
 class Planner():
     '''
-    All interaction with a Planner is with this class using input_handler
+    All interaction with a Planner is with this class, either by calling user_input
+    with a user's command or by directly accessing the functions provided here.
 
-    One catalog shared within a Planner, with distinct users containing their
-    own schedules, eligible classes and degree selection
-
-    input_handler function receives commands and arguments separated by
-    commas in a string. Multiple commands allowed within one entry.
+    One catalog is generated for each Planner
 
     Valid commands are:
         (developer only)
             import
                 - parse course and degree information from json
+            cache
+                - recomputes cache with the courses/tags within catalog
 
         (general use)
             schedule, <schedule name>
@@ -40,6 +39,10 @@ class Planner():
                 - print schedule
             fulfillment
                 - print degree requirement fulfillment status
+            recommend
+                - recommend courses based on courses already taken. Can also
+                recommend based on custom inputs, but requires tensorflow
+                to be enabled
             find, <course>* (may list any number of courses)
                 - find courses that match with the inputted string. Useful
                 for browsing courses that contain certain keywords.
@@ -50,18 +53,32 @@ class Planner():
     It is essential to keep all user specific data inside the User class.
     '''
 
-    def __init__(self, io:Output=None, ENABLE_TENSORFLOW=True):
+    def __init__(self, io:Output=None, enable_tensorflow=True):
         # each user is assigned a User object and stored in this dictionary
         # Users = <user id, User>
         self.users = dict()
-        self.catalog = Catalog(enable_tensorflow=ENABLE_TENSORFLOW)
+        self.catalog = Catalog(enable_tensorflow=enable_tensorflow)
 
         self.default_io = io
         if self.default_io is None:
             self.default_io = Output(Output.OUT.CONSOLE, signature='INPUT HANDLER', auto_clear=True)
 
-        self.ENABLE_TENSORFLOW = ENABLE_TENSORFLOW
+        self.ENABLE_TENSORFLOW = enable_tensorflow
         self.SEMESTERS_MAX  = 12
+
+
+    def get_user(self, userid):
+        return self.users.get(userid)
+
+
+    def add_user(self, userid, username=None):
+        if userid in self.users:
+            return
+        self.users.update({userid:User(userid, username)})
+
+
+    def remove_user(self, userid):
+        self.users.pop(userid, None)
 
 
     def user_input(self, user:User, input:str, io=None):

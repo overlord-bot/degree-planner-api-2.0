@@ -69,7 +69,7 @@ class Cache():
         cache.update({'course_keywords':self.course_keywords})
         cache.update({'word_embeddings':{key:value.tolist() for key, value in self.word_embeddings.items()}})
         cache_json = json.dumps(cache)
-        self.write_to_file(self.cache_path, cache_json)
+        self.write_to_file(CACHE_PATH, cache_json)
 
 
     def clear(self):
@@ -78,7 +78,7 @@ class Cache():
         self.tag_relevances_to_courses.clear()
         self.course_keywords.clear()
         self.word_embeddings.clear()
-        self.write_to_file(self.cache_path, "")
+        self.write_to_file(CACHE_PATH, "")
         
 
     def write_to_file(self, file, text):

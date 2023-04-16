@@ -69,21 +69,21 @@ class Output():
         if self.output_type == self.OUTTYPE.JSON:
             if isinstance(printout, dict):
                 output = json.dumps(printout)
-            elif isinstance (printout, str):
+            elif isinstance(printout, str):
                 output = json.dumps({'MESSAGE':printout})
-            elif isinstance (printout, json):
+            elif isinstance(printout, json):
                 output = printout
         else:
             output = ''
             if isinstance(printout, dict):
                 for entry_key, entry_value in printout.items():
                     output += f'{entry_key}{self.DELIMITER_TITLE}{entry_value}\n'
-            elif isinstance (printout, str):
+            elif isinstance(printout, str):
                 if not no_signature and not self.signature is None and len(self.signature):
                     output = f'{self.signature.ljust(self.LJUSTIFY) if self.LJUSTIFY != 0 else self.signature}{self.DELIMITER_TITLE}{printout}'
                 else:
                     output = printout
-            elif isinstance (printout, json):
+            elif isinstance(printout, json):
                 output = str(json.loads(printout))
 
             if outlocation == self.OUT.INFO:

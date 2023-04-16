@@ -487,7 +487,7 @@ class Degree():
 
             status = matches[0]
             for matched_fulfillment in matches:
-                status.extend_fulfillment_set(matched_fulfillment.get_fulfillment_set())
+                status.add_fulfillment_course(matched_fulfillment.get_fulfillment_set())
                 max_fulfillments.update({best_template_original:status})
 
         recommendation = dict() # {best template : {alternative template : fulfillment list}}
@@ -503,7 +503,7 @@ class Degree():
 
             original_specification = best_template.original_specifications
             # remaking the original template
-            best_template_original = Template(best_template.name + ' original', specifications=original_specification, replacement=best_template.replacement, courses_required=1)
+            best_template_original = Template(f'{best_template.name} original', specifications=original_specification, replacement=best_template.replacement, courses_required=1)
 
             # here we receive the list of fulfillment sets from get course match
             matches = best_template_original.get_course_match(self.catalog.courses())
@@ -527,6 +527,7 @@ class Degree():
                 final_score = dict()
                 for course in recommended_courses:
                     score = course_relevances.get(course)
+                    score += (course_R_bindings.get(course) / 50.0)
                     final_score.update({course : score})
 
                 recommended_courses = sorting.dictionary_sort(final_score)
@@ -577,9 +578,11 @@ class Degree():
 ######################################
 
 
-def num_bindings(all_fulfillment:dict, course:Course, bind_type:Bind_Type=Bind_Type.ALL) -> list:
+def num_bindings(all_fulfillment:dict, course:Course, bind_type:Bind_Type=Bind_Type.ALL):
     '''
     Total number of appearances of course in fulfillment sets that allow replacement
+
+    returns integer if input is a course, returns dictionary of course:int if input is a list of courses
     '''
     if isinstance(course, list) or isinstance(course, set):
         dictionary_return = dict()

@@ -130,10 +130,10 @@ class Template():
 
 
     def __repr__(self):
-        s = f"Template {self.name}:\n"
-        s += f"  replacement: {self.replacement}\n"
-        s += f"  specifications: {str(self.specifications)}"
-        return s
+        string = f"Template {self.name}:\n"
+        string += f"  replacement: {self.replacement}\n"
+        string += f"  specifications: {str(self.specifications)}"
+        return string
     
     def __str__(self):
         return self.name
@@ -200,7 +200,7 @@ class template_parsing():
         return course.attr(attr) is not None, {}
 
     @staticmethod
-    def parse_attribute(input:str, course:Course, true_given_for_wildcards:dict=None) -> str:
+    def parse_attribute(input_text:str, course:Course, true_given_for_wildcards:dict=None) -> str:
         '''
         Input -> Attribute
         Input -> True|False
@@ -214,34 +214,34 @@ class template_parsing():
         '''
         # print('accepted input ' + str(input))
 
-        if '(' in input:
-            open_bracket_loc = input.find('(')
-            close_bracket_loc = len(input) # we allow close brackets to be omitted if it's at the end of the input
+        if '(' in input_text:
+            open_bracket_loc = input_text.find('(')
+            close_bracket_loc = len(input_text) # we allow close brackets to be omitted if it's at the end of the input
             passed_bracket_count = 0
 
             # calculate the location of the closing bracket for the current bracket
-            for i in range(open_bracket_loc + 1, len(input)):
-                if input[i] == '(':
+            for i in range(open_bracket_loc + 1, len(input_text)):
+                if input_text[i] == '(':
                     passed_bracket_count += 1
-                if input[i] == ')':
+                if input_text[i] == ')':
                     if passed_bracket_count == 0:
                         close_bracket_loc = i
                         break
                     passed_bracket_count -= 1
 
-            new_string = input[: open_bracket_loc] + str(template_parsing.parse_attribute(input[open_bracket_loc + 1 : close_bracket_loc], course, true_given_for_wildcards)) + input[close_bracket_loc + 1:]
+            new_string = input_text[: open_bracket_loc] + str(template_parsing.parse_attribute(input_text[open_bracket_loc + 1 : close_bracket_loc], course, true_given_for_wildcards)) + input_text[close_bracket_loc + 1:]
             return template_parsing.parse_attribute(new_string, course, true_given_for_wildcards)
         
-        elif '&' in input:
-            and_loc = input.find('&')
-            return template_parsing.parse_attribute(input[: and_loc], course, true_given_for_wildcards) and template_parsing.parse_attribute(input[and_loc + 1:], course, true_given_for_wildcards)
+        elif '&' in input_text:
+            and_loc = input_text.find('&')
+            return template_parsing.parse_attribute(input_text[: and_loc], course, true_given_for_wildcards) and template_parsing.parse_attribute(input_text[and_loc + 1:], course, true_given_for_wildcards)
         
-        elif '|' in input:
-            and_loc = input.find('|')
-            return template_parsing.parse_attribute(input[: and_loc], course, true_given_for_wildcards) or template_parsing.parse_attribute(input[and_loc + 1:], course, true_given_for_wildcards)
+        elif '|' in input_text:
+            and_loc = input_text.find('|')
+            return template_parsing.parse_attribute(input_text[: and_loc], course, true_given_for_wildcards) or template_parsing.parse_attribute(input_text[and_loc + 1:], course, true_given_for_wildcards)
         
         else:
-            truth, true_given_entries = template_parsing.single_attribute_evaluation(input, course)
+            truth, true_given_entries = template_parsing.single_attribute_evaluation(input_text, course)
             if len(true_given_entries):
                 true_given_for_wildcards.update(true_given_entries)
             return truth
