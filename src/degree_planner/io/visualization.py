@@ -6,10 +6,9 @@ from ..io.output import Output
 
 class Visualization():
 
-    def __init__(self, file_name):
+    def __init__(self):
 
         self.PATH = Output.DATA_FOLDER_PATH + "visualization/"
-        self.file_name = file_name
 
         self.total_courses = 0
         self.total_templates = 0
@@ -18,9 +17,8 @@ class Visualization():
         self.width = 1
         self.counter = 0
 
-    def make_fulfillment_plot(self, fulfillments:dict, title='Untitled'):
+    def visualize(self, fulfillments:dict, title='Untitled'):
         # Define the course names and their coordinates
-
         boxes = list()
 
         i = 0

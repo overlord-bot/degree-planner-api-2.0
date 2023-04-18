@@ -25,6 +25,7 @@ from degree_planner.math.graph import Graph
 from degree_planner.math.graph import Edge_Generator
 from degree_planner.math.sorting import sorting
 from degree_planner.user.user import User
+from degree_planner.io.output import Output
 
 mem_after_imports = process_memory()
 
@@ -678,15 +679,13 @@ def test_recommender(recache, tf_disabled):
         print('\n\n')
 
 def visualization():
-    
-    planner = Planner(enable_tensorflow=False)
-    user1 = User(1)
-    
+    from degree_planner.io.visualization import Visualization
+    Output.visualizers.update({'degree':Visualization()})
+    test_fulfillment6()
 
 
 def run_cmd(planner, user, string):
     planner.user_input(user, string)
-
 
 
 def main():

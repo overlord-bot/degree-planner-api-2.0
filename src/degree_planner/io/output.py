@@ -30,12 +30,20 @@ class Output():
         STORE = 6
         FILE = 7
 
+        VISUALIZE = 8
+
     class OUTTYPE(Enum):
         STRING = 1
         JSON = 2
 
 
     DATA_FOLDER_PATH = os.getcwd() + "/degree_planner/data/"
+    visualizers = dict()
+
+    @staticmethod
+    def visualize(visualizer_name, *args):
+        if Output.visualizers.get(visualizer_name) is not None:
+            Output.visualizers.get(visualizer_name).visualize(*args)
 
 
     def __init__(self, output_location:OUT, output_type:OUTTYPE=OUTTYPE.STRING, user=None, 
