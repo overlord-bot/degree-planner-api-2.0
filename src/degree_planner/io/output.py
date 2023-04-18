@@ -42,8 +42,9 @@ class Output():
 
     @staticmethod
     def visualize(visualizer_name, *args):
-        if Output.visualizers.get(visualizer_name) is not None:
-            Output.visualizers.get(visualizer_name).visualize(*args)
+        visualizer = Output.visualizers.get(visualizer_name)
+        if visualizer is not None:
+            visualizer.visualize(*args)
 
 
     def __init__(self, output_location:OUT, output_type:OUTTYPE=OUTTYPE.STRING, user=None, 

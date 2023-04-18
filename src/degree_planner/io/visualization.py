@@ -4,7 +4,7 @@ import matplotlib.patheffects as path_effects
 from ..io.output import Output
 
 
-class Visualization():
+class Fulfillment_Visualizer():
 
     def __init__(self):
 
