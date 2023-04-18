@@ -68,7 +68,8 @@ class Output():
             logging_flag (OUT): temporary prints to this output location
                 without altering the stored location within this object
         '''
-        outlocation = self.output_location if output_location == None else output_location
+
+        output_location = self.output_location if output_location == None else output_location
 
         if output_location == self.OUT.NONE:
             return
@@ -93,21 +94,23 @@ class Output():
             elif isinstance(printout, json):
                 output = str(json.loads(printout))
 
-            if outlocation == self.OUT.INFO:
+            if output_location == self.OUT.INFO:
                 logging.info(output)
-            elif outlocation == self.OUT.DEBUG:
+            elif output_location == self.OUT.DEBUG:
                 logging.debug(output)
-            elif outlocation == self.OUT.WARN:
+            elif output_location == self.OUT.WARN:
                 logging.warning(output)
-            elif outlocation == self.OUT.ERROR:
+            elif output_location == self.OUT.ERROR:
                 logging.error(output)
-            elif outlocation == self.OUT.CONSOLE:
+            elif output_location == self.OUT.CONSOLE:
                 print(output)
 
         if (output_location == self.OUT.STORE):
             self.cache.append(output)
 
         elif (output_location == self.OUT.FILE):
+            if file_name is None:
+                file_name = self.file
             f = open(file_name, 'a')
             f.write(output)
             f.close
@@ -168,24 +171,29 @@ class Output():
     ######################################
 
     @staticmethod
-    def print_fulfillment(all_fulfillment:dict) -> str:
+    def print_fulfillment(all_fulfillment:dict, as_dict=False) -> str:
         '''
         Print fulfillment dictionary in a neat string format
         '''
         printout = ''
+        if as_dict:
+            printout = dict()
         fulfillments = list(all_fulfillment.values())
         fulfillments.sort()
         for status in fulfillments:
-            printout += (f"  Template '{status.template.name}':" + \
-                f"\n    replacement: {status.template.replacement}, importance: {status.template.importance}" + \
-                f"\n    required count: {status.get_required_count()}" + \
-                f"\n    actual count: {status.get_actual_count()}" + \
-                f"\n    specifications: {status.template.specifications}" + \
-                f"\n    original specifications: {status.template.original_specifications}\n")
-            simplified_fulfillment_set = set()
-            for course in status.get_fulfillment_set():
-                simplified_fulfillment_set.add(course.get_unique_name())
-            printout += f"    fulfillment set: {simplified_fulfillment_set}\n"
+            if as_dict:
+                printout.update({status.template.name:[str(e) for e in status.get_fulfillment_set()]})
+            else:
+                printout += (f"  Template '{status.template.name}':" + \
+                    f"\n    replacement: {status.template.replacement}, importance: {status.template.importance}" + \
+                    f"\n    required count: {status.get_required_count()}" + \
+                    f"\n    actual count: {status.get_actual_count()}" + \
+                    f"\n    specifications: {status.template.specifications}" + \
+                    f"\n    original specifications: {status.template.original_specifications}\n")
+                simplified_fulfillment_set = set()
+                for course in status.get_fulfillment_set():
+                    simplified_fulfillment_set.add(course.get_unique_name())
+                printout += f"    fulfillment set: {simplified_fulfillment_set}\n"
         return printout
 
     @staticmethod

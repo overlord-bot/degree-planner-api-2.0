@@ -502,37 +502,37 @@ def test_fulfillment6():
     degree = Degree("computer science", catalog)
     catalog.add_degree(degree)
 
-    course1 = Course('1', 'BINTEST', 1)
+    course1 = Course('01', 'BINTEST', 1)
     course1.add_attribute('bin.1')
     course1.add_attribute('bin.2')
     course1.add_attribute('bin.3')
     course1.add_attribute('bin.4')
     catalog.add_course(course1)
 
-    course2 = Course('2', 'BINTEST', 2)
+    course2 = Course('02', 'BINTEST', 2)
     course2.add_attribute('bin.2')
     course2.add_attribute('bin.3')
     course2.add_attribute('bin.4')
     catalog.add_course(course2)
 
-    course3 = Course('3', 'BINTEST', 3)
+    course3 = Course('03', 'BINTEST', 3)
     course3.add_attribute('bin.1')
     course3.add_attribute('bin.2')
     course3.add_attribute('bin.5')
     catalog.add_course(course3)
 
-    course4 = Course('4', 'BINTEST', 4)
+    course4 = Course('04', 'BINTEST', 4)
     course4.add_attribute('bin.3')
     course4.add_attribute('bin.5')
     catalog.add_course(course4)
 
-    course5 = Course('5', 'BINTEST', 5)
+    course5 = Course('05', 'BINTEST', 5)
     course5.add_attribute('bin.4')
     course5.add_attribute('bin.5')
     catalog.add_course(course5)
 
 
-    course6 = Course('6', 'BINTEST', 6)
+    course6 = Course('06', 'BINTEST', 6)
     course6.add_attribute('bin.1')
     course6.add_attribute('bin.2')
     course6.add_attribute('bin.3')
@@ -541,7 +541,7 @@ def test_fulfillment6():
     course6.add_attribute('concentration.AI')
     catalog.add_course(course6)
 
-    course7 = Course('7', 'BINTEST', 7)
+    course7 = Course('07', 'BINTEST', 7)
     course7.add_attribute('bin.1')
     course7.add_attribute('bin.2')
     course7.add_attribute('bin.3')
@@ -550,7 +550,7 @@ def test_fulfillment6():
     course7.add_attribute('bin.7')
     catalog.add_course(course7)
 
-    course8 = Course('8', 'BINTEST', 8)
+    course8 = Course('08', 'BINTEST', 8)
     course8.add_attribute('bin.1')
     course8.add_attribute('bin.2')
     course8.add_attribute('bin.3')
@@ -560,7 +560,7 @@ def test_fulfillment6():
     course8.add_attribute('bin.9')
     catalog.add_course(course8)
 
-    course9 = Course('9', 'BINTEST', 9)
+    course9 = Course('09', 'BINTEST', 9)
     course9.add_attribute('bin.1')
     course9.add_attribute('bin.2')
     course9.add_attribute('bin.3')
@@ -571,7 +571,7 @@ def test_fulfillment6():
     course9.add_attribute('concentration.theory')
     catalog.add_course(course9)
 
-    course10 = Course('one', 'BINTEST', 'one')
+    course10 = Course('10', 'BINTEST', 10)
     course10.add_attribute('bin.3')
     course10.add_attribute('bin.4')
     course10.add_attribute('bin.5')
@@ -581,7 +581,7 @@ def test_fulfillment6():
     course10.add_attribute('concentration.theory')
     catalog.add_course(course10)
 
-    course11 = Course('two', 'BINTEST', 'two')
+    course11 = Course('11', 'BINTEST', 11)
     course11.add_attribute('bin.3')
     course11.add_attribute('bin.4')
     course11.add_attribute('bin.5')
@@ -634,8 +634,8 @@ def test_fulfillment6():
     for t in templates:
         degree.add_template(t)
 
-    run_cmd(planner, user, 'degree, computer science, add, 1, bin 1, add, 2, bin 2, add, 3, bin 3, add, 4, bin 4, add, 5, bin 5, add, 6, bin 6')
-    run_cmd(planner, user, 'add, 7, bin 7, add, 7, bin 8, add, 7, bin 9, add, 7, bin one, add, 7, bin two, add, 8, bin two')
+    run_cmd(planner, user, 'degree, computer science, add, 1, bin 01, add, 2, bin 02, add, 3, bin 03, add, 4, bin 04, add, 5, bin 05, add, 6, bin 06')
+    run_cmd(planner, user, 'add, 7, bin 07, add, 7, bin 08, add, 7, bin 09, add, 7, bin 10, add, 7, bin 11, add, 8, bin 11')
     run_cmd(planner, user, 'print, fulfillment')
 
     
@@ -677,48 +677,91 @@ def test_recommender(recache, tf_disabled):
         run_cmd(planner, user, "print, fulfillment")
         print('\n\n')
 
+def visualization():
+    
+    planner = Planner(enable_tensorflow=False)
+    user1 = User(1)
+    
+
+
 def run_cmd(planner, user, string):
     planner.user_input(user, string)
 
 
-start = timeit.default_timer()
 
-print(f'beginning test {datetime.now()}')
+def main():
+    start = timeit.default_timer()
 
-testall = False
-logging.getLogger().setLevel(logging.INFO)
-if len(sys.argv) > 1:
-    if '-d' in sys.argv:
-        logging.getLogger().setLevel(logging.DEBUG)
-        print('DEBUG MODE ON, PRINTING ALL DEBUGGING INFORMATION!')
-    if '-all' in sys.argv:
-        testall = True
+    print(f'beginning test {datetime.now()}')
 
-if testall:
-    test_graph()
-    input('press enter to continue')
-    test_other()
-    input('press enter to continue')
-    test_fulfillment()
-    input('press enter to continue')
-    test_fulfillment2()
-    input('press enter to continue')
-    test_fulfillment3()
-    input('press enter to continue')
-    test_fulfillment4()
-    input('press enter to continue')
-    test_fulfillment5()
-    input('press enter to continue')
-    test_fulfillment6()
+    testall = False
+    logging.getLogger().setLevel(logging.INFO)
+    for i in range(len(sys.argv)):
+        if sys.argv[i] == '-d':
+            logging.getLogger().setLevel(logging.DEBUG)
+            print('DEBUG MODE ON, PRINTING ALL DEBUGGING INFORMATION!')
+        if sys.argv[i] == '-all':
+            testall = True
+        if sys.argv[i] == '-t' and i + 1 < len(sys.argv):
+            print(f'testing only test case {sys.argv[i + 1]}')
+            test_case = sys.argv[i + 1]
+            if test_case == '1':
+                test_fulfillment()
+                return
+            elif test_case == '2':
+                test_fulfillment2()
+                return
+            elif test_case == '3':
+                test_fulfillment3()
+                return
+            elif test_case == '4':
+                test_fulfillment4()
+                return
+            elif test_case == '5':
+                test_fulfillment5()
+                return
+            elif test_case == '6':
+                test_fulfillment6()
+                return
+            elif test_case == 'recommender':
+                user_input = input('INPUT C TO RECOMPUTE CACHE, INPUT F TO DISABLE TENSORFLOW, then press enter to continue\n')
+                test_recommender('c' in user_input.casefold(), 'f' in user_input.casefold())
+                return
+            elif test_case == 'visualization':
+                visualization()
+                return
+            else:
+                print('invalid test case')
+                return
 
-tracemalloc.start()
-user_input = input('INPUT C TO RECOMPUTE CACHE, INPUT F TO DISABLE TENSORFLOW, then press enter to continue\n')
-test_recommender('c' in user_input.casefold(), 'f' in user_input.casefold())
-# displaying the memory
-print('MEMORY USAGE:')
-mem_after = process_memory()
-print(f"memory report with psutil: (total usage) {mem_after - mem_before:,} (imports) {mem_after_imports - mem_before:,}")
- 
 
-stop = timeit.default_timer()
-print('\ntime: ', stop - start)
+    if testall:
+        test_graph()
+        input('press enter to continue')
+        test_other()
+        input('press enter to continue')
+        test_fulfillment()
+        input('press enter to continue')
+        test_fulfillment2()
+        input('press enter to continue')
+        test_fulfillment3()
+        input('press enter to continue')
+        test_fulfillment4()
+        input('press enter to continue')
+        test_fulfillment5()
+        input('press enter to continue')
+        test_fulfillment6()
+
+    tracemalloc.start()
+    user_input = input('INPUT C TO RECOMPUTE CACHE, INPUT F TO DISABLE TENSORFLOW, then press enter to continue\n')
+    test_recommender('c' in user_input.casefold(), 'f' in user_input.casefold())
+    # displaying the memory
+    print('MEMORY USAGE:')
+    mem_after = process_memory()
+    print(f"memory report with psutil: (total usage) {mem_after - mem_before:,} (imports) {mem_after_imports - mem_before:,}")
+    
+
+    stop = timeit.default_timer()
+    print('\ntime: ', stop - start)
+
+main()

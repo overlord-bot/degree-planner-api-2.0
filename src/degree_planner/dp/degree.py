@@ -14,6 +14,7 @@ from ..io.output import Output
 from ..math.sorting import sorting
 from .course import Course
 from .fulfillment_status import Fulfillment_Status
+from ..io.visualization import Visualization
 
 class Bind_Type(Enum):
     NR = False
@@ -38,7 +39,8 @@ class Degree():
         self.io = Output(Output.OUT.CONSOLE, auto_clear=True)
 
         self.MAX_IMPORTANCE = 1000 # essentially the maximum number of templates possible
-        self.VISUALIZATION = Output(output_location=Output.OUT.FILE, file=Output.DATA_FOLDER_PATH + "visualization.txt")
+        self.PLOT = Visualization("visualization_plot.txt")
+
 
     def add_template(self, template:Template):
         '''
@@ -132,7 +134,7 @@ class Degree():
             for template in template_set:
                 max_fulfillments.update({template:template.get_course_match(taken_courses)[0]})
 
-            self.VISUALIZATION.print(f'max fulfillment:\n\n{max_fulfillments}\n\n\n')
+            self.PLOT.make_fulfillment_plot(max_fulfillments, 'max fulfillment')
 
             all_fulfillment = dict()
 
@@ -181,6 +183,8 @@ class Degree():
                 self.replacement_template_steal(template, all_fulfillment, max_fulfillments, template.importance)
 
             potential_fulfillments.append(all_fulfillment)
+
+            self.PLOT.make_fulfillment_plot(all_fulfillment, 'completed fulfillment calculations')
 
         # checks all fulfillment sets and return the best one
         best_fulfillment = None
@@ -266,7 +270,7 @@ class Degree():
         """
         for course in requested_courses:
 
-            self.VISUALIZATION.print(f'all fulfillment template fill:\n\n{all_fulfillment}\n\n\n')
+            self.PLOT.make_fulfillment_plot(all_fulfillment, 'template fill')
 
             # course hasn't been added to any fulfillment sets yet, or if this template is replacement enabled
             # and the course is not in any no replacement templates
@@ -283,7 +287,7 @@ class Degree():
                 all_fulfillment.update({template:this_fulfillment})
                 continue
 
-        self.VISUALIZATION.print(f'all fulfillment template fill:\n\n{all_fulfillment}\n\n\n')
+        self.PLOT.make_fulfillment_plot(all_fulfillment, 'template fill')
 
         return this_fulfillment
 
@@ -340,12 +344,12 @@ class Degree():
             self.io.debug(f'transferring course {transferred_course} from {giver} to {receiver}')
             self.course_move(all_fulfillment.get(giver), all_fulfillment.get(receiver), transferred_course, graph)
 
-            self.VISUALIZATION.print(f'all fulfillment course steal:\n\n{all_fulfillment}\n\n\n')
+            self.PLOT.make_fulfillment_plot(all_fulfillment, 'course steal')
 
         self.io.debug(f'transferring course {course} from {path[-1]} to {all_fulfillment.get(template)}')
         self.course_move(all_fulfillment.get(path[-1]), all_fulfillment.get(template), course, graph)
 
-        self.VISUALIZATION.print(f'all fulfillment course steal 1 step finished:\n\n{all_fulfillment}\n\n\n')
+        self.PLOT.make_fulfillment_plot(all_fulfillment, 'course steal')
 
 
     def template_steal(self, template:Template, all_fulfillment:dict, max_fulfillments:dict, graph:Graph, importance_level:int=-1) -> None:

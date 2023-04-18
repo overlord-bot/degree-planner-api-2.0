@@ -66,7 +66,7 @@ class Fulfillment_Status():
     def excess_count(self) -> int:
         return max(0, self.get_actual_count() - self.get_required_count())
     
-    def json(self) -> json:
+    def json(self, as_dict=False) -> json:
         '''
         Return this class as a json file
         '''
@@ -74,10 +74,12 @@ class Fulfillment_Status():
         stat.update({'template':self.template})
         stat.update({'required count':self.get_required_count()})
         stat.update({'fulfillment set':self.get_fulfillment_set()})
+        if as_dict:
+            return stat
         return json.dumps(stat)
     
     def __repr__(self) -> str:
-        return f"template: {self.template} {self.template.specifications}  required count: {self.required}  fulfillment set: {[str(e) for e in self.fulfillment_set]}"
+        return f"template {self.template.name} specifications: {self.template.specifications}  required count: {self.required}  fulfillment set: {[str(e) for e in self.fulfillment_set]}"
     
     def __str__(self):
         return f"{self.template.name} fulfillment set: {[str(e) for e in self.fulfillment_set]}"
