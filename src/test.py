@@ -692,7 +692,6 @@ def main():
     start = timeit.default_timer()
 
     print(f'beginning test {datetime.now()}')
-
     testall = False
     logging.getLogger().setLevel(logging.INFO)
     for i in range(len(sys.argv)):
@@ -704,32 +703,31 @@ def main():
         if sys.argv[i] == '-t' and i + 1 < len(sys.argv):
             print(f'testing only test case {sys.argv[i + 1]}')
             test_case = sys.argv[i + 1]
-
-            visualize = False
             if '-v' in sys.argv:
-                visualize = True
+                from degree_planner.io.visualization import Fulfillment_Visualizer
+                Output.visualizers.update({'degree':Fulfillment_Visualizer()})
 
             if test_case == '1':
-                test_fulfillment(visualize=visualize)
+                test_fulfillment()
                 return
             elif test_case == '2':
-                test_fulfillment2(visualize=visualize)
+                test_fulfillment2()
                 return
             elif test_case == '3':
-                test_fulfillment3(visualize=visualize)
+                test_fulfillment3()
                 return
             elif test_case == '4':
-                test_fulfillment4(visualize=visualize)
+                test_fulfillment4()
                 return
             elif test_case == '5':
-                test_fulfillment5(visualize=visualize)
+                test_fulfillment5()
                 return
             elif test_case == '6':
-                test_fulfillment6(visualize=visualize)
+                test_fulfillment6()
                 return
             elif test_case == 'recommender':
                 user_input = input('INPUT C TO RECOMPUTE CACHE, INPUT F TO DISABLE TENSORFLOW, then press enter to continue\n')
-                test_recommender('c' in user_input.casefold(), 'f' in user_input.casefold(), visualize=visualize)
+                test_recommender('c' in user_input.casefold(), 'f' in user_input.casefold())
                 return
             else:
                 print('invalid test case')
@@ -741,21 +739,21 @@ def main():
         input('press enter to continue')
         test_other()
         input('press enter to continue')
-        test_fulfillment(visualize=visualize)
+        test_fulfillment()
         input('press enter to continue')
-        test_fulfillment2(visualize=visualize)
+        test_fulfillment2()
         input('press enter to continue')
-        test_fulfillment3(visualize=visualize)
+        test_fulfillment3()
         input('press enter to continue')
-        test_fulfillment4(visualize=visualize)
+        test_fulfillment4()
         input('press enter to continue')
-        test_fulfillment5(visualize=visualize)
+        test_fulfillment5()
         input('press enter to continue')
-        test_fulfillment6(visualize=visualize)
+        test_fulfillment6()
 
     tracemalloc.start()
     user_input = input('INPUT C TO RECOMPUTE CACHE, INPUT F TO DISABLE TENSORFLOW, then press enter to continue\n')
-    test_recommender('c' in user_input.casefold(), 'f' in user_input.casefold(), visualize=visualize)
+    test_recommender('c' in user_input.casefold(), 'f' in user_input.casefold())
     # displaying the memory
     print('MEMORY USAGE:')
     mem_after = process_memory()
