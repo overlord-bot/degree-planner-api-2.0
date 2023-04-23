@@ -182,6 +182,15 @@ def test_other():
         'bin.2&(bin.1|bin.5)':False,
         'bin.*':True,
         'bin.#':True,
+        'credits.1+':True,
+        'credits.5+':False,
+        'credits+':True,
+        'credits.+':True,
+        '+':True,
+        'z+':False,
+        'a+':True,
+        'a.+':False,
+        'z.+':False
     }
     for example, answer in example_attributes.items():
         true_given = dict()

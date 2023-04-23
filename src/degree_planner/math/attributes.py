@@ -8,7 +8,7 @@ class Attributes():
         attr = attr.casefold()
         attr_split = attr.split('.')
         self.attributes_full_str_to_list.update({attr:attr_split})
-        for i in range(1, len(attr_split) + 1):
+        for i in range(0, len(attr_split) + 1):
             head = '.'.join(attr_split[:i])
             body = '.'.join(attr_split[i:])
             update_dict(self.attributes_head_to_body_str, head, body)
@@ -18,7 +18,7 @@ class Attributes():
         attr_split = attr.split('.')
         if self.attributes_full_str_to_list.pop(attr, None) is None:
             return
-        for i in range(1, len(attr_split) + 1):
+        for i in range(0, len(attr_split) + 1):
             head = '.'.join(attr_split[:i])
             body = '.'.join(attr_split[i:])
             update_dict(self.attributes_head_to_body_str, head, body, True)
@@ -28,15 +28,20 @@ class Attributes():
         '''
         returns all attributes with that head
         '''
-        head = attr
+        if attr == '':
+            return self.attributes_full_str_to_list.keys()
         bodies = self.attributes_head_to_body_str.get(attr, {})
         attributes = list()
         for body in bodies:
             if body == '':
-                attributes.append(f'{head}')
+                attributes.append(f'{attr}')
             else:
-                attributes.append(f'{head}.{body}')
+                attributes.append(f'{attr}.{body}')
         return attributes
+    
+    def get_attributes_body_by_head(self, attr:str):
+        bodies = self.attributes_head_to_body_str.get(attr, {})
+        return list(bodies)
 
     def remove_attributes_by_head(self, attr:str):
         for attribute in self.get_attributes_by_head(attr):
@@ -45,6 +50,12 @@ class Attributes():
     def replace_attribute(self, head:str, body:str):
         self.remove_attributes_by_head(head)
         self.add_attribute(f'{head}.{body}')
+
+    def get_attributes_ge(self, attr):
+        bodies_of_head_matches = self.get_attributes_body_by_head(no_tail(attr))
+        bodies_ge = [possibility for possibility in bodies_of_head_matches if possibility >= tail(attr)]
+        # print(f"attribute {attr} with no tail {no_tail(attr)} matched with bodies {bodies_of_head_matches} with bodies ge {bodies_ge}")
+        return [f"{no_tail(attr)}.{body}" if no_tail(attr) != '' else body for body in bodies_ge]
 
     def attr(self, head:str):
         '''
@@ -98,7 +109,17 @@ def head(attr) -> str:
     return attr[:attr.find('.')]
 
 def body(attr) -> str:
+    if '.' not in attr:
+        return ''
     return attr[attr.find('.') + 1:]
+
+def tail(attr) -> str:
+    return attr[attr.rfind('.') + 1:]
+
+def no_tail(attr) -> str:
+    if '.' not in attr:
+        return ''
+    return attr[:attr.rfind('.')]
 
 def update_dict(dictionary:dict, key, value, remove=False):
     if remove:

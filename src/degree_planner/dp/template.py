@@ -188,6 +188,9 @@ class template_parsing():
             return False, {}
         if attr in ('True', 'False', True, False):
             return attr
+        if len(attr) and attr[-1] == '+':
+            matches = course.get_attributes_ge(attr[:-1])
+            return len(matches) > 0, {}
         if '*' in attr:
             matches = course.get_attributes_by_head(attr[:attr.find('*') - 1])
             return len(matches) > 0, {attr:matches}

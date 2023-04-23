@@ -143,6 +143,9 @@ class Course():
 
     def get_next(self, head) -> set:
         return self.attributes.next_attr(head)
+    
+    def get_attributes_ge(self, attr) -> list:
+        return self.attributes.get_attributes_ge(attr)
 
     def json(self):
         '''
