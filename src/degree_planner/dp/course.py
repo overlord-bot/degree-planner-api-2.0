@@ -147,6 +147,9 @@ class Course():
     def get_attributes_ge(self, attr) -> list:
         return self.attributes.get_attributes_ge(attr)
 
+    def get_attributes_le(self, attr) -> list:
+        return self.attributes.get_attributes_le(attr)
+
     def json(self):
         '''
         Returns:

@@ -191,6 +191,9 @@ class template_parsing():
         if len(attr) and attr[-1] == '+':
             matches = course.get_attributes_ge(attr[:-1])
             return len(matches) > 0, {}
+        if len(attr) and attr[-1] == '-':
+            matches = course.get_attributes_le(attr[:-1])
+            return len(matches) > 0, {}
         if '*' in attr:
             matches = course.get_attributes_by_head(attr[:attr.find('*') - 1])
             return len(matches) > 0, {attr:matches}

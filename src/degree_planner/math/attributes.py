@@ -56,6 +56,12 @@ class Attributes():
         bodies_ge = [possibility for possibility in bodies_of_head_matches if possibility >= tail(attr)]
         # print(f"attribute {attr} with no tail {no_tail(attr)} matched with bodies {bodies_of_head_matches} with bodies ge {bodies_ge}")
         return [f"{no_tail(attr)}.{body}" if no_tail(attr) != '' else body for body in bodies_ge]
+    
+    def get_attributes_le(self, attr):
+        bodies_of_head_matches = self.get_attributes_body_by_head(no_tail(attr))
+        bodies_le = [possibility for possibility in bodies_of_head_matches if possibility <= tail(attr)]
+        # print(f"attribute {attr} with no tail {no_tail(attr)} matched with bodies {bodies_of_head_matches} with bodies ge {bodies_ge}")
+        return [f"{no_tail(attr)}.{body}" if no_tail(attr) != '' else body for body in bodies_le]
 
     def attr(self, head:str):
         '''

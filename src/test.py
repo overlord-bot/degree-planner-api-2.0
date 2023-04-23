@@ -190,7 +190,14 @@ def test_other():
         'z+':False,
         'a+':True,
         'a.+':False,
-        'z.+':False
+        'z.+':False,
+        'a-':False,
+        'z-':True,
+        'credits.5-':True,
+        'credits.3-':True,
+        'credits.2-':False,
+        'bin.-':False,
+        'bin.z-':True
     }
     for example, answer in example_attributes.items():
         true_given = dict()
