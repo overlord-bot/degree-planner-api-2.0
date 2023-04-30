@@ -170,6 +170,7 @@ def test_other():
         'True&False':False,
         'bin.1&bin.5':True,
         'bin.1 & bin.5':True,
+
         ' () & ( bin.1  &  (((( ( bin.5  ))))) )  ':True,
         ' () & ( bin.1  &  (((( ( bin.5':True,
         'bin.1|bin.5':True,

@@ -182,24 +182,23 @@ class template_parsing():
         attr = attr.strip()
         if attr == '':
             return True, {}
-        if attr == 'True':
+        if attr in ('True', True):
             return True, {}
-        if attr == 'False':
+        if attr in ('False', False):
             return False, {}
-        if attr in ('True', 'False', True, False):
-            return attr
+
         if len(attr) and attr[-1] == '+':
             matches = course.get_attributes_ge(attr[:-1])
-            return len(matches) > 0, {}
+            return (len(matches) > 0), {}
         if len(attr) and attr[-1] == '-':
             matches = course.get_attributes_le(attr[:-1])
-            return len(matches) > 0, {}
+            return (len(matches) > 0), {}
         if '*' in attr:
             matches = course.get_attributes_by_head(attr[:attr.find('*') - 1])
-            return len(matches) > 0, {attr:matches}
+            return (len(matches) > 0), {attr:matches}
         if '#' in attr:
-            return len(course.get_attributes_by_head(attr[:attr.find('#') - 1])) > 0, {}
-        return course.attr(attr) is not None, {}
+            return (len(course.get_attributes_by_head(attr[:attr.find('#') - 1])) > 0), {}
+        return (course.attr(attr) is not None), {}
 
     @staticmethod
     def parse_attribute(input_text:str, course:Course, true_given_for_wildcards:dict=None) -> str:
@@ -234,16 +233,15 @@ class template_parsing():
             new_string = input_text[: open_bracket_loc] + str(template_parsing.parse_attribute(input_text[open_bracket_loc + 1 : close_bracket_loc], course, true_given_for_wildcards)) + input_text[close_bracket_loc + 1:]
             return template_parsing.parse_attribute(new_string, course, true_given_for_wildcards)
         
-        elif '&' in input_text:
+        if '&' in input_text:
             and_loc = input_text.find('&')
             return template_parsing.parse_attribute(input_text[: and_loc], course, true_given_for_wildcards) and template_parsing.parse_attribute(input_text[and_loc + 1:], course, true_given_for_wildcards)
         
-        elif '|' in input_text:
+        if '|' in input_text:
             and_loc = input_text.find('|')
             return template_parsing.parse_attribute(input_text[: and_loc], course, true_given_for_wildcards) or template_parsing.parse_attribute(input_text[and_loc + 1:], course, true_given_for_wildcards)
-        
-        else:
-            truth, true_given_entries = template_parsing.single_attribute_evaluation(input_text, course)
-            if len(true_given_entries):
-                true_given_for_wildcards.update(true_given_entries)
-            return truth
+
+        truth, true_given_entries = template_parsing.single_attribute_evaluation(input_text, course)
+        if len(true_given_entries):
+            true_given_for_wildcards.update(true_given_entries)
+        return truth
