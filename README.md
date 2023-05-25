@@ -8,9 +8,9 @@ This is a tool that stores user schedules of one's curriculum, checking requirem
 
 ## Using this API:
 
-import dp.degree_planner and dp.user. Create a new Planner object (only one is necessary), and generate a new User object for every unique user. To interact with the planner, call Planner.input_handler(User, Input). 
+import dp.degree_planner and dp.user. Create a new Planner object, and generate a new User object for every unique user. To interact with the planner, call Planner.input_handler(User, Input). 
 
-Note that input can be a command or a response to a prompt. A prompt is requested when the user enters an ambiguous command, such as specifying a course name with multiple possible choices. If your use case does not allow responding to such prompts, just make sure all commands that specify a course name is unambigous (such as by only using the course's unique name "{subject} {course_id} {name})"
+Note that input can be a command or a response to a prompt. A prompt is requested when the user enters an ambiguous command, such as specifying a course name with multiple possible choices. If your use case does not allow responding to such prompts, set the noreply flag to true by inputting the command "noreply, true" through an admin user or by using -nr flag when starting the program
 
 
 ## Commands:
