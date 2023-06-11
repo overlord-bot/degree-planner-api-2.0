@@ -6,7 +6,7 @@ from ..dp.command import Command
 class command_handler():
 
     @staticmethod
-    def user_input(planner, user:User, user_input:str, io:Output=None) -> bool:
+    def user_input(planner, user:User, user_input:str, io:Output=None, prompting=False) -> bool:
         ''' MAIN FUNCTION FOR ACCEPTING COMMAND ENTRIES
 
         Args:
@@ -39,13 +39,13 @@ class command_handler():
             for command in commands:
                 user.command_queue.put(command)
 
-        command_handler.execute_commands(planner, user, io)
+        command_handler.execute_commands(planner, user, io, prompting)
         user.command_queue_locked = False
         io.debug(f'user {user.username} unlocked their command queue')
         return True
 
     @staticmethod
-    def execute_commands(planner, user:User, io:Output=None) -> None:
+    def execute_commands(planner, user:User, io:Output=None, prompting=False) -> None:
         ''' EXECUTES COMMANDS FROM USER'S COMMAND QUEUE
 
         Args:
@@ -135,7 +135,7 @@ class command_handler():
                 if not len(possible_courses):
                     io.print(f"no courses matching entry {course_name} found")
 
-                if len(possible_courses) > 1:
+                if len(possible_courses) > 1 and prompting:
                     io.print(f"entry {course_name} has multiple choices, please choose from list:")
                     i = 1
                     for course in possible_courses:

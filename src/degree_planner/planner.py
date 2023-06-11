@@ -53,7 +53,7 @@ class Planner():
     It is essential to keep all user specific data inside the User class.
     '''
 
-    def __init__(self, io:Output=None, enable_tensorflow=True):
+    def __init__(self, io:Output=None, enable_tensorflow=True, prompting=False):
         # each user is assigned a User object and stored in this dictionary
         # Users = <user id, User>
         self.users = dict()
@@ -63,7 +63,10 @@ class Planner():
         if self.default_io is None:
             self.default_io = Output(Output.OUT.CONSOLE, signature='INPUT HANDLER', auto_clear=True)
 
+        # configurable flags
         self.ENABLE_TENSORFLOW = enable_tensorflow
+        self.PROMPTING = prompting
+
         self.SEMESTERS_MAX  = 12
 
 
@@ -84,7 +87,7 @@ class Planner():
     def user_input(self, user:User, input:str, io=None):
         if io is None:
             io = self.default_io
-        command_handler.user_input(self, user, input, io)
+        command_handler.user_input(self, user, input, io, prompting=self.PROMPTING)
 
 
     def schedule(self, user:User, schedule_name:str, io:Output=None) -> None:

@@ -24,6 +24,7 @@ def terminal():
     print(f"  {datetime.now()}")
 
     enable_tensorflow = True
+    prompting=False
     if len(sys.argv) > 1:
         if '-d' in sys.argv:
             print("  logging all debugging info")
@@ -32,9 +33,11 @@ def terminal():
             logging.getLogger().setLevel(logging.WARNING)
         if '-f' in sys.argv:
             enable_tensorflow = False
+        if '-p' in sys.argv:
+            prompting = True
 
     print("")
-    planner = Planner(enable_tensorflow=enable_tensorflow)
+    planner = Planner(enable_tensorflow=enable_tensorflow, prompting=prompting)
     user = User(1, "user1")
     output = Output(Output.OUT.CONSOLE, output_type=Output.OUTTYPE.STRING, signature='DP', auto_clear=True)
     while 1:
