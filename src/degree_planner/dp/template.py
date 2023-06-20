@@ -270,6 +270,9 @@ class template_parsing():
             and_loc = input_text.find('|')
             return template_parsing.parse_attribute(input_text[: and_loc], course, true_given_for_wildcards) or template_parsing.parse_attribute(input_text[and_loc + 1:], course, true_given_for_wildcards)
 
+        if len(input_text) and input_text[0] == '~':
+            return not template_parsing.parse_attribute(input_text[1:], course, true_given_for_wildcards)
+
         truth, true_given_entries = template_parsing.single_attribute_evaluation(input_text, course)
         if len(true_given_entries):
             true_given_for_wildcards.update(true_given_entries)

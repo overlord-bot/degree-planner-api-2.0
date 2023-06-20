@@ -13,7 +13,7 @@
         "Core - Computer Organization": {
             "requires": 1,
             "replacement": false,
-            "attributes":["subject.csci & course_id.2500 | subject.ecse & course_id.2660"]
+            "attributes":["(subject.csci & course_id.2500) | (subject.ecse & course_id.2660)"]
         },
         "Core - Algorithms": {
             "requires": 1,

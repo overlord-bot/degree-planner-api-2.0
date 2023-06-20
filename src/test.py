@@ -198,7 +198,20 @@ def test_other():
         'credits.3-':True,
         'credits.2-':False,
         'bin.-':False,
-        'bin.z-':True
+        'bin.z-':True,
+
+        '~bin.1':False,
+        '~~bin.1':True,
+        '~(bin.1 & bin.5)':False,
+        '~(bin.1 & bin.4)':True,
+        '~(~bin.1 & bin.5)':True,
+        '~(~bin.1 | bin.5)':False,
+        '~(~bin.1 | ~bin.5)':True,
+        '~(~(bin.1))':True,
+        '~bin.1 & bin.5':False,
+        '~bin.1 | bin.5':True,
+        '~bin.1 & bin.4':False
+
     }
     for example, answer in example_attributes.items():
         true_given = dict()
