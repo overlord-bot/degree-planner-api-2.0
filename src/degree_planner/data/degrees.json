@@ -1,4 +1,9 @@
 {
+    "specification sets": {
+        "cscore": {
+            "attributes":["(subject.csci & course_id.1200) | (subject.csci & course_id.2200) | (subject.csci & course_id.2300) | (subject.csci & course_id.4430) | (subject.csci & course_id.4210)"]
+        }
+    },
     "computer science": {
         "Core - Data Structures": {
             "requires": 1,
@@ -38,7 +43,7 @@
         "Intensity": {
             "requires": 4,
             "replacement": true,
-            "attributes":["level.4", "subject.csci"]
+            "attributes":["level.4", "subject.csci", "~$cscore"]
         },
         "Concentration": {
             "requires": 3,

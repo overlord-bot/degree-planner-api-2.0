@@ -13,6 +13,8 @@ class Template():
     courses we filter from.
     '''
 
+    specification_sets = dict() # a dictionary of 'set name' : 'specification'
+
     def __init__(self, name, specifications=None, replacement=False, courses_required=1):
         if specifications == None:
             specifications = list()
@@ -208,6 +210,8 @@ class template_parsing():
 
     @staticmethod
     def single_attribute_evaluation(attr:str, course:Course):
+        if isinstance(attr, bool):
+            return attr
         attr = attr.strip()
         if attr == '':
             return True, {}
@@ -215,6 +219,23 @@ class template_parsing():
             return True, {}
         if attr in ('False', False):
             return False, {}
+
+        if len(attr) and attr[0] == '$':
+            ''' 
+            this signifies evaluate the attribute of the template with the name after $[attr] inside
+            'specification sets' degree in the degrees.json
+            '''
+            print(f'found $ sign, evaluating based on specification set {attr[1:]}!')
+
+            if Template.specification_sets.get(attr[1:]) is None:
+                return False
+            
+            true_given_for_wildcards = {}
+            truth = template_parsing.parse_attribute(attr[1:], course, true_given_for_wildcards)
+
+            print(f'evaluated to {truth} = {template_parsing.single_attribute_evaluation(truth, course)} with conditions {true_given_for_wildcards}')
+
+            return template_parsing.single_attribute_evaluation(truth, course), true_given_for_wildcards
 
         if len(attr) and attr[-1] == '+':
             matches = course.get_attributes_ge(attr[:-1])
