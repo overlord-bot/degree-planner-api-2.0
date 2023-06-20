@@ -66,11 +66,13 @@ class command_handler():
         be entered again.
         """
         io.debug(f'user {user.username} entered command loop')
+
         while(not user.command_queue.empty() or User.Flag.CMD_PAUSED in user.flag):
             if User.Flag.CMD_PAUSED in user.flag:
                 command:Command = user.command_paused
             else:
                 command:Command = user.command_queue.get()
+                io.warn(f'RECEIVED COMMAND FROM USER {user}: {command}')
                 io.debug(f'user {user.username} fetched command {command}')
 
             if command.command == Command.CMD.IMPORT:
@@ -176,7 +178,10 @@ class command_handler():
                 else:
                     io.store(f"{schedule.name} Fulfillment")
                     io.store(f"  taken courses: {[str(e) for e in schedule.courses()]}")
-                    fulfillment = schedule.degree.fulfillment(schedule.courses())
+                    
+                    attributes_to_replace = command.arguments
+
+                    fulfillment = planner.fulfillment(user, schedule.name, io, attributes_to_replace)
                     io.store(Output.print_fulfillment(fulfillment))
                     io.view_cache()
                 user.command_queue.task_done()

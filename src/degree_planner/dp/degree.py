@@ -66,13 +66,17 @@ class Degree():
     # fulfillment computation
     ##############################################################################################
 
-    def generate_template_combinations(self, taken_courses) -> list:
+    def generate_template_combinations(self, taken_courses, template_set:list=None) -> list:
         '''
         generates a list of all possible template combinations resulted from wildcard usage
         '''
         # max fulfillment set for every template, including wildcards
+
+        if template_set is None:
+            template_set = self.templates
+
         max_fulfillment_possibilities = list()
-        for template in self.templates:
+        for template in template_set:
             max_fulfillment_possibilities.append(template.get_course_match(taken_courses))
 
         # if template contains wildcards, this is how many templates can result from the wildcard
@@ -99,7 +103,7 @@ class Degree():
     # MAIN FULFILLMENT FUNCTION
     ##############################################################################################
 
-    def fulfillment(self, taken_courses:set) -> dict:
+    def fulfillment(self, taken_courses:set, template_sets:list=None, attributes_to_replace:list=None) -> dict:
         '''
         Generates the best fulfillment set by assigning courses to the templates stored along with
         each degree.
@@ -113,6 +117,7 @@ class Degree():
 
         parameters:
             taken_courses (set): all courses that is to be used to generate the fulfillment sets
+            templates_set (list): specify list of templates to use, leave empty to use default set of this degree
 
         returns:
             all_fulfillment (dict): {template : Fulfillment_set}
@@ -123,9 +128,22 @@ class Degree():
         # all fulfillment sets based on each possible combination of templates resulted from wildcard templates
         potential_fulfillments = list()
 
-        
+        if template_sets is None:
+            template_sets = self.templates
+        if attributes_to_replace is not None:
+            template_sets = copy.deepcopy(template_sets)
 
-        for template_set in self.generate_template_combinations(taken_courses):
+
+            # just for now, we treat attributes to replace as a list where [template, attribute to replace, template, attribute to replace ...]
+            for i in range(0, len(attributes_to_replace) - 1, 2):
+                for template in template_sets:
+                    print(f'comparing {template.name} and {attributes_to_replace[i]}')
+                    if template.name.casefold() == attributes_to_replace[i].casefold():
+                        attribute = attributes_to_replace[i + 1]
+                        attribute_head = attribute[:attribute.find('.')]
+                        template.replace_specifications(attribute_head, attribute)
+
+        for template_set in self.generate_template_combinations(taken_courses, template_sets):
 
             # all courses that fulfills each template
             max_fulfillments = dict()
@@ -501,7 +519,7 @@ class Degree():
 
         for best_template, best_fulfillment in best_fulfillments.items():
             original_specification = best_template.original_specifications
-            best_template_original = Template(best_template.name + ' original', specifications=original_specification, replacement=best_template.replacement, courses_required=1)
+            best_template_original = Template(best_template.name, specifications=original_specification, replacement=best_template.replacement, courses_required=1)
             matches = best_template_original.get_course_match(self.catalog.courses())
 
             status = matches[0]
@@ -522,7 +540,7 @@ class Degree():
 
             original_specification = best_template.original_specifications
             # remaking the original template
-            best_template_original = Template(f'{best_template.name} original', specifications=original_specification, replacement=best_template.replacement, courses_required=1)
+            best_template_original = Template(f'{best_template.name}', specifications=original_specification, replacement=best_template.replacement, courses_required=1)
 
             # here we receive the list of fulfillment sets from get course match
             matches = best_template_original.get_course_match(self.catalog.courses())
@@ -537,8 +555,14 @@ class Degree():
                 self.io.debug(f'max match for template {best_template_original}: \n{matches}\n')
                 # remove the courses already taken
                 recommended_courses = matched_fulfillment.get_fulfillment_set()
+                
+                fulfilled_courses = 0
                 for course in best_fulfillment.get_fulfillment_set():
                     recommended_courses.discard(course)
+                    fulfilled_courses += 1
+
+                matched_fulfillment.get_template().courses_fulfilled = fulfilled_courses
+                matched_fulfillment.get_template().importance = fulfilled_courses
 
                 course_R_bindings = num_bindings(max_fulfillments, recommended_courses, Bind_Type.R)
                 course_relevances = self.catalog.recommender.embedded_relevance(taken_courses, recommended_courses, custom_tags)
